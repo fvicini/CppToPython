@@ -7,7 +7,7 @@ def change_list(elements):
 
 if __name__ == '__main__':
 	print("Importing library...")
-	lib = ct.cdll.LoadLibrary("./QTDebug/hello.so")
+	lib = ct.cdll.LoadLibrary("./Debug/hello.so")
 	print(lib)
 	print("Import successful")
 
