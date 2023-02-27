@@ -3,6 +3,8 @@
 #include <iostream>
 #include <vector>
 
+#include "IOUtilities.hpp"
+
 std::string print(const std::string& what);
 
 extern "C"
@@ -11,7 +13,9 @@ void hello() { std::cout << "Hello world!"<< std::endl; }
 extern "C"
 void testInt(const int test)
 {
+  Gedim::Output::PrintStars(std::cout);
   std::cout<< "Get "<< test<< std::endl;
+  Gedim::Output::PrintStars(std::cout);
 }
 
 extern "C"
