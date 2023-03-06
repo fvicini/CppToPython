@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 
+#include "Eigen/Eigen"
 #include "IOUtilities.hpp"
 
 std::string print(const std::string& what);
@@ -75,6 +76,17 @@ long long sum(const int n,
     res += array[i];
 
   return res;
+}
+
+// Type definition
+typedef double (*StatusCB)(const int numPoints, const double* points);
+
+extern "C"
+void GetStatus(StatusCB StatusFn)
+{
+  Eigen::MatrixXd test = (Eigen::MatrixXd(3, 2)<< 1.2, 3.5, 8.4, 2.4, 5.3, 9.9).finished();
+  const double result = StatusFn(test.cols(), test.data());
+  std::cout<< "Obtained "<< result<< std::endl;
 }
 
 int main() 
