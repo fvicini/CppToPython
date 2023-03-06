@@ -5,19 +5,19 @@ import sys
 def change_list(elements):
     return ct.cast((ct.c_int * len(elements))(*elements), ct.POINTER(ct.c_int))
 
-def make_nd_array(c_pointer, shape, dtype=np.float64, order='C', own_data=True):
+def make_nd_array(c_pointer, shape, dtype=np.double, order='C', own_data=True):
     arr_size = np.prod(shape[:]) * np.dtype(dtype).itemsize 
+    print("size", arr_size)
     
     if sys.version_info.major >= 3:
-        buf_from_mem = ct.pythonapi.PyMemoryView_FromMemory
-        buf_from_mem.restype = ct.py_object
-        buf_from_mem.argtypes = (ct.c_void_p, ct.c_int, ct.c_int)
-        buffer = buf_from_mem(c_pointer, arr_size, 0x100)
+        ct.pythonapi.PyMemoryView_FromMemory.restype = ct.py_object
+        ct.pythonapi.PyMemoryView_FromMemory.argtypes = (ct.c_void_p, ct.c_int, ct.c_int)
+        buffer = ct.pythonapi.PyMemoryView_FromMemory(c_pointer, arr_size, 0x100)
     else:
-        buf_from_mem = ct.pythonapi.PyBuffer_FromMemory
-        buf_from_mem.restype = ct.py_object
-        buffer = buf_from_mem(c_pointer, arr_size)
-        
+        ct.pythonapi.PyBuffer_FromMemory.restype = ct.py_object
+        buffer = ct.pythonapi.PyBuffer_FromMemory(c_pointer, arr_size)
+    
+    print(tuple(shape[:]), buffer)
     arr = np.ndarray(tuple(shape[:]), dtype, buffer, order=order)
     if own_data and not arr.flags.owndata:
         return arr.copy()
@@ -85,5 +85,10 @@ if __name__ == '__main__':
 
 	lib.PassFunctionPointer(ExampleFN(example_fn))
 	print("Function pointer successfull")
+	
+	lib.CreateMatrix.argtypes = [ct.c_int, ct.c_int]
+	lib.CreateMatrix.restype = np.ctypeslib.ndpointer(dtype=np.double)
+	A = make_nd_array(lib.CreateMatrix(3, 4), (3, 4), np.double)
+	print(A)
 
 	print("Call successful")

@@ -91,6 +91,17 @@ void PassFunctionPointer(ExampleFN exampleFn)
   std::cout<< "resultConvert "<< resultConvert<< std::endl;
 }
 
+extern "C"
+double* CreateMatrix(const int nRows, const int nCols)
+{
+  Eigen::MatrixXd A = Eigen::MatrixXd::Random(nRows, nCols);
+  std::cout.precision(16);
+  std::cout<< std::scientific<< "A\n"<< A<< std::endl;
+  std::cout<< std::scientific<< "A\n"<< A.data()[2 * nRows]<< std::endl;
+
+  return A.data();
+}
+
 int main() 
 {
   hello();
