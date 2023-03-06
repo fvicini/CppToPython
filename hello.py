@@ -30,9 +30,15 @@ def example_fn(numPoints, points):
     
     vec = make_nd_array(points, (3,numPoints), np.double, 'C', True)
     print('vec', vec)
+    print('shape', vec.shape)
     print(type(vec))
         
-    return (vec[0,:]**2 + vec[1,:]**2).sum() # sum_p p_x^2 + p_y^2
+    result = (vec[0,:]**2 + vec[1,:]**2) # [x^2 + y^2]
+    print('result', result)
+    print('shape', result.shape)
+    print(type(result))
+        
+    return result.ctypes.data
 
 if __name__ == '__main__':
 	print("Importing library...")
@@ -73,7 +79,7 @@ if __name__ == '__main__':
 	result = lib.sum(len(array), array)
 	print(result)
 	
-	ExampleFN = ct.CFUNCTYPE(ct.c_double, ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
+	ExampleFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 	lib.PassFunctionPointer.argtypes = [ExampleFN]
 	lib.PassFunctionPointer.restype = None
 

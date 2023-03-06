@@ -79,14 +79,16 @@ long long sum(const int n,
 }
 
 // Type definition
-typedef double (*ExampleFN)(const int numPoints, const double* points);
+typedef const double* (*ExampleFN)(const int numPoints, const double* points);
 
 extern "C"
 void PassFunctionPointer(ExampleFN exampleFn)
 {
   Eigen::MatrixXd test = (Eigen::MatrixXd(3, 2)<< 1.2, 3.5, 8.4, 2.4, 5.3, 9.9).finished();
-  const double result = exampleFn(test.cols(), test.data());
-  std::cout<< "Obtained "<< result<< std::endl;
+  const double* result = exampleFn(test.cols(), test.data());
+  Eigen::Map<const Eigen::VectorXd> resultConvert(result, test.cols());
+  std::cout<< "Obtained "<< result[0]<< std::endl;
+  std::cout<< "resultConvert "<< resultConvert<< std::endl;
 }
 
 int main() 
