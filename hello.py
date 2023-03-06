@@ -74,10 +74,10 @@ if __name__ == '__main__':
 	print(result)
 	
 	ExampleFN = ct.CFUNCTYPE(ct.c_double, ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
-	lib.GetStatus.argtypes = [ExampleFN]
-	lib.GetStatus.restype = None
+	lib.PassFunctionPointer.argtypes = [ExampleFN]
+	lib.PassFunctionPointer.restype = None
 
-	lib.GetStatus(ExampleFN(example_fn))
-	print("Status successfull")
+	lib.PassFunctionPointer(ExampleFN(example_fn))
+	print("Function pointer successfull")
 
 	print("Call successful")

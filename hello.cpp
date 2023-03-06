@@ -79,13 +79,13 @@ long long sum(const int n,
 }
 
 // Type definition
-typedef double (*StatusCB)(const int numPoints, const double* points);
+typedef double (*ExampleFN)(const int numPoints, const double* points);
 
 extern "C"
-void GetStatus(StatusCB StatusFn)
+void PassFunctionPointer(ExampleFN exampleFn)
 {
   Eigen::MatrixXd test = (Eigen::MatrixXd(3, 2)<< 1.2, 3.5, 8.4, 2.4, 5.3, 9.9).finished();
-  const double result = StatusFn(test.cols(), test.data());
+  const double result = exampleFn(test.cols(), test.data());
   std::cout<< "Obtained "<< result<< std::endl;
 }
 
