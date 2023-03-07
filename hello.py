@@ -5,7 +5,7 @@ import sys
 def change_list(elements):
     return ct.cast((ct.c_int * len(elements))(*elements), ct.POINTER(ct.c_int))
 
-def make_nd_array(c_pointer, shape, dtype=np.double, order='C', own_data=True):
+def make_nd_array(c_pointer, shape, dtype=np.double, order='F', own_data=True):
     arr_size = np.prod(shape[:]) * np.dtype(dtype).itemsize 
     print("size", arr_size)
     
@@ -16,8 +16,7 @@ def make_nd_array(c_pointer, shape, dtype=np.double, order='C', own_data=True):
     else:
         ct.pythonapi.PyBuffer_FromMemory.restype = ct.py_object
         buffer = ct.pythonapi.PyBuffer_FromMemory(c_pointer, arr_size)
-    
-    print(tuple(shape[:]), buffer)
+        
     arr = np.ndarray(tuple(shape[:]), dtype, buffer, order=order)
     if own_data and not arr.flags.owndata:
         return arr.copy()
@@ -28,7 +27,7 @@ def example_fn(numPoints, points):
     print('numPoints', numPoints)
     print('points', points)
     
-    vec = make_nd_array(points, (3,numPoints), np.double, 'C', True)
+    vec = make_nd_array(points, (3,numPoints), np.double)
     print('vec', vec)
     print('shape', vec.shape)
     print(type(vec))
@@ -86,9 +85,12 @@ if __name__ == '__main__':
 	lib.PassFunctionPointer(ExampleFN(example_fn))
 	print("Function pointer successfull")
 	
-	lib.CreateMatrix.argtypes = [ct.c_int, ct.c_int]
-	lib.CreateMatrix.restype = np.ctypeslib.ndpointer(dtype=np.double)
-	A = make_nd_array(lib.CreateMatrix(3, 4), (3, 4), np.double)
+	lib.CreateMatrix.argtypes = [ct.c_int, ct.c_int, ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.CreateMatrix.restype = None
+	pointerA = ct.POINTER(ct.c_double)()
+	lib.CreateMatrix(1, 5, ct.byref(pointerA))
+	print(pointerA[0], pointerA[1], pointerA[2], pointerA[3], pointerA[4])
+	A = make_nd_array(pointerA, (1, 5), np.double)
 	print(A)
 
 	print("Call successful")

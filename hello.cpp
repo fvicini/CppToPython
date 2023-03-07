@@ -92,14 +92,16 @@ void PassFunctionPointer(ExampleFN exampleFn)
 }
 
 extern "C"
-double* CreateMatrix(const int nRows, const int nCols)
+void CreateMatrix(const int nRows, const int nCols, double** pointerA)
 {
-  Eigen::MatrixXd A = Eigen::MatrixXd::Random(nRows, nCols);
+  *pointerA = new double[nRows * nCols];
+
+  Eigen::Map<Eigen::MatrixXd> A(*pointerA, nRows, nCols);
+  A.setRandom();
+
   std::cout.precision(16);
   std::cout<< std::scientific<< "A\n"<< A<< std::endl;
-  std::cout<< std::scientific<< "A\n"<< A.data()[2 * nRows]<< std::endl;
-
-  return A.data();
+  std::cout<< std::scientific<< "A\n"<< pointerA[0][0]<< std::endl;
 }
 
 int main() 
