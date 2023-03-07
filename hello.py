@@ -57,6 +57,7 @@ if __name__ == '__main__':
 
 	lib.testTuple.restype = ct.py_object
 	result = lib.testTuple()
+	print(type(result))
 	print(result)
 
 	lib.testList.restype = ct.py_object
@@ -92,5 +93,10 @@ if __name__ == '__main__':
 	print(pointerA[0], pointerA[1], pointerA[2], pointerA[3], pointerA[4])
 	A = make_nd_array(pointerA, (1, 5), np.double)
 	print(A)
+	
+	lib.CreateStruct.restype = ct.py_object
+	result = lib.CreateStruct()
+	print(type(result))
+	print(result)
 
 	print("Call successful")

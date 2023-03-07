@@ -104,6 +104,26 @@ void CreateMatrix(const int nRows, const int nCols, double** pointerA)
   std::cout<< std::scientific<< "A\n"<< pointerA[0][0]<< std::endl;
 }
 
+struct Test
+{
+    double A;
+    unsigned int B;
+};
+
+extern "C"
+PyObject* CreateStruct()
+{
+  Test test;
+  test.A = 1.5;
+  test.B = 17;
+
+  PyObject* list = PyList_New(2);
+  PyList_SET_ITEM(list, 0, Py_BuildValue("{s:d}", "A", test.A));
+  PyList_SET_ITEM(list, 1, Py_BuildValue("{s:i}", "B", test.B));
+
+  return list;
+}
+
 int main() 
 {
   hello();
