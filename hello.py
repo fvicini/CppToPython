@@ -99,4 +99,19 @@ if __name__ == '__main__':
 	print(type(result))
 	print(result)
 
+	l = [1,2,3.2,4,5, 'ciao']
+	lib.GetStruct.argtypes = [ct.py_object]
+	lib.GetStruct.restype = None
+	lib.GetStruct(l)
+	
+	lib.CreateDict.restype = ct.py_object
+	result = lib.CreateDict()
+	print(type(result))
+	print(result)
+	
+	l = {'A': 1.5, 'B': 17} 
+	lib.GetDict.argtypes = [ct.py_object]
+	lib.GetDict.restype = None
+	lib.GetDict(l)
+
 	print("Call successful")

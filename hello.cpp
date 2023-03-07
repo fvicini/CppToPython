@@ -124,7 +124,79 @@ PyObject* CreateStruct()
   return list;
 }
 
-int main() 
+extern "C"
+PyObject* CreateDict()
+{
+  Test test;
+  test.A = 1.5;
+  test.B = 17;
+
+  PyObject* dict = PyDict_New();
+  PyDict_SetItemString(dict, "A", Py_BuildValue("d", test.A));
+  PyDict_SetItemString(dict, "B", Py_BuildValue("i", test.B));
+
+  return dict;
+}
+
+extern "C"
+void GetStruct(PyObject* test)
+{
+  if (!PyList_Check(test))
+  {
+    std::cout<< "AHIA"<< std::endl;
+    return;
+  }
+
+  const unsigned int listSize = PyList_Size(test);
+  std::cout<< "List of size "<< listSize<< std::endl;
+  for (unsigned int i = 0; i < listSize; i++)
+  {
+    PyObject* value = PyList_GET_ITEM(test, i);
+    if (PyLong_Check(value))
+      std::cout<< "Item "<< i<< " int: "<< PyLong_AsLong(value)<< std::endl;
+    else if (PyFloat_Check(value))
+      std::cout<< "Item "<< i<< " double: "<< PyFloat_AsDouble(value)<< std::endl;
+    else
+    {
+      std::cout<< "Item "<< i<< " UNKNONWN"<< std::endl;
+      PyErr_Occurred();
+      return;
+    }
+  }
+}
+
+extern "C"
+void GetDict(PyObject* test)
+{
+  if (!PyDict_Check(test))
+  {
+    std::cout<< "AHIA"<< std::endl;
+    return;
+  }
+
+  const unsigned int dictSize = PyDict_Size(test);
+  std::cout<< "Dict of size "<< dictSize<< std::endl;
+
+  Py_ssize_t pos = 0;
+  PyObject *key, *value;
+  while (PyDict_Next(test, &pos, &key, &value))
+  {
+    PyObject* test_value = PyDict_GetItem(test, key);
+
+    if (PyLong_Check(value))
+      std::cout<< "Item "<< pos<< " key "<< "TODO"<< " int: "<< PyLong_AsLong(value)<< " int: "<< PyLong_AsLong(test_value)<< std::endl;
+    else if (PyFloat_Check(value))
+      std::cout<< "Item "<< pos<< " key "<< "TODO"<< " double: "<< PyFloat_AsDouble(value)<< " double: "<< PyFloat_AsDouble(test_value)<< std::endl;
+    else
+    {
+      std::cout<< "Item "<< pos<< " UNKNONWN"<< std::endl;
+      PyErr_Occurred();
+      return;
+    }
+  }
+}
+
+int main()
 {
   hello();
   std::cout << print("Hello world!")<< std::endl;
