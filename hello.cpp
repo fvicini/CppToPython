@@ -184,9 +184,9 @@ void GetDict(PyObject* test)
     PyObject* test_value = PyDict_GetItem(test, key);
 
     if (PyLong_Check(value))
-      std::cout<< "Item "<< pos<< " key "<< "TODO"<< " int: "<< PyLong_AsLong(value)<< " int: "<< PyLong_AsLong(test_value)<< std::endl;
+      std::cout<< "Item "<< pos<< " int: "<< PyLong_AsLong(value)<< " int: "<< PyLong_AsLong(test_value)<< std::endl;
     else if (PyFloat_Check(value))
-      std::cout<< "Item "<< pos<< " key "<< "TODO"<< " double: "<< PyFloat_AsDouble(value)<< " double: "<< PyFloat_AsDouble(test_value)<< std::endl;
+      std::cout<< "Item "<< pos<< " double: "<< PyFloat_AsDouble(value)<< " double: "<< PyFloat_AsDouble(test_value)<< std::endl;
     else
     {
       std::cout<< "Item "<< pos<< " UNKNONWN"<< std::endl;
@@ -194,6 +194,7 @@ void GetDict(PyObject* test)
       return;
     }
   }
+  std::cout<< "Item "<< pos<< " key "<< "B"<< " int: "<< PyLong_AsLong(PyDict_GetItemString(test, "B"))<< std::endl;
 }
 
 int main()
