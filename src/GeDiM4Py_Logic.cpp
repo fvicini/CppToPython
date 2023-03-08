@@ -48,6 +48,10 @@ namespace GedimForPy
         gedimData.MeshUtilities().CreateTriangularMesh(domain.Vertices,
                                                        domain.MeshCellsMaximumArea,
                                                        domainMesh);
+        gedimData.MeshUtilities().ChangePolygonMeshMarkers(domain.Vertices,
+                                                           domain.VerticesBoundaryCondition,
+                                                           domain.EdgesBoundaryCondition,
+                                                           domainMesh);
       }
         break;
       default:

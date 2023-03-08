@@ -31,7 +31,7 @@ namespace UnitTesting
   // ***************************************************************************
   TEST(TestGeometry, Test_CreateDomain_Square)
   {
-    const std::string exportFolder = "./Export";
+    const std::string exportFolder = "./Export/TestGeometry/Test_CreateDomain_Square";
     Gedim::Output::CreateFolder(exportFolder);
 
     GedimForPy::InterfaceConfiguration interfaceConfig;

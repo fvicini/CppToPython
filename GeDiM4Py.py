@@ -10,7 +10,7 @@ def Initialize(config):
 def CreateDomainSquare(domain):
 	lib.GedimForPy_CreateDomainSquare.argtypes = [ct.py_object]
 	lib.GedimForPy_CreateDomainSquare.restype = None
-	lib.GedimForPy_CreateDomainSquare(config)
+	lib.GedimForPy_CreateDomainSquare(domain)
 
 if __name__ == '__main__':
 
