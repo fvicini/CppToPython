@@ -9,6 +9,8 @@
 // ***************************************************************************
 extern "C"
 void GedimForPy_Initialize(PyObject* config);
+extern "C"
+void GedimForPy_CreateDomainSquare(PyObject* square);
 // ***************************************************************************
 
 namespace GedimForPy
@@ -16,11 +18,15 @@ namespace GedimForPy
   class GeDiM4Py_Interface final
   {
     public:
-      static GedimForPy::GeDiM4Py_Logic_Configuration InterfaceConfig;
+      static GedimForPy::InterfaceConfiguration InterfaceConfig;
       static GedimForPy::InterfaceData InterfaceData;
+      static GedimForPy::Domain2D Domain;
+      static GedimForPy::Domain2DMesh Mesh;
 
     public:
-      static GeDiM4Py_Logic_Configuration ConvertConfiguration(PyObject* config);
+      static InterfaceConfiguration ConvertConfiguration(PyObject* config);
+      static Domain2D ConvertDomainSquare(InterfaceDataDAO& gedimData,
+                                          PyObject* square);
   };
 }
 

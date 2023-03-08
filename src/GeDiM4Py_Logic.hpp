@@ -36,7 +36,7 @@ namespace GedimForPy
       const Gedim::MeshUtilities& MeshUtilities() const { return *data.p_meshUtilities; }
   };
 
-  struct GeDiM4Py_Logic_Configuration final
+  struct InterfaceConfiguration final
   {
       double GeometricTolerance = 1.0e-8;
   };
@@ -69,11 +69,11 @@ namespace GedimForPy
       GeDiM4Py_Logic();
       ~GeDiM4Py_Logic();
 
-      void Initialize(const GeDiM4Py_Logic_Configuration& config,
-                      InterfaceData& data) const;
+      static void Initialize(const InterfaceConfiguration& config,
+                             InterfaceData& data);
 
-      Domain2DMesh CreateDomainMesh2D(const Domain2D& domain,
-                                      InterfaceDataDAO& gedimData) const;
+      static Domain2DMesh CreateDomainMesh2D(const Domain2D& domain,
+                                             InterfaceDataDAO& gedimData);
   };
 
 }

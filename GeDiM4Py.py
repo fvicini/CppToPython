@@ -6,6 +6,11 @@ def Initialize(config):
 	lib.GedimForPy_Initialize.argtypes = [ct.py_object]
 	lib.GedimForPy_Initialize.restype = None
 	lib.GedimForPy_Initialize(config)
+	
+def CreateDomainSquare(domain):
+	lib.GedimForPy_CreateDomainSquare.argtypes = [ct.py_object]
+	lib.GedimForPy_CreateDomainSquare.restype = None
+	lib.GedimForPy_CreateDomainSquare(config)
 
 if __name__ == '__main__':
 
@@ -15,8 +20,13 @@ if __name__ == '__main__':
 	print("Import library successful")
 
 	print("Initialize...")
-	config = { 'GeometricTolerance': 1.0e-8, }
+	config = { 'GeometricTolerance': 1.0e-8 }
 	Initialize(config)
 	print("Initialize successful")
+	
+	print("CreateDomainSquare...")
+	domain = { 'SquareEdge': 1.0, 'DiscretizationType': 1, 'MeshCellsMaximumArea': 0.1 }
+	CreateDomainSquare(domain)
+	print("CreateDomainSquare successful")
 
 	print("Test successful")
