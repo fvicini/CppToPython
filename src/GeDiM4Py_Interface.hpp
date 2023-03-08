@@ -21,9 +21,12 @@ namespace GedimForPy
     private:
       InterfaceData& data;
 
+      void Construct();
+      void Destroy();
+
     public:
-      InterfaceDataDAO(InterfaceData& data) : data(data) {};
-      ~InterfaceDataDAO() {};
+      InterfaceDataDAO(InterfaceData& data) : data(data) { Construct(); }
+      ~InterfaceDataDAO() { Destroy(); }
 
       Gedim::GeometryUtilitiesConfig& GeometryUtilitiesConfig() { return *data.p_geometryUtilitiesConfig; }
       Gedim::GeometryUtilities& GeometryUtilities() { return *data.p_geometryUtilities; }
@@ -33,7 +36,7 @@ namespace GedimForPy
       const Gedim::MeshUtilities& MeshUtilities() const { return *data.p_meshUtilities; }
   };
 
-  struct Configuration final
+  struct GeDiM4Py_Interface_Configuration final
   {
       double GeometricTolerance = 1.0e-8;
   };
@@ -47,8 +50,8 @@ namespace GedimForPy
       };
 
       Eigen::MatrixXd Vertices;
-      std::vector<double> VerticesBoundaryCondition = {};
-      std::vector<double> EdgesBoundaryCondition = {};
+      std::vector<unsigned int> VerticesBoundaryCondition = {};
+      std::vector<unsigned int> EdgesBoundaryCondition = {};
       DiscretizationTypes DiscretizationType = DiscretizationTypes::Unknown;
       double MeshCellsMaximumArea = 0.0;
   };
@@ -61,16 +64,13 @@ namespace GedimForPy
   class GeDiM4Py_Interface final
   {
     private:
-      InterfaceData data;
-
-      void Construct();
-      void Destroy();
+      InterfaceData& data;
 
     public:
-      GeDiM4Py_Interface();
+      GeDiM4Py_Interface(InterfaceData& data);
       ~GeDiM4Py_Interface();
 
-      void Initialize(const Configuration& config);
+      void Initialize(const GeDiM4Py_Interface_Configuration& config);
 
       Domain2DMesh CreateDomainMesh2D(const Domain2D& domain);
   };

@@ -5,30 +5,29 @@
 namespace GedimForPy
 {
   // ***************************************************************************
-  GeDiM4Py_Interface::GeDiM4Py_Interface()
-  {
-    Construct();
-  }
-  GeDiM4Py_Interface::~GeDiM4Py_Interface()
-  {
-    Destroy();
-  }
-  // ***************************************************************************
-  void GeDiM4Py_Interface::Construct()
+  void InterfaceDataDAO::Construct()
   {
     data.p_geometryUtilitiesConfig = nullptr;
     data.p_geometryUtilities = nullptr;
     data.p_meshUtilities = nullptr;
   }
   // ***************************************************************************
-  void GeDiM4Py_Interface::Destroy()
+  void InterfaceDataDAO::Destroy()
   {
     delete data.p_meshUtilities;
     delete data.p_geometryUtilitiesConfig;
     delete data.p_geometryUtilities;
   }
   // ***************************************************************************
-  void GeDiM4Py_Interface::Initialize(const Configuration& config)
+  GeDiM4Py_Interface::GeDiM4Py_Interface(InterfaceData& data) :
+    data(data)
+  {
+  }
+  GeDiM4Py_Interface::~GeDiM4Py_Interface()
+  {
+  }
+  // ***************************************************************************
+  void GeDiM4Py_Interface::Initialize(const GeDiM4Py_Interface_Configuration& config)
   {
     data.p_geometryUtilitiesConfig = new Gedim::GeometryUtilitiesConfig();
     data.p_geometryUtilitiesConfig->Tolerance = config.GeometricTolerance;
