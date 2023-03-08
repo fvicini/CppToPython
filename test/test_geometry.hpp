@@ -5,7 +5,7 @@
 #include <gmock/gmock.h>
 #include <gmock/gmock-matchers.h>
 
-#include "GeDiM4Py_Interface.hpp"
+#include "GeDiM4Py_Logic.hpp"
 #include "MeshMatricesDAO.hpp"
 #include "VTKUtilities.hpp"
 
@@ -17,13 +17,13 @@ namespace UnitTesting
     const std::string exportFolder = "./Export";
     Gedim::Output::CreateFolder(exportFolder);
 
-    GedimForPy::GeDiM4Py_Interface_Configuration interfaceConfig;
+    GedimForPy::GeDiM4Py_Logic_Configuration interfaceConfig;
     interfaceConfig.GeometricTolerance = 1.0e-8;
 
     GedimForPy::InterfaceData data;
     GedimForPy::InterfaceDataDAO gedimData(data);
 
-    GedimForPy::GeDiM4Py_Interface interface(data);
+    GedimForPy::GeDiM4Py_Logic interface(data);
 
     ASSERT_NO_THROW(interface.Initialize(interfaceConfig));
 

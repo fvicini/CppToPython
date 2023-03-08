@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "test_geometry.hpp"
+#include "test_python.hpp"
 
 int main(int argc, char *argv[])
 {

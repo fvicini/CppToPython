@@ -1,63 +1,16 @@
 #include "GeDiM4Py_Interface.hpp"
-#include "MeshMatricesDAO.hpp"
-#include "MeshUtilities.hpp"
 
-namespace GedimForPy
+// ***************************************************************************
+void GedimForPy_Initialize(PyObject* config)
 {
-  // ***************************************************************************
-  void InterfaceDataDAO::Construct()
+  if (!PyDict_Check(config))
   {
-    data.p_geometryUtilitiesConfig = nullptr;
-    data.p_geometryUtilities = nullptr;
-    data.p_meshUtilities = nullptr;
+    std::cout<< "The input is not correct"<< std::endl;
+    return;
   }
-  // ***************************************************************************
-  void InterfaceDataDAO::Destroy()
-  {
-    delete data.p_meshUtilities;
-    delete data.p_geometryUtilitiesConfig;
-    delete data.p_geometryUtilities;
-  }
-  // ***************************************************************************
-  GeDiM4Py_Interface::GeDiM4Py_Interface(InterfaceData& data) :
-    data(data)
-  {
-  }
-  GeDiM4Py_Interface::~GeDiM4Py_Interface()
-  {
-  }
-  // ***************************************************************************
-  void GeDiM4Py_Interface::Initialize(const GeDiM4Py_Interface_Configuration& config)
-  {
-    data.p_geometryUtilitiesConfig = new Gedim::GeometryUtilitiesConfig();
-    data.p_geometryUtilitiesConfig->Tolerance = config.GeometricTolerance;
-    data.p_geometryUtilities = new Gedim::GeometryUtilities(*data.p_geometryUtilitiesConfig);
-    data.p_meshUtilities = new Gedim::MeshUtilities();
-  }
-  // ***************************************************************************
-  Domain2DMesh GeDiM4Py_Interface::CreateDomainMesh2D(const Domain2D& domain)
-  {
-    InterfaceDataDAO gedimData(data);
 
-    Domain2DMesh mesh;
-    Gedim::MeshMatricesDAO domainMesh(mesh.Mesh);
+  PyObject* geometricTolerance = PyDict_GetItemString(config, "GeometricTolerance");
 
-    switch (domain.DiscretizationType)
-    {
-      case Domain2D::DiscretizationTypes::Triangular:
-      {
-        gedimData.MeshUtilities().CreateTriangularMesh(domain.Vertices,
-                                                       domain.MeshCellsMaximumArea,
-                                                       domainMesh);
-      }
-        break;
-      default:
-        throw std::runtime_error("MeshGenerator " +
-                                 std::to_string((unsigned int)domain.DiscretizationType) +
-                                 " not supported");
-    }
-
-    return mesh;
-  }
-  // ***************************************************************************
+  std::cout<< "GeometricTolerance "<< PyFloat_AsDouble(geometricTolerance)<< std::endl;
 }
+// ***************************************************************************
