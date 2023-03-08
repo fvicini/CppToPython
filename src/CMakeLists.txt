@@ -1,6 +1,6 @@
-list(APPEND src_headers ${CMAKE_CURRENT_SOURCE_DIR}/EllipticProblem.hpp)
+list(APPEND src_headers ${CMAKE_CURRENT_SOURCE_DIR}/GeDiM4Py_Interface.hpp)
 
-list(APPEND src_sources ${CMAKE_CURRENT_SOURCE_DIR}/EllipticProblem.cpp)
+list(APPEND src_sources ${CMAKE_CURRENT_SOURCE_DIR}/GeDiM4Py_Interface.cpp)
 
 list(APPEND src_include ${CMAKE_CURRENT_SOURCE_DIR})
 

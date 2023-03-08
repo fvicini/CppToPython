@@ -110,11 +110,12 @@ target_link_libraries(GeDiM4Py_Test ${THIRDPARTY_LINKED_LIBRARIES})
 target_link_libraries(GeDiM4Py_Test ${TEST_LINKED_LIBRARIES})
 target_include_directories(GeDiM4Py_Test SYSTEM PRIVATE ${THIRDPARTY_INCLUDE})
 target_include_directories(GeDiM4Py_Test SYSTEM PRIVATE ${${GEDIMFORPY_INCLUDE}})
+target_include_directories(GeDiM4Py_Test SYSTEM PRIVATE ${test_include})
 
 add_library(GeDiM4Py SHARED ${THIRDPARTY_HEADERS} ${${GEDIMFORPY_HEADERS}} ${${GEDIMFORPY_SOURCES}})
 target_link_libraries(GeDiM4Py ${THIRDPARTY_LINKED_LIBRARIES})
-target_include_directories(GeDiM4Py SYSTEM PRIVATE ${THIRDPARTY_INCLUDE}
-target_include_directories(GeDiM4Py SYSTEM PRIVATE ${${GEDIMFORPY_INCLUDE}}))
+target_include_directories(GeDiM4Py SYSTEM PRIVATE ${THIRDPARTY_INCLUDE})
+target_include_directories(GeDiM4Py SYSTEM PRIVATE ${${GEDIMFORPY_INCLUDE}})
 target_compile_options(GeDiM4Py PUBLIC -fPIC)
 set_target_properties(
     GeDiM4Py
