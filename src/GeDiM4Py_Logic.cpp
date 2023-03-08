@@ -63,4 +63,52 @@ namespace GedimForPy
     return mesh;
   }
   // ***************************************************************************
+  DiscreteProblemData GeDiM4Py_Logic::Discretize(const Gedim::IMeshDAO& mesh,
+                                                 const DiscreteSpace& space)
+  {
+    DiscreteProblemData problemData;
+
+    if (space.Type != DiscreteSpace::Types::FEM)
+      throw std::runtime_error("DiscreteSpace Type " +
+                               std::to_string((unsigned int)space.Type) +
+                               " not supported");
+
+    if (space.Order < 1 && space.Order > 2)
+      throw std::runtime_error("DiscreteSpace Order " +
+                               std::to_string(space.Order) +
+                               " not supported");
+
+    problemData.NumberDOFs = 0;
+    problemData.NumberStrongs = 0;
+    problemData.Cell0Ds_DOF.resize(mesh.Cell0DTotalNumber());
+    problemData.Cell1Ds_DOF.resize(mesh.Cell1DTotalNumber());
+
+    for (unsigned int p = 0; p < mesh.Cell0DTotalNumber(); p++)
+    {
+      const DiscreteSpace::BoundaryConditionTypes& type = space.BoundaryConditionsType.at(mesh.Cell0DMarker(p));
+      DiscreteProblemData::DOF& cell0D_DOF =  problemData.Cell0Ds_DOF[p];
+
+      switch (type)
+      {
+        case DiscreteSpace::BoundaryConditionTypes::None:
+        case DiscreteSpace::BoundaryConditionTypes::Weak:
+          cell0D_DOF.Type = DiscreteProblemData::DOF::Types::DOF;
+          cell0D_DOF.Global_Index = problemData.NumberDOFs;
+          problemData.NumberDOFs++;
+          break;
+        case DiscreteSpace::BoundaryConditionTypes::Strong:
+          cell0D_DOF.Type = DiscreteProblemData::DOF::Types::Strong;
+          cell0D_DOF.Global_Index = problemData.NumberStrongs;
+          problemData.NumberStrongs++;
+          break;
+        default:
+          throw std::runtime_error("BoundaryCondition Type " +
+                                   std::to_string((unsigned int)type) +
+                                   " not supported");
+      }
+    }
+
+    return problemData;
+  }
+  // ***************************************************************************
 }

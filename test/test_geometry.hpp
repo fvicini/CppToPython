@@ -78,6 +78,43 @@ namespace UnitTesting
     }
   }
   // ***************************************************************************
+  TEST(TestGeometry, Test_CreateDofs)
+  {
+    const std::string exportFolder = "./Export/TestGeometry/Test_CreateDomain_Square";
+    Gedim::Output::CreateFolder(exportFolder);
+
+    GedimForPy::InterfaceConfiguration interfaceConfig;
+    interfaceConfig.GeometricTolerance = 1.0e-8;
+
+    GedimForPy::InterfaceData data;
+    GedimForPy::InterfaceDataDAO gedimData(data);
+
+    GedimForPy::GeDiM4Py_Logic::Initialize(interfaceConfig,
+                                           data);
+
+    GedimForPy::Domain2D domain;
+    domain.Vertices = gedimData.GeometryUtilities().CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
+                                                                 1.0);
+    domain.VerticesBoundaryCondition = std::vector<unsigned int> { 1, 1, 1, 1 };
+    domain.EdgesBoundaryCondition = std::vector<unsigned int> { 1, 1, 1, 1 };
+    domain.DiscretizationType = GedimForPy::Domain2D::DiscretizationTypes::Triangular;
+    domain.MeshCellsMaximumArea = 0.1;
+
+    GedimForPy::Domain2DMesh mesh = GedimForPy::GeDiM4Py_Logic::CreateDomainMesh2D(domain,
+                                                                                   gedimData);
+    Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+    GedimForPy::DiscreteSpace discreteSpace;
+    discreteSpace.Type = GedimForPy::DiscreteSpace::Types::FEM;
+    discreteSpace.Order = 1;
+    discreteSpace.BoundaryConditionsType = { GedimForPy::DiscreteSpace::BoundaryConditionTypes::None,
+                                             GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong };
+
+    GedimForPy::DiscreteProblemData problemData = GedimForPy::GeDiM4Py_Logic::Discretize(meshDAO,
+                                                                                         discreteSpace);
+
+  }
+  // ***************************************************************************
 }
 
 #endif // __TEST_GEOMETRY_H

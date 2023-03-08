@@ -61,6 +61,48 @@ namespace GedimForPy
       Gedim::MeshMatrices Mesh;
   };
 
+  struct DiscreteSpace final
+  {
+      enum struct Types
+      {
+        Unknown = 0,
+        FEM = 1
+      };
+
+      enum struct BoundaryConditionTypes
+      {
+        Unknown = 0,
+        None = 1,
+        Strong = 2,
+        Weak = 3
+      };
+
+      unsigned int Order = 0;
+      Types Type = Types::Unknown;
+      std::vector<BoundaryConditionTypes> BoundaryConditionsType = {};
+  };
+
+  struct DiscreteProblemData final
+  {
+      struct DOF
+      {
+          enum struct Types
+          {
+            Unknwon = 0,
+            Strong = 1,
+            DOF = 2
+          };
+
+          Types Type = Types::Unknwon;
+          unsigned int Global_Index = 0;
+      };
+
+      unsigned int NumberDOFs = 0;
+      unsigned int NumberStrongs = 0;
+      std::vector<DOF> Cell0Ds_DOF = {};
+      std::vector<DOF> Cell1Ds_DOF = {};
+  };
+
   class GeDiM4Py_Logic final
   {
     private:
@@ -74,6 +116,9 @@ namespace GedimForPy
 
       static Domain2DMesh CreateDomainMesh2D(const Domain2D& domain,
                                              InterfaceDataDAO& gedimData);
+
+      static DiscreteProblemData Discretize(const Gedim::IMeshDAO& mesh,
+                                            const DiscreteSpace& space);
   };
 
 }
