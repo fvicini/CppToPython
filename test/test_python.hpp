@@ -38,19 +38,35 @@ namespace UnitTesting
     GedimForPy::Domain2D domain_expected;
     domain_expected.Vertices = gedimData.GeometryUtilities().CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
                                                                           squareEdge);
+    domain_expected.VerticesBoundaryCondition = { 1, 1, 1, 1 };
+    domain_expected.EdgesBoundaryCondition = { 1, 1, 1, 1 };
     domain_expected.MeshCellsMaximumArea = 0.1;
     domain_expected.DiscretizationType = GedimForPy::Domain2D::DiscretizationTypes::Triangular;
     const int discretizationType = static_cast<int>(domain_expected.DiscretizationType);
 
     PyObject* dict = PyDict_New();
 
+    PyObject* verticesBoundaryMarker = PyList_New(4);
+    PyObject* edgesBoundaryMarker = PyList_New(4);
+    for (unsigned int v = 0; v < 4; v++)
+    {
+      PyList_SET_ITEM(verticesBoundaryMarker, v, Py_BuildValue("i", 1));
+      PyList_SET_ITEM(edgesBoundaryMarker, v, Py_BuildValue("i", 1));
+    }
+
     PyDict_SetItemString(dict, "SquareEdge", Py_BuildValue("d", squareEdge));
+    PyDict_SetItemString(dict, "VerticesBoundaryCondition", Py_BuildValue("O", verticesBoundaryMarker));
+    PyDict_SetItemString(dict, "EdgesBoundaryCondition", Py_BuildValue("O", edgesBoundaryMarker));
     PyDict_SetItemString(dict, "DiscretizationType", Py_BuildValue("i", discretizationType));
     PyDict_SetItemString(dict, "MeshCellsMaximumArea", Py_BuildValue("d", domain_expected.MeshCellsMaximumArea));
 
     ASSERT_NO_THROW(GedimForPy_CreateDomainSquare(dict));
     ASSERT_EQ(domain_expected.Vertices,
               GedimForPy::GeDiM4Py_Interface::Domain.Vertices);
+    ASSERT_EQ(domain_expected.VerticesBoundaryCondition,
+              GedimForPy::GeDiM4Py_Interface::Domain.VerticesBoundaryCondition);
+    ASSERT_EQ(domain_expected.EdgesBoundaryCondition,
+              GedimForPy::GeDiM4Py_Interface::Domain.EdgesBoundaryCondition);
     ASSERT_EQ(domain_expected.MeshCellsMaximumArea,
               GedimForPy::GeDiM4Py_Interface::Domain.MeshCellsMaximumArea);
     ASSERT_EQ(domain_expected.DiscretizationType,

@@ -35,6 +35,32 @@ void GedimForPy_CreateDomainSquare(PyObject* square)
 // ***************************************************************************
 namespace GedimForPy
 {
+  // ***************************************************************************
+  template<typename T>
+  std::vector<T> GeDiM4Py_Interface::ConvertArray(PyObject* list)
+  {
+    std::vector<T> result;
+
+    PyList_Check(list);
+
+    const unsigned int size = PyList_Size(list);
+    result.resize(size);
+
+    for (unsigned int i = 0; i < size; i++)
+    {
+      PyObject* value = PyList_GET_ITEM(list, i);
+
+      if (PyLong_Check(value))
+        result[i] = PyLong_AsLong(value);
+      else if (PyFloat_Check(value))
+        result[i] = PyFloat_AsDouble(value);
+      else
+        throw std::runtime_error("Unknown value type");
+    }
+
+    return result;
+  }
+  // ***************************************************************************
   InterfaceConfiguration GeDiM4Py_Interface::InterfaceConfig;
   InterfaceData GeDiM4Py_Interface::InterfaceData;
   Domain2D GeDiM4Py_Interface::Domain;
@@ -55,10 +81,11 @@ namespace GedimForPy
     Domain2D domain;
 
     const double squareEdge = PyFloat_AsDouble(PyDict_GetItemString(square, "SquareEdge"));
+
     domain.Vertices = gedimData.GeometryUtilities().CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
                                                                  squareEdge);
-    //domain.VerticesBoundaryCondition = std::vector<unsigned int> { 1, 1, 1, 1 };
-    //domain.EdgesBoundaryCondition = std::vector<unsigned int> { 1, 1, 1, 1 };
+    domain.VerticesBoundaryCondition = ConvertArray<unsigned int>(PyDict_GetItemString(square, "VerticesBoundaryCondition"));
+    domain.EdgesBoundaryCondition = ConvertArray<unsigned int>(PyDict_GetItemString(square, "EdgesBoundaryCondition"));
     domain.DiscretizationType = static_cast<Domain2D::DiscretizationTypes>(PyLong_AsLong(PyDict_GetItemString(square, "DiscretizationType")));
     domain.MeshCellsMaximumArea = PyFloat_AsDouble(PyDict_GetItemString(square, "MeshCellsMaximumArea"));
 

@@ -25,7 +25,7 @@ if __name__ == '__main__':
 	print("Initialize successful")
 	
 	print("CreateDomainSquare...")
-	domain = { 'SquareEdge': 1.0, 'DiscretizationType': 1, 'MeshCellsMaximumArea': 0.1 }
+	domain = { 'SquareEdge': 1.0, 'VerticesBoundaryCondition': [1,1,1,1], 'EdgesBoundaryCondition': [1,1,1,1], 'DiscretizationType': 1, 'MeshCellsMaximumArea': 0.1 }
 	CreateDomainSquare(domain)
 	print("CreateDomainSquare successful")
 

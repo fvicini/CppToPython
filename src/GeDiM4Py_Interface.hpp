@@ -23,6 +23,10 @@ namespace GedimForPy
       static GedimForPy::Domain2D Domain;
       static GedimForPy::Domain2DMesh Mesh;
 
+    private:
+      template<typename T>
+      static std::vector<T> ConvertArray(PyObject* list);
+
     public:
       static InterfaceConfiguration ConvertConfiguration(PyObject* config);
       static Domain2D ConvertDomainSquare(InterfaceDataDAO& gedimData,
