@@ -19,15 +19,15 @@ namespace GedimForPy
     delete data.p_geometryUtilities;
   }
   // ***************************************************************************
-  GeDiM4Py_Logic::GeDiM4Py_Logic(InterfaceData& data) :
-    data(data)
+  GeDiM4Py_Logic::GeDiM4Py_Logic()
   {
   }
   GeDiM4Py_Logic::~GeDiM4Py_Logic()
   {
   }
   // ***************************************************************************
-  void GeDiM4Py_Logic::Initialize(const GeDiM4Py_Logic_Configuration& config)
+  void GeDiM4Py_Logic::Initialize(const GeDiM4Py_Logic_Configuration& config,
+                                  InterfaceData& data) const
   {
     data.p_geometryUtilitiesConfig = new Gedim::GeometryUtilitiesConfig();
     data.p_geometryUtilitiesConfig->Tolerance = config.GeometricTolerance;
@@ -35,10 +35,9 @@ namespace GedimForPy
     data.p_meshUtilities = new Gedim::MeshUtilities();
   }
   // ***************************************************************************
-  Domain2DMesh GeDiM4Py_Logic::CreateDomainMesh2D(const Domain2D& domain)
+  Domain2DMesh GeDiM4Py_Logic::CreateDomainMesh2D(const Domain2D& domain,
+                                                  InterfaceDataDAO& gedimData) const
   {
-    InterfaceDataDAO gedimData(data);
-
     Domain2DMesh mesh;
     Gedim::MeshMatricesDAO domainMesh(mesh.Mesh);
 

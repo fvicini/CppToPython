@@ -64,15 +64,16 @@ namespace GedimForPy
   class GeDiM4Py_Logic final
   {
     private:
-      InterfaceData& data;
 
     public:
-      GeDiM4Py_Logic(InterfaceData& data);
+      GeDiM4Py_Logic();
       ~GeDiM4Py_Logic();
 
-      void Initialize(const GeDiM4Py_Logic_Configuration& config);
+      void Initialize(const GeDiM4Py_Logic_Configuration& config,
+                      InterfaceData& data) const;
 
-      Domain2DMesh CreateDomainMesh2D(const Domain2D& domain);
+      Domain2DMesh CreateDomainMesh2D(const Domain2D& domain,
+                                      InterfaceDataDAO& gedimData) const;
   };
 
 }

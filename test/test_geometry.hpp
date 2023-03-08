@@ -23,9 +23,10 @@ namespace UnitTesting
     GedimForPy::InterfaceData data;
     GedimForPy::InterfaceDataDAO gedimData(data);
 
-    GedimForPy::GeDiM4Py_Logic interface(data);
+    GedimForPy::GeDiM4Py_Logic interface;
 
-    ASSERT_NO_THROW(interface.Initialize(interfaceConfig));
+    ASSERT_NO_THROW(interface.Initialize(interfaceConfig,
+                                         data));
 
     GedimForPy::Domain2D domain;
     domain.Vertices = gedimData.GeometryUtilities().CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
@@ -35,7 +36,8 @@ namespace UnitTesting
     domain.DiscretizationType = GedimForPy::Domain2D::DiscretizationTypes::Triangular;
     domain.MeshCellsMaximumArea = 0.1;
 
-    GedimForPy::Domain2DMesh mesh = interface.CreateDomainMesh2D(domain);
+    GedimForPy::Domain2DMesh mesh = interface.CreateDomainMesh2D(domain,
+                                                                 gedimData);
 
     ASSERT_EQ(13, mesh.Mesh.NumberCell0D);
     ASSERT_EQ(28, mesh.Mesh.NumberCell1D);
