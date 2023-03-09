@@ -34,7 +34,7 @@ void GedimForPy_CreateDomainSquare(PyObject* square)
                                                         gedimData);
 }
 // ***************************************************************************
-void GedimForPy_Discretize(PyObject* discreteSpace)
+PyObject* GedimForPy_Discretize(PyObject* discreteSpace)
 {
   if (!PyDict_Check(discreteSpace))
     throw std::runtime_error("The input is not correct");
@@ -52,6 +52,7 @@ void GedimForPy_Discretize(PyObject* discreteSpace)
   problemData = GedimForPy::GeDiM4Py_Logic::Discretize(meshDAO,
                                                        space);
 
+  return GedimForPy::GeDiM4Py_Interface::ConvertProblemData(problemData);
 }
 // ***************************************************************************
 namespace GedimForPy
@@ -128,6 +129,16 @@ namespace GedimForPy
       space.BoundaryConditionsType[b] = static_cast<DiscreteSpace::BoundaryConditionTypes>(boundaryConditionsType[b]);
 
     return space;
+  }
+  // ***************************************************************************
+  PyObject* GeDiM4Py_Interface::ConvertProblemData(DiscreteProblemData& problemData)
+  {
+    PyObject* problem = PyDict_New();
+
+    PyDict_SetItemString(problem, "NumberDOFs", Py_BuildValue("i", problemData.NumberDOFs));
+    PyDict_SetItemString(problem, "NumberStrongs", Py_BuildValue("i", problemData.NumberStrongs));
+
+    return problem;
   }
   // ***************************************************************************
 }

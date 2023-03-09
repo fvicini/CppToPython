@@ -14,8 +14,8 @@ def CreateDomainSquare(domain):
 	
 def Discretize(discreteSpace):
 	lib.GedimForPy_Discretize.argtypes = [ct.py_object]
-	lib.GedimForPy_Discretize.restype = None
-	lib.GedimForPy_Discretize(discreteSpace)
+	lib.GedimForPy_Discretize.restype = ct.py_object
+	return lib.GedimForPy_Discretize(discreteSpace)
 
 if __name__ == '__main__':
 
@@ -36,7 +36,8 @@ if __name__ == '__main__':
 
 	print("Discretize...")
 	discreteSpace = { 'Order': 2, 'Type': 1, 'BoundaryConditionsType': [1, 2] }
-	Discretize(discreteSpace)
+	problemData = Discretize(discreteSpace)
+	print(problemData)
 	print("Discretize successful")
 
 	print("Test successful")
