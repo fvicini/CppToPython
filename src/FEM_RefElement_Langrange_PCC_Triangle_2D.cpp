@@ -1,4 +1,6 @@
 #include "FEM_RefElement_Langrange_PCC_Triangle_2D.hpp"
+#include "Quadrature_Gauss2D_Triangle.hpp"
+#include "Quadrature_Gauss1D.hpp"
 
 using namespace std;
 using namespace Eigen;
@@ -23,10 +25,10 @@ namespace GedimForPy
       localSpace.NumberDofs1D = 0;
       localSpace.NumberDofs2D = 1;
       localSpace.NumberBasisFunctions = 1;
-      localSpace.ReferenceElementDofPositions.setZero(3, localSpace.NumberBasisFunctions);
-      localSpace.ReferenceElementDofTypes.setZero(3, localSpace.NumberBasisFunctions);
+      localSpace.ReferenceElement.DofPositions.setZero(3, localSpace.NumberBasisFunctions);
+      localSpace.ReferenceElement.DofTypes.setZero(3, localSpace.NumberBasisFunctions);
 
-      localSpace.ReferenceElementDofPositions.col(0)<< 1.0 / 3.0, 1.0 / 3.0, 0.0;
+      localSpace.ReferenceElement.DofPositions.col(0)<< 1.0 / 3.0, 1.0 / 3.0, 0.0;
       return localSpace;
     }
 
@@ -71,29 +73,29 @@ namespace GedimForPy
     localSpace.NumberDofs0D = nodeDofs.size() / 3;
     localSpace.NumberDofs1D = edgeDofs[0].size();
     localSpace.NumberDofs2D = cellDofs.size();
-    localSpace.ReferenceElementDofPositions.setZero(3, localSpace.NumberBasisFunctions);
-    localSpace.ReferenceElementDofTypes.setZero(3, localSpace.NumberBasisFunctions);
+    localSpace.ReferenceElement.DofPositions.setZero(3, localSpace.NumberBasisFunctions);
+    localSpace.ReferenceElement.DofTypes.setZero(3, localSpace.NumberBasisFunctions);
 
     dof = 0;
     for (const unsigned int dofIndex : nodeDofs)
     {
-      localSpace.ReferenceElementDofPositions.col(dof)<< localDofPositions.col(dofIndex);
-      localSpace.ReferenceElementDofTypes.col(dof)<< localDofTypes.col(dofIndex);
+      localSpace.ReferenceElement.DofPositions.col(dof)<< localDofPositions.col(dofIndex);
+      localSpace.ReferenceElement.DofTypes.col(dof)<< localDofTypes.col(dofIndex);
       dof++;
     }
     for (unsigned int e = 0; e < 3; e++)
     {
       for (const unsigned int dofIndex : edgeDofs.at(e))
       {
-        localSpace.ReferenceElementDofPositions.col(dof)<< localDofPositions.col(dofIndex);
-        localSpace.ReferenceElementDofTypes.col(dof)<< localDofTypes.col(dofIndex);
+        localSpace.ReferenceElement.DofPositions.col(dof)<< localDofPositions.col(dofIndex);
+        localSpace.ReferenceElement.DofTypes.col(dof)<< localDofTypes.col(dofIndex);
         dof++;
       }
     }
     for (const unsigned int dofIndex : cellDofs)
     {
-      localSpace.ReferenceElementDofPositions.col(dof)<< localDofPositions.col(dofIndex);
-      localSpace.ReferenceElementDofTypes.col(dof)<< localDofTypes.col(dofIndex);
+      localSpace.ReferenceElement.DofPositions.col(dof)<< localDofPositions.col(dofIndex);
+      localSpace.ReferenceElement.DofTypes.col(dof)<< localDofTypes.col(dofIndex);
       dof++;
     }
 
@@ -104,6 +106,13 @@ namespace GedimForPy
     localSpace.Dof1DsIndex.resize(4, localSpace.Dof0DsIndex[3]);
     for (unsigned int e = 0; e < 3; e++)
       localSpace.Dof1DsIndex[e + 1] = localSpace.Dof1DsIndex[e] + localSpace.NumberDofs1D;
+
+    Gedim::Quadrature_Gauss2D_Triangle::FillPointsAndWeights(2 * order,
+                                                             localSpace.ReferenceElement.InternalQuadrature.Points,
+                                                             localSpace.ReferenceElement.InternalQuadrature.Weights);
+    Gedim::Quadrature_Gauss1D::FillPointsAndWeights(2 * order,
+                                                    localSpace.ReferenceElement.BorderQuadrature.Points,
+                                                    localSpace.ReferenceElement.BorderQuadrature.Weights);
 
     return localSpace;
   }
@@ -125,8 +134,8 @@ namespace GedimForPy
 
         for (unsigned int d = 0; d < localSpace.NumberBasisFunctions; d++)
         {
-          const Eigen::Vector3i& dofType = localSpace.ReferenceElementDofTypes.col(d);
-          const Eigen::Vector3d& dofPosition = localSpace.ReferenceElementDofPositions.col(d);
+          const Eigen::Vector3i& dofType = localSpace.ReferenceElement.DofTypes.col(d);
+          const Eigen::Vector3d& dofPosition = localSpace.ReferenceElement.DofPositions.col(d);
 
           // terms of equation 1 - x - y - t * h
           for (unsigned int t = 0; t < dofType[0]; t++)
@@ -169,8 +178,8 @@ namespace GedimForPy
 
         for (unsigned int d = 0; d < localSpace.NumberBasisFunctions; d++)
         {
-          const Eigen::Vector3i& dofType = localSpace.ReferenceElementDofTypes.col(d);
-          const Eigen::Vector3d& dofPosition = localSpace.ReferenceElementDofPositions.col(d);
+          const Eigen::Vector3i& dofType = localSpace.ReferenceElement.DofTypes.col(d);
+          const Eigen::Vector3d& dofPosition = localSpace.ReferenceElement.DofPositions.col(d);
 
           const unsigned int numProds = dofType[0] +
                                         dofType[1] +

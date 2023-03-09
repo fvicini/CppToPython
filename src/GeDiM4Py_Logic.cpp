@@ -136,6 +136,9 @@ namespace GedimForPy
       }
     }
 
+    FEM_RefElement_Langrange_PCC_Triangle_2D femRefElement;
+    problemData.LocalSpace = femRefElement.Compute(space.Order);
+
     return problemData;
   }
   // ***************************************************************************

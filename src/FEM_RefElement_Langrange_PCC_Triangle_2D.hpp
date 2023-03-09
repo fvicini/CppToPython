@@ -10,18 +10,30 @@ namespace GedimForPy
   class FEM_RefElement_Langrange_PCC_Triangle_2D final
   {
     public:
-      struct LocalSpace
+      struct QuadratureData final
       {
-          unsigned int Order; ///< Order of the method
-          unsigned int NumberBasisFunctions; ///< Number of total basis functions
-          unsigned int NumberDofs0D; ///< Number of Dofs 0D
-          unsigned int NumberDofs1D; ///< Number of Dofs 1D
-          unsigned int NumberDofs2D; ///< Number of Dofs 2D
-          std::vector<unsigned int> Dof0DsIndex; ///< local DOF index for each element 0D, size num0D + 1
-          std::vector<unsigned int> Dof1DsIndex; ///< local DOF index for each element 1D, size num1D + 1
-          std::vector<unsigned int> Dof2DsIndex; ///< local DOF index for each element 2D, size num2D + 1
-          Eigen::MatrixXd ReferenceElementDofPositions; ///< reference element dof points
-          Eigen::MatrixXi ReferenceElementDofTypes; ///< dof type [num oblique edges, num vertical edges, num horizontal edges]
+          Eigen::MatrixXd Points;
+          Eigen::VectorXd Weights;
+      };
+
+      struct LocalSpace final
+      {
+          struct ReferenceElementData final
+          {
+              QuadratureData BorderQuadrature; ///< Border quadrature points of reference element
+              QuadratureData InternalQuadrature; ///< Internal quadrature points of reference element
+              Eigen::MatrixXd DofPositions; ///< reference element dof points
+              Eigen::MatrixXi DofTypes; ///< dof type [num oblique edges, num vertical edges, num horizontal edges]
+          };
+
+          unsigned int Order = 0; ///< Order of the method
+          unsigned int NumberBasisFunctions = 0; ///< Number of total basis functions
+          unsigned int NumberDofs0D = 0; ///< Number of Dofs 0D
+          unsigned int NumberDofs1D = 0; ///< Number of Dofs 1D
+          unsigned int NumberDofs2D = 0; ///< Number of Dofs 2D
+          std::vector<unsigned int> Dof0DsIndex = {}; ///< local DOF index for each element 0D, size num0D + 1
+          std::vector<unsigned int> Dof1DsIndex = {}; ///< local DOF index for each element 1D, size num1D + 1
+          ReferenceElementData ReferenceElement;
       };
 
     public:

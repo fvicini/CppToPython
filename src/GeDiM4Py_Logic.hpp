@@ -6,6 +6,7 @@
 
 #include "MeshMatrices.hpp"
 #include "MeshUtilities.hpp"
+#include "FEM_RefElement_Langrange_PCC_Triangle_2D.hpp"
 
 namespace GedimForPy
 {
@@ -101,6 +102,7 @@ namespace GedimForPy
       unsigned int NumberStrongs = 0;
       std::vector<DOF> Cell0Ds_DOF = {};
       std::vector<DOF> Cell1Ds_DOF = {};
+      FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace LocalSpace;
   };
 
   class GeDiM4Py_Logic final
