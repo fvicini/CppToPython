@@ -60,6 +60,8 @@ namespace GedimForPy
   struct Domain2DMesh final
   {
       Gedim::MeshMatrices Mesh;
+      std::vector<Gedim::MapTriangle::MapTriangleData> Cell2DsMap;
+
   };
 
   struct DiscreteSpace final
@@ -109,7 +111,8 @@ namespace GedimForPy
   class GeDiM4Py_Logic final
   {
     public:
-      typedef const Eigen::VectorXd (*K)(const Eigen::MatrixXd& points);
+      typedef Eigen::VectorXd (*K)(const Eigen::MatrixXd& points);
+      typedef Eigen::VectorXd (*F)(const Eigen::MatrixXd& points);
 
     private:
 
@@ -130,6 +133,10 @@ namespace GedimForPy
                                                                        const Gedim::IMeshDAO& mesh,
                                                                        const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                                                        const DiscreteProblemData& problemData);
+      static Eigen::VectorXd AssembleForcingTerm(F f,
+                                                 const Gedim::IMeshDAO& mesh,
+                                                 const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                 const DiscreteProblemData& problemData);
   };
 
 }

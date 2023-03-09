@@ -8,6 +8,7 @@
 #include "GeDiM4Py_Logic.hpp"
 #include "MeshMatricesDAO.hpp"
 #include "VTKUtilities.hpp"
+#include "test_Poisson.hpp"
 
 namespace UnitTesting
 {
@@ -131,6 +132,26 @@ namespace UnitTesting
                         "/DOFs.vtu");
       }
     }
+
+    std::list<Eigen::Triplet<double>> stiffnessTriplets = GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(Poisson::DiffusionTerm,
+                                                                                                              meshDAO,
+                                                                                                              mesh.Cell2DsMap,
+                                                                                                              problemData);
+    const Eigen::VectorXd forcingTerm = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(Poisson::ForcingTerm,
+                                                                                        meshDAO,
+                                                                                        mesh.Cell2DsMap,
+                                                                                        problemData);
+
+    Eigen::SparseMatrix<double> stiffness(problemData.NumberDOFs,
+                                          problemData.NumberDOFs);
+    stiffness.setFromTriplets(stiffnessTriplets.begin(),
+                              stiffnessTriplets.end());
+    stiffness.makeCompressed();
+    stiffnessTriplets.clear();
+    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>, Eigen::Lower> linearSolver;
+    linearSolver.compute(stiffness);
+
+    Eigen::VectorXd solution = linearSolver.solve(forcingTerm);
 
   }
   // ***************************************************************************
