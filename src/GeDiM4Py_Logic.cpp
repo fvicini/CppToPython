@@ -108,6 +108,34 @@ namespace GedimForPy
       }
     }
 
+    if (space.Order == 2)
+    {
+      for (unsigned int e = 0; e < mesh.Cell1DTotalNumber(); e++)
+      {
+        const DiscreteSpace::BoundaryConditionTypes& type = space.BoundaryConditionsType.at(mesh.Cell1DMarker(e));
+        DiscreteProblemData::DOF& cell1D_DOF =  problemData.Cell1Ds_DOF[e];
+
+        switch (type)
+        {
+          case DiscreteSpace::BoundaryConditionTypes::None:
+          case DiscreteSpace::BoundaryConditionTypes::Weak:
+            cell1D_DOF.Type = DiscreteProblemData::DOF::Types::DOF;
+            cell1D_DOF.Global_Index = problemData.NumberDOFs;
+            problemData.NumberDOFs++;
+            break;
+          case DiscreteSpace::BoundaryConditionTypes::Strong:
+            cell1D_DOF.Type = DiscreteProblemData::DOF::Types::Strong;
+            cell1D_DOF.Global_Index = problemData.NumberStrongs;
+            problemData.NumberStrongs++;
+            break;
+          default:
+            throw std::runtime_error("BoundaryCondition Type " +
+                                     std::to_string((unsigned int)type) +
+                                     " not supported");
+        }
+      }
+    }
+
     return problemData;
   }
   // ***************************************************************************
