@@ -55,6 +55,25 @@ PyObject* GedimForPy_Discretize(PyObject* discreteSpace)
   return GedimForPy::GeDiM4Py_Interface::ConvertProblemData(problemData);
 }
 // ***************************************************************************
+void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::K k,
+                                        double** stiffnessTriplets)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
+  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertTriplets(GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(k,
+                                                                                                      meshDAO,
+                                                                                                      mesh.Cell2DsMap,
+                                                                                                      problemData),
+                                                  stiffnessTriplets);
+}
+// ***************************************************************************
 namespace GedimForPy
 {
   // ***************************************************************************
@@ -139,6 +158,18 @@ namespace GedimForPy
     PyDict_SetItemString(problem, "NumberStrongs", Py_BuildValue("i", problemData.NumberStrongs));
 
     return problem;
+  }
+  // ***************************************************************************
+  void GeDiM4Py_Interface::ConvertTriplets(const std::list<Eigen::Triplet<double>>& triplets,
+                                           double** convertedTriplets)
+  {
+    *convertedTriplets = new double[3 * triplets.size()];
+
+    Eigen::Map<Eigen::MatrixXd> tripl(*convertedTriplets, 3, triplets.size());
+
+    unsigned int t = 0;
+    for (const Eigen::Triplet<double>& triplet : triplets)
+      tripl.col(t)<< triplet.row(), triplet.col(), triplet.value();
   }
   // ***************************************************************************
 }

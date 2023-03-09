@@ -10,7 +10,7 @@
 #include "VTKUtilities.hpp"
 #include "test_Poisson.hpp"
 
-#define ACTIVE_CHECK 0
+#define ACTIVE_CHECK 1
 
 namespace UnitTesting
 {
@@ -37,7 +37,7 @@ namespace UnitTesting
     domain.VerticesBoundaryCondition = std::vector<unsigned int> { 1, 1, 1, 1 };
     domain.EdgesBoundaryCondition = std::vector<unsigned int> { 1, 1, 1, 1 };
     domain.DiscretizationType = GedimForPy::Domain2D::DiscretizationTypes::Triangular;
-    domain.MeshCellsMaximumArea = 0.001;
+    domain.MeshCellsMaximumArea = 0.1;
 
     GedimForPy::Domain2DMesh mesh = GedimForPy::GeDiM4Py_Logic::CreateDomainMesh2D(domain,
                                                                                    gedimData);

@@ -16,9 +16,17 @@ def CreateDomainSquare(domain):
 	lib.GedimForPy_CreateDomainSquare(domain)
 	
 def Discretize(discreteSpace):
+	ExampleFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
+
 	lib.GedimForPy_Discretize.argtypes = [ct.py_object]
 	lib.GedimForPy_Discretize.restype = ct.py_object
 	return lib.GedimForPy_Discretize(discreteSpace)
+	
+def AssembleStiffnessMatrix(discreteSpace):
+	lib.GedimForPy_AssembleStiffnessMatrix.argtypes = [ct.py_object]
+	lib.GedimForPy_AssembleStiffnessMatrix.restype = ct.py_object
+	triplets = lib.GedimForPy_AssembleStiffnessMatrix()
+	return stiffness
 
 if __name__ == '__main__':
 
@@ -41,6 +49,11 @@ if __name__ == '__main__':
 	discreteSpace = { 'Order': 2, 'Type': 1, 'BoundaryConditionsType': [1, 2] }
 	problemData = Discretize(discreteSpace)
 	print(problemData)
+	print("Discretize successful")
+
+	print("Discretize...")
+	stiffness = AssembleStiffnessMatrix()
+	print(stiffness)
 	print("Discretize successful")
 
 	print("Test successful")
