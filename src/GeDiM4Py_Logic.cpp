@@ -210,7 +210,7 @@ namespace GedimForPy
         {
           const DiscreteProblemData::DOF& dofJ = *cell2D_DOF[j];
 
-          if (dofI.Type != DiscreteProblemData::DOF::Types::DOF)
+          if (dofJ.Type != DiscreteProblemData::DOF::Types::DOF)
             continue;
 
           triplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,

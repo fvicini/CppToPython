@@ -23,7 +23,7 @@ namespace UnitTesting
       static Eigen::VectorXd ExactSolution(const Eigen::MatrixXd& points)
       {
         return 16.0 * (points.row(1).array() * (1.0 - points.row(1).array()) *
-                       points.row(0).array() * (1.0 - points.row(0).array())) + 1.1;
+                       points.row(0).array() * (1.0 - points.row(0).array()));
       }
       // ***************************************************************************
       static Eigen::VectorXd ExactDerivativeSolution(const unsigned int& direction,

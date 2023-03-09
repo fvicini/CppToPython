@@ -153,6 +153,48 @@ namespace UnitTesting
 
     Eigen::VectorXd solution = linearSolver.solve(forcingTerm);
 
+    std::cerr.precision(16);
+    std::cerr<< std::scientific<< solution.transpose()<< std::endl;
+
+    // export
+    {
+      {
+        std::vector<double> cell0Ds_numeric_solution(meshDAO.Cell0DTotalNumber(),
+                                                     0.0);
+        Eigen::VectorXd cell0Ds_exact_solution = Poisson::ExactSolution(meshDAO.Cell0DsCoordinates());
+
+        for (unsigned int p = 0; p < meshDAO.Cell0DTotalNumber(); p++)
+        {
+          const GedimForPy::DiscreteProblemData::DOF& dof = problemData.Cell0Ds_DOF[p];
+
+          if (dof.Type != GedimForPy::DiscreteProblemData::DOF::Types::DOF)
+            continue;
+
+          cell0Ds_numeric_solution[p] = solution[dof.Global_Index];
+        }
+
+        Gedim::VTKUtilities exporter;
+        exporter.AddPolygons(meshDAO.Cell0DsCoordinates(),
+                             meshDAO.Cell2DsVertices(),
+                             {
+                               {
+                                 "cell0Ds_exact_solution",
+                                 Gedim::VTPProperty::Formats::Points,
+                                 static_cast<unsigned int>(cell0Ds_exact_solution.size()),
+                                 cell0Ds_exact_solution.data()
+                               },
+                               {
+                                 "cell0Ds_numeric_solution",
+                                 Gedim::VTPProperty::Formats::Points,
+                                 static_cast<unsigned int>(cell0Ds_numeric_solution.size()),
+                                 cell0Ds_numeric_solution.data()
+                               }
+                             });
+        exporter.Export(exportFolder +
+                        "/Solution.vtu");
+      }
+    }
+
   }
   // ***************************************************************************
 }

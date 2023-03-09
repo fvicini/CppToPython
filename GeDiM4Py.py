@@ -2,6 +2,9 @@ import ctypes as ct
 import numpy as np
 import sys
 
+def ImportLibrary(path):
+	return ct.cdll.LoadLibrary(path)
+
 def Initialize(config):
 	lib.GedimForPy_Initialize.argtypes = [ct.py_object]
 	lib.GedimForPy_Initialize.restype = None
@@ -20,7 +23,7 @@ def Discretize(discreteSpace):
 if __name__ == '__main__':
 
 	print("Importing library...")
-	lib = ct.cdll.LoadLibrary("./release/GeDiM4Py.so")
+	lib = ImportLibrary("./release/GeDiM4Py.so")
 	print(lib)
 	print("Import library successful")
 
