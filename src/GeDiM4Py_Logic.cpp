@@ -192,10 +192,12 @@ namespace GedimForPy
                                                                                                               cell2DMapData,
                                                                                                               referenceBasisFunctionDerivatives);
 
-      const Eigen::VectorXd diffusioTermValues = k(cell2DQuadraturePoints);
+      const double* diffusioTermValues = k(cell2DQuadraturePoints.cols(),
+                                           cell2DQuadraturePoints.data());
       const Eigen::MatrixXd cellMatrixA = equation.ComputeStiffnessMatrix(numLocals,
                                                                           basisFunctionDerivativeValues2D,
-                                                                          diffusioTermValues,
+                                                                          Eigen::Map<const Eigen::VectorXd>(diffusioTermValues,
+                                                                                                            cell2DQuadraturePoints.cols()),
                                                                           cell2DQuadratureWeights);
 
       const std::vector<DiscreteProblemData::DOF*>& cell2D_DOF = problemData.Cell2Ds_DOF[cell2DIndex];

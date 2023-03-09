@@ -9,9 +9,14 @@ namespace UnitTesting
   {
     public:
       // ***************************************************************************
-      static Eigen::VectorXd DiffusionTerm(const Eigen::MatrixXd& points)
+      static const double* DiffusionTerm(const int numPoints, const double* points)
       {
-        return Eigen::VectorXd::Constant(points.cols(), 1.0);
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+        vecValues.setConstant(1.0);
+
+        return values;
       }
       // ***************************************************************************
       static Eigen::VectorXd ForcingTerm(const Eigen::MatrixXd& points)

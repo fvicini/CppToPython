@@ -56,8 +56,11 @@ PyObject* GedimForPy_Discretize(PyObject* discreteSpace)
 }
 // ***************************************************************************
 void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::K k,
+                                        int* numTriplets,
                                         double** stiffnessTriplets)
 {
+  std::cout<< "INSIDE!"<< std::endl;
+
   GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
   GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
   GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
@@ -71,6 +74,7 @@ void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::K k,
                                                                                                       meshDAO,
                                                                                                       mesh.Cell2DsMap,
                                                                                                       problemData),
+                                                  numTriplets,
                                                   stiffnessTriplets);
 }
 // ***************************************************************************
@@ -161,11 +165,13 @@ namespace GedimForPy
   }
   // ***************************************************************************
   void GeDiM4Py_Interface::ConvertTriplets(const std::list<Eigen::Triplet<double>>& triplets,
+                                           int* numTriplets,
                                            double** convertedTriplets)
   {
-    *convertedTriplets = new double[3 * triplets.size()];
+    numTriplets = new int[triplets.size()];
+    *convertedTriplets = new double[3 * *numTriplets];
 
-    Eigen::Map<Eigen::MatrixXd> tripl(*convertedTriplets, 3, triplets.size());
+    Eigen::Map<Eigen::MatrixXd> tripl(*convertedTriplets, 3, *numTriplets);
 
     unsigned int t = 0;
     for (const Eigen::Triplet<double>& triplet : triplets)
@@ -174,3 +180,7 @@ namespace GedimForPy
   // ***************************************************************************
 }
 // ***************************************************************************
+void GedimForPy_TEST(ExampleFN k)
+{
+  std::cout<< "INSIDE!"<< std::endl;
+}
