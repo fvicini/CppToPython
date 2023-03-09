@@ -102,11 +102,15 @@ namespace GedimForPy
       unsigned int NumberStrongs = 0;
       std::vector<DOF> Cell0Ds_DOF = {};
       std::vector<DOF> Cell1Ds_DOF = {};
+      std::vector<std::vector<DOF*>> Cell2Ds_DOF = {};
       FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace LocalSpace;
   };
 
   class GeDiM4Py_Logic final
   {
+    public:
+      typedef const Eigen::VectorXd (*K)(const Eigen::MatrixXd& points);
+
     private:
 
     public:
@@ -121,6 +125,11 @@ namespace GedimForPy
 
       static DiscreteProblemData Discretize(const Gedim::IMeshDAO& mesh,
                                             const DiscreteSpace& space);
+
+      static std::list<Eigen::Triplet<double>> AssembleStiffnessMatrix(K k,
+                                                                       const Gedim::IMeshDAO& mesh,
+                                                                       const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                                       const DiscreteProblemData& problemData);
   };
 
 }

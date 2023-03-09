@@ -48,14 +48,14 @@ namespace GedimForPy
       std::vector<Eigen::MatrixXd> Reference_BasisFunctionDerivatives(const LocalSpace& localSpace,
                                                                       const Eigen::MatrixXd& points) const;
 
-      inline Eigen::MatrixXd Map_BasisFunctions(const LocalSpace& localSpace,
-                                                const Gedim::MapTriangle::MapTriangleData& mapData,
-                                                const Eigen::MatrixXd& reference_values) const
+      inline Eigen::MatrixXd BasisFunctions(const LocalSpace& localSpace,
+                                            const Gedim::MapTriangle::MapTriangleData& mapData,
+                                            const Eigen::MatrixXd& reference_values) const
       { return reference_values; }
 
-      std::vector<Eigen::MatrixXd> Map_BasisFunctionDerivatives(const LocalSpace& localSpace,
-                                                                const Gedim::MapTriangle::MapTriangleData& mapData,
-                                                                const std::vector<Eigen::MatrixXd>& reference_values) const;
+      std::vector<Eigen::MatrixXd> BasisFunctionDerivatives(const LocalSpace& localSpace,
+                                                            const Gedim::MapTriangle::MapTriangleData& mapData,
+                                                            const std::vector<Eigen::MatrixXd>& reference_values) const;
 
   };
 }

@@ -239,7 +239,7 @@ namespace GedimForPy
     }
   }
   // ***************************************************************************
-  std::vector<MatrixXd> FEM_RefElement_Langrange_PCC_Triangle_2D::Map_BasisFunctionDerivatives(const LocalSpace& localSpace,
+  std::vector<MatrixXd> FEM_RefElement_Langrange_PCC_Triangle_2D::BasisFunctionDerivatives(const LocalSpace& localSpace,
                                                                                                const Gedim::MapTriangle::MapTriangleData& mapData,
                                                                                                const std::vector<Eigen::MatrixXd>& reference_values) const
   {
