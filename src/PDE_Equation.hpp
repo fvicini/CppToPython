@@ -17,11 +17,6 @@ namespace GedimForPy
       static Eigen::VectorXd ComputeCellForcingTerm(const Eigen::VectorXd& forcingTermValues,
                                                     const Eigen::MatrixXd& basisFunctionValues,
                                                     const Eigen::VectorXd& quadratureWeights);
-
-      static Eigen::VectorXd ForcingTerm(const Eigen::MatrixXd& points);
-      static Eigen::VectorXd ExactSolution(const Eigen::MatrixXd& points);
-      static Eigen::VectorXd ExactDerivativeSolution(const unsigned int& direction,
-                                                     const Eigen::MatrixXd& points);
   };
 }
 

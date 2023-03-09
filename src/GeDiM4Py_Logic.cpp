@@ -203,6 +203,7 @@ namespace GedimForPy
       for (unsigned int i = 0; i < numLocals; i++)
       {
         const DiscreteProblemData::DOF& dofI = *cell2D_DOF[i];
+
         if (dofI.Type != DiscreteProblemData::DOF::Types::DOF)
           continue;
 
@@ -254,7 +255,6 @@ namespace GedimForPy
                                                                              cell2DMapData,
                                                                              referenceBasisFunctions);
 
-
       const Eigen::VectorXd forcingTermValues = f(cell2DQuadraturePoints);
       const Eigen::VectorXd cellForcingTerm = equation.ComputeCellForcingTerm(forcingTermValues,
                                                                               basisFunctionValues2D,
@@ -265,10 +265,11 @@ namespace GedimForPy
       for (unsigned int i = 0; i < numLocals; i++)
       {
         const DiscreteProblemData::DOF& dofI = *cell2D_DOF[i];
+
         if (dofI.Type != DiscreteProblemData::DOF::Types::DOF)
           continue;
 
-        forcingTerm[dofI.Global_Index] = cellForcingTerm[i];
+        forcingTerm[dofI.Global_Index] += cellForcingTerm[i];
       }
     }
 
