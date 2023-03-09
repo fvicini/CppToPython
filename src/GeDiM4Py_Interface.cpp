@@ -1,4 +1,5 @@
 #include "GeDiM4Py_Interface.hpp"
+#include "MeshMatricesDAO.hpp"
 
 // ***************************************************************************
 void GedimForPy_Initialize(PyObject* config)
@@ -33,6 +34,26 @@ void GedimForPy_CreateDomainSquare(PyObject* square)
                                                         gedimData);
 }
 // ***************************************************************************
+void GedimForPy_Discretize(PyObject* discreteSpace)
+{
+  if (!PyDict_Check(discreteSpace))
+    throw std::runtime_error("The input is not correct");
+
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
+  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  space = GedimForPy::GeDiM4Py_Interface::ConvertDiscreteSpace(discreteSpace);
+  problemData = GedimForPy::GeDiM4Py_Logic::Discretize(meshDAO,
+                                                       space);
+
+}
+// ***************************************************************************
 namespace GedimForPy
 {
   // ***************************************************************************
@@ -61,10 +82,12 @@ namespace GedimForPy
     return result;
   }
   // ***************************************************************************
-  InterfaceConfiguration GeDiM4Py_Interface::InterfaceConfig;
-  InterfaceData GeDiM4Py_Interface::InterfaceData;
-  Domain2D GeDiM4Py_Interface::Domain;
-  Domain2DMesh GeDiM4Py_Interface::Mesh;
+  GedimForPy::InterfaceConfiguration GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh GeDiM4Py_Interface::Mesh;
+  GedimForPy::DiscreteSpace GeDiM4Py_Interface::Space;
+  GedimForPy::DiscreteProblemData GeDiM4Py_Interface::ProblemData;
   // ***************************************************************************
   InterfaceConfiguration GeDiM4Py_Interface::ConvertConfiguration(PyObject* config)
   {
@@ -90,6 +113,21 @@ namespace GedimForPy
     domain.MeshCellsMaximumArea = PyFloat_AsDouble(PyDict_GetItemString(square, "MeshCellsMaximumArea"));
 
     return domain;
+  }
+  // ***************************************************************************
+  DiscreteSpace GeDiM4Py_Interface::ConvertDiscreteSpace(PyObject* discreteSpace)
+  {
+    DiscreteSpace space;
+
+    space.Order = PyLong_AsLong(PyDict_GetItemString(discreteSpace, "Order"));
+    space.Type = static_cast<DiscreteSpace::Types>(PyLong_AsLong(PyDict_GetItemString(discreteSpace, "Type")));
+
+    std::vector<unsigned int> boundaryConditionsType = ConvertArray<unsigned int>(PyDict_GetItemString(discreteSpace, "BoundaryConditionsType"));
+    space.BoundaryConditionsType.resize(boundaryConditionsType.size());
+    for (unsigned int b = 0; b < boundaryConditionsType.size(); b++)
+      space.BoundaryConditionsType[b] = static_cast<DiscreteSpace::BoundaryConditionTypes>(boundaryConditionsType[b]);
+
+    return space;
   }
   // ***************************************************************************
 }

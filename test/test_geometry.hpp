@@ -12,9 +12,9 @@
 namespace UnitTesting
 {
   // ***************************************************************************
-  TEST(TestGeometry, Test_Initialize)
+  TEST(TestGeometry, Test_SquareLaplace)
   {
-    const std::string exportFolder = "./Export";
+    const std::string exportFolder = "./Export/TestGeometry/Test_SquareLaplace";
     Gedim::Output::CreateFolder(exportFolder);
 
     GedimForPy::InterfaceConfiguration interfaceConfig;
@@ -27,21 +27,6 @@ namespace UnitTesting
 
     ASSERT_NO_THROW(interface.Initialize(interfaceConfig,
                                          data));
-  }
-  // ***************************************************************************
-  TEST(TestGeometry, Test_CreateDomain_Square)
-  {
-    const std::string exportFolder = "./Export/TestGeometry/Test_CreateDomain_Square";
-    Gedim::Output::CreateFolder(exportFolder);
-
-    GedimForPy::InterfaceConfiguration interfaceConfig;
-    interfaceConfig.GeometricTolerance = 1.0e-8;
-
-    GedimForPy::InterfaceData data;
-    GedimForPy::InterfaceDataDAO gedimData(data);
-
-    GedimForPy::GeDiM4Py_Logic::Initialize(interfaceConfig,
-                                           data);
 
     GedimForPy::Domain2D domain;
     domain.Vertices = gedimData.GeometryUtilities().CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
@@ -58,10 +43,10 @@ namespace UnitTesting
     ASSERT_EQ(28, mesh.Mesh.NumberCell1D);
     ASSERT_EQ(16, mesh.Mesh.NumberCell2D);
 
+    Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
     // export
     {
-      Gedim::MeshMatricesDAO domainMesh(mesh.Mesh);
-
       {
         Gedim::VTKUtilities exporter;
         exporter.AddPolygon(domain.Vertices);
@@ -71,38 +56,11 @@ namespace UnitTesting
 
       {
         Gedim::VTKUtilities exporter;
-        gedimData.MeshUtilities().ExportMeshToVTU(domainMesh,
+        gedimData.MeshUtilities().ExportMeshToVTU(meshDAO,
                                                   exportFolder,
                                                   "Mesh");
       }
     }
-  }
-  // ***************************************************************************
-  TEST(TestGeometry, Test_CreateDofs)
-  {
-    const std::string exportFolder = "./Export/TestGeometry/Test_CreateDomain_Square";
-    Gedim::Output::CreateFolder(exportFolder);
-
-    GedimForPy::InterfaceConfiguration interfaceConfig;
-    interfaceConfig.GeometricTolerance = 1.0e-8;
-
-    GedimForPy::InterfaceData data;
-    GedimForPy::InterfaceDataDAO gedimData(data);
-
-    GedimForPy::GeDiM4Py_Logic::Initialize(interfaceConfig,
-                                           data);
-
-    GedimForPy::Domain2D domain;
-    domain.Vertices = gedimData.GeometryUtilities().CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
-                                                                 1.0);
-    domain.VerticesBoundaryCondition = std::vector<unsigned int> { 1, 1, 1, 1 };
-    domain.EdgesBoundaryCondition = std::vector<unsigned int> { 1, 1, 1, 1 };
-    domain.DiscretizationType = GedimForPy::Domain2D::DiscretizationTypes::Triangular;
-    domain.MeshCellsMaximumArea = 0.1;
-
-    GedimForPy::Domain2DMesh mesh = GedimForPy::GeDiM4Py_Logic::CreateDomainMesh2D(domain,
-                                                                                   gedimData);
-    Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
     GedimForPy::DiscreteSpace discreteSpace;
     discreteSpace.Type = GedimForPy::DiscreteSpace::Types::FEM;

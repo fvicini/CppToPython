@@ -11,6 +11,8 @@ extern "C"
 void GedimForPy_Initialize(PyObject* config);
 extern "C"
 void GedimForPy_CreateDomainSquare(PyObject* square);
+extern "C"
+void GedimForPy_Discretize(PyObject* discreteSpace);
 // ***************************************************************************
 
 namespace GedimForPy
@@ -22,6 +24,8 @@ namespace GedimForPy
       static GedimForPy::InterfaceData InterfaceData;
       static GedimForPy::Domain2D Domain;
       static GedimForPy::Domain2DMesh Mesh;
+      static GedimForPy::DiscreteSpace Space;
+      static GedimForPy::DiscreteProblemData ProblemData;
 
     private:
       template<typename T>
@@ -31,6 +35,7 @@ namespace GedimForPy
       static InterfaceConfiguration ConvertConfiguration(PyObject* config);
       static Domain2D ConvertDomainSquare(InterfaceDataDAO& gedimData,
                                           PyObject* square);
+      static DiscreteSpace ConvertDiscreteSpace(PyObject* discreteSpace);
   };
 }
 
