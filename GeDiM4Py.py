@@ -117,12 +117,17 @@ def Solver(A, f):
 	return scipy.sparse.linalg.spsolve(A, f)
 
 def PlotDofs(dofs, strongs):
-	x = np.concatenate((dofs[0,:], strongs[0,:]), axis=0)
-	y = np.concatenate((dofs[1,:], strongs[1,:]), axis=0)
-	triang = matplotlib.tri.Triangulation(x, y)
-	fig1, ax1 = plt.subplots()
+	x = np.concatenate((dofs[0,:], strongs[0,:]))
+	y = np.concatenate((dofs[1,:], strongs[1,:]))
+	z = np.concatenate((np.arange(0, dofs.shape[1]), np.arange(0, strongs.shape[1])))
+
+	fig = plt.figure(figsize=plt.figaspect(0.5))
+
+	ax1 = fig.add_subplot(1, 1, 1)
 	ax1.set_aspect('equal')
-	ax1.triplot(triang, 'bo-', lw=1)
+	ax1.scatter(x, y, c=z)
+	ax1.grid(True)
+
 	plt.show()
 
 def PlotSolution(dofs, strongs, solutionDofs, solutionStrongs):
@@ -161,11 +166,11 @@ if __name__ == '__main__':
 	print("CreateDomainSquare successful")
 
 	print("Discretize...")
-	discreteSpace = { 'Order': 1, 'Type': 1, 'BoundaryConditionsType': [1, 2] }
+	discreteSpace = { 'Order': 2, 'Type': 1, 'BoundaryConditionsType': [1, 2] }
 	[problemData, dofs, strongs] = Discretize(discreteSpace)
 	print("Discretize successful")
 
-	#PlotDofs(dofs, strongs)
+	PlotDofs(dofs, strongs)
 
 	print("AssembleStiffnessMatrix...")
 	stiffness = AssembleStiffnessMatrix(Poisson_k, problemData)
