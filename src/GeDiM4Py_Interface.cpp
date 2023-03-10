@@ -66,8 +66,10 @@ PyObject* GedimForPy_Discretize(PyObject* discreteSpace,
 }
 // ***************************************************************************
 void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::K k,
-                                        int* numTriplets,
-                                        double** stiffnessTriplets)
+                                        int* numStiffnessTriplets,
+                                        double** stiffnessTriplets,
+                                        int* numStiffnessDirichletTriplets,
+                                        double** stiffnessDirichletTriplets)
 {
   GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
   GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
@@ -78,12 +80,21 @@ void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::K k,
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
-  GedimForPy::GeDiM4Py_Interface::ConvertTriplets(GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(k,
-                                                                                                      meshDAO,
-                                                                                                      mesh.Cell2DsMap,
-                                                                                                      problemData),
-                                                  *numTriplets,
+  std::list<Eigen::Triplet<double>> stiffness, stiffnessDirichlet;
+  GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(k,
+                                                      meshDAO,
+                                                      mesh.Cell2DsMap,
+                                                      problemData,
+                                                      stiffness,
+                                                      stiffnessDirichlet);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertTriplets(stiffness,
+                                                  *numStiffnessTriplets,
                                                   *stiffnessTriplets);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertTriplets(stiffnessDirichlet,
+                                                  *numStiffnessDirichletTriplets,
+                                                  *stiffnessDirichletTriplets);
 }
 // ***************************************************************************
 void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,

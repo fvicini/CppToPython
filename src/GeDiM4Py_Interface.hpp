@@ -18,8 +18,10 @@ PyObject* GedimForPy_Discretize(PyObject* discreteSpace,
                                 double** strongsCoordinate);
 extern "C"
 void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::K k,
-                                        int* numTriplets,
-                                        double** stiffnessTriplets);
+                                        int* numStiffnessTriplets,
+                                        double** stiffnessTriplets,
+                                        int* numStiffnessDirichletTriplets,
+                                        double** stiffnessDirichletTriplets);
 extern "C"
 void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,
                                     int* size,

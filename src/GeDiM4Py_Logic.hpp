@@ -131,10 +131,13 @@ namespace GedimForPy
       static DiscreteProblemData Discretize(const Gedim::IMeshDAO& mesh,
                                             const DiscreteSpace& space);
 
-      static std::list<Eigen::Triplet<double>> AssembleStiffnessMatrix(K k,
-                                                                       const Gedim::IMeshDAO& mesh,
-                                                                       const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
-                                                                       const DiscreteProblemData& problemData);
+      static void AssembleStiffnessMatrix(K k,
+                                          const Gedim::IMeshDAO& mesh,
+                                          const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                          const DiscreteProblemData& problemData,
+                                          std::list<Eigen::Triplet<double> >& stiffnessTriplets,
+                                          std::list<Eigen::Triplet<double> >& stiffnessDirichletTriplets);
+
       static Eigen::VectorXd AssembleForcingTerm(F f,
                                                  const Gedim::IMeshDAO& mesh,
                                                  const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,

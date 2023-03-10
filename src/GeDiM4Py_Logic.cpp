@@ -205,12 +205,13 @@ namespace GedimForPy
     return problemData;
   }
   // ***************************************************************************
-  std::list<Eigen::Triplet<double>> GeDiM4Py_Logic::AssembleStiffnessMatrix(K k,
-                                                                            const Gedim::IMeshDAO& mesh,
-                                                                            const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
-                                                                            const DiscreteProblemData& problemData)
+  void GeDiM4Py_Logic::AssembleStiffnessMatrix(K k,
+                                               const Gedim::IMeshDAO& mesh,
+                                               const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                               const DiscreteProblemData& problemData,
+                                               std::list<Eigen::Triplet<double>>& stiffnessTriplets,
+                                               std::list<Eigen::Triplet<double>>& stiffnessDirichletTriplets)
   {
-    std::list<Eigen::Triplet<double>> triplets;
     FEM_RefElement_Langrange_PCC_Triangle_2D femValues;
     Gedim::MapTriangle mapTriangle;
     const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& localSpace = problemData.LocalSpace;
@@ -255,17 +256,28 @@ namespace GedimForPy
         {
           const DiscreteProblemData::DOF& dofJ = *cell2D_DOF[j];
 
+          switch (dofJ.Type) {
+            case DiscreteProblemData::DOF::Types::DOF:
+              stiffnessTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
+                                                                 dofJ.Global_Index,
+                                                                 cellMatrixA(i, j)));
+              break;
+            case DiscreteProblemData::DOF::Types::Strong:
+              stiffnessDirichletTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
+                                                                          dofJ.Global_Index,
+                                                                          cellMatrixA(i, j)));
+              break;
+            default:
+              throw std::runtime_error("DOF Type " +
+                                       std::to_string((unsigned int)dofJ.Type) +
+                                       " not supported");
+          }
+
           if (dofJ.Type != DiscreteProblemData::DOF::Types::DOF)
             continue;
-
-          triplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
-                                                    dofJ.Global_Index,
-                                                    cellMatrixA(i, j)));
         }
       }
     }
-
-    return triplets;
   }
   // ***************************************************************************
   Eigen::VectorXd GeDiM4Py_Logic::AssembleForcingTerm(F f,

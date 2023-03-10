@@ -5,6 +5,12 @@ import sys
 import matplotlib.pyplot as plt
 import matplotlib.tri
 
+def make_np_sparse(nRows, nCols, c_nNonZeros, c_pointerTriplets):
+	nNonZeros = c_nNonZeros.value
+	triplets = make_nd_matrix(c_pointerTriplets, (3, nNonZeros))
+	
+	return scipy.sparse.csr_matrix((triplets[2,:], (triplets[0,:], triplets[1,:])), shape=(nRows, nCols))
+
 def make_nd_matrix(c_pointer, shape, dtype=np.double, order='F', own_data=True):
     arr_size = np.prod(shape[:]) * np.dtype(dtype).itemsize 
     
@@ -82,17 +88,22 @@ def Discretize(discreteSpace):
 def AssembleStiffnessMatrix(k, problemData):
 	DiffusionFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 		
-	lib.GedimForPy_AssembleStiffnessMatrix.argtypes = [DiffusionFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleStiffnessMatrix.argtypes = [DiffusionFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_AssembleStiffnessMatrix.restype =  None
 	
-	pointerT = ct.POINTER(ct.c_double)()
-	numTriplets = ct.c_int(0)
-	lib.GedimForPy_AssembleStiffnessMatrix(DiffusionFN(k), ct.byref(numTriplets), ct.byref(pointerT))
-	numTriplets = numTriplets.value
-	triplets = make_nd_matrix(pointerT, (3, numTriplets))
+	pointerStifness = ct.POINTER(ct.c_double)()
+	numStiffnessTriplets = ct.c_int(0)
+	pointerStifnessDirichlet = ct.POINTER(ct.c_double)()
+	numStiffnessDirichletTriplets = ct.c_int(0)
+	lib.GedimForPy_AssembleStiffnessMatrix(DiffusionFN(k), ct.byref(numStiffnessTriplets), ct.byref(pointerStifness), ct.byref(numStiffnessDirichletTriplets), ct.byref(pointerStifnessDirichlet))
 	
 	numDofs = problemData['NumberDOFs']
-	return scipy.sparse.csr_matrix((triplets[2,:], (triplets[0,:], triplets[1,:])), shape=(numDofs, numDofs))
+	numStrongs = problemData['NumberStrongs']
+
+	stifness = make_np_sparse(numDofs, numDofs, numStiffnessTriplets, pointerStifness)
+	stifnessDirichlet = make_np_sparse(numDofs, numStrongs, numStiffnessDirichletTriplets, pointerStifnessDirichlet)
+
+	return [stifness, stifnessDirichlet]
 
 def AssembleForcingTerm(f, problemData):
 	ForcingTermFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
@@ -192,7 +203,7 @@ if __name__ == '__main__':
 	PlotDofs(mesh, dofs, strongs)
 
 	print("AssembleStiffnessMatrix...")
-	stiffness = AssembleStiffnessMatrix(Poisson_k, problemData)
+	[stiffness, stiffnessDirichlet] = AssembleStiffnessMatrix(Poisson_k, problemData)
 	print("AssembleStiffnessMatrix successful")
 
 	print("AssembleForcingTerm...")
