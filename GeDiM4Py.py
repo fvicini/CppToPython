@@ -54,6 +54,11 @@ def Poisson_f(numPoints, points):
 	values = 32.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) + matPoints[0,:] * (1.0 - matPoints[0,:]))
 	return values.ctypes.data
 
+def Poisson_exactSolution(numPoints, points):
+	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
+	values = 16.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) * matPoints[0,:] * (1.0 - matPoints[0,:])) + 1.1
+	return values.ctypes.data
+
 def ImportLibrary(path):
 	return ct.cdll.LoadLibrary(path)
 
@@ -93,17 +98,17 @@ def AssembleStiffnessMatrix(k, problemData):
 	
 	pointerStifness = ct.POINTER(ct.c_double)()
 	numStiffnessTriplets = ct.c_int(0)
-	pointerStifnessDirichlet = ct.POINTER(ct.c_double)()
-	numStiffnessDirichletTriplets = ct.c_int(0)
-	lib.GedimForPy_AssembleStiffnessMatrix(DiffusionFN(k), ct.byref(numStiffnessTriplets), ct.byref(pointerStifness), ct.byref(numStiffnessDirichletTriplets), ct.byref(pointerStifnessDirichlet))
+	pointerStifnessStrong = ct.POINTER(ct.c_double)()
+	numStiffnessStrongTriplets = ct.c_int(0)
+	lib.GedimForPy_AssembleStiffnessMatrix(DiffusionFN(k), ct.byref(numStiffnessTriplets), ct.byref(pointerStifness), ct.byref(numStiffnessStrongTriplets), ct.byref(pointerStifnessStrong))
 	
 	numDofs = problemData['NumberDOFs']
 	numStrongs = problemData['NumberStrongs']
 
 	stifness = make_np_sparse(numDofs, numDofs, numStiffnessTriplets, pointerStifness)
-	stifnessDirichlet = make_np_sparse(numDofs, numStrongs, numStiffnessDirichletTriplets, pointerStifnessDirichlet)
+	stifnessStrong = make_np_sparse(numDofs, numStrongs, numStiffnessStrongTriplets, pointerStifnessStrong)
 
-	return [stifness, stifnessDirichlet]
+	return [stifness, stifnessStrong]
 
 def AssembleForcingTerm(f, problemData):
 	ForcingTermFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
@@ -116,6 +121,18 @@ def AssembleForcingTerm(f, problemData):
 	lib.GedimForPy_AssembleForcingTerm(ForcingTermFN(f), ct.byref(size), ct.byref(pointerF))
 	size = size.value
 	return make_nd_array(pointerF, size)
+
+def AssembleStrongSolution(g, problemData):
+	StrongFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
+		
+	lib.GedimForPy_AssembleStrongSolution.argtypes = [StrongFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleStrongSolution.restype =  None
+	
+	pointerStrongSolution = ct.POINTER(ct.c_double)()
+	size = ct.c_int(0)
+	lib.GedimForPy_AssembleStrongSolution(StrongFN(g), ct.byref(size), ct.byref(pointerStrongSolution))
+	size = size.value
+	return make_nd_array(pointerStrongSolution, size)
 
 def CholeskySolver(A, f):
 	[rows, cols, values] = scipy.sparse.find(A)
@@ -203,17 +220,22 @@ if __name__ == '__main__':
 	PlotDofs(mesh, dofs, strongs)
 
 	print("AssembleStiffnessMatrix...")
-	[stiffness, stiffnessDirichlet] = AssembleStiffnessMatrix(Poisson_k, problemData)
+	[stiffness, stiffnessStrong] = AssembleStiffnessMatrix(Poisson_k, problemData)
 	print("AssembleStiffnessMatrix successful")
 
 	print("AssembleForcingTerm...")
 	forcingTerm = AssembleForcingTerm(Poisson_f, problemData)
 	print("AssembleForcingTerm successful")
 
+	print("AssembleStrongSolution...")
+	solutionStrong = AssembleStrongSolution(Poisson_exactSolution, problemData)
+	print(solutionStrong)
+	print("AssembleStrongSolution successful")
+
 	print("CholeskySolver...")
-	solution = CholeskySolver(stiffness, forcingTerm)
+	solution = CholeskySolver(stiffness, forcingTerm - stiffnessStrong @ solutionStrong)
 	print("CholeskySolver successful")
 
-	PlotSolution(mesh, dofs, strongs, solution, np.zeros(problemData['NumberStrongs']))
+	PlotSolution(mesh, dofs, strongs, solution, solutionStrong)
 
 	print("Test successful")

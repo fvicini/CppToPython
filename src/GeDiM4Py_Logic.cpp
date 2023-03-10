@@ -210,7 +210,7 @@ namespace GedimForPy
                                                const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                                const DiscreteProblemData& problemData,
                                                std::list<Eigen::Triplet<double>>& stiffnessTriplets,
-                                               std::list<Eigen::Triplet<double>>& stiffnessDirichletTriplets)
+                                               std::list<Eigen::Triplet<double>>& stiffnessStrongTriplets)
   {
     FEM_RefElement_Langrange_PCC_Triangle_2D femValues;
     Gedim::MapTriangle mapTriangle;
@@ -264,7 +264,7 @@ namespace GedimForPy
                                                                  cellMatrixA(i, j)));
               break;
             case DiscreteProblemData::DOF::Types::Strong:
-              stiffnessDirichletTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
+              stiffnessStrongTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
                                                                           dofJ.Global_Index,
                                                                           cellMatrixA(i, j)));
               break;
@@ -335,7 +335,7 @@ namespace GedimForPy
     return forcingTerm;
   }
   // ***************************************************************************
-  Eigen::VectorXd GeDiM4Py_Logic::AssembleDirichletTerm(Dirichlet g,
+  Eigen::VectorXd GeDiM4Py_Logic::AssembleStrongSolution(Strong g,
                                                         const Gedim::IMeshDAO& mesh,
                                                         const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                                         const DiscreteProblemData& problemData)

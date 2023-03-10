@@ -20,12 +20,16 @@ extern "C"
 void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::K k,
                                         int* numStiffnessTriplets,
                                         double** stiffnessTriplets,
-                                        int* numStiffnessDirichletTriplets,
-                                        double** stiffnessDirichletTriplets);
+                                        int* numStiffnessStrongTriplets,
+                                        double** stiffnessStrongTriplets);
 extern "C"
 void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,
                                     int* size,
                                     double** forcingTerm);
+extern "C"
+void GedimForPy_AssembleStrongSolution(GedimForPy::GeDiM4Py_Logic::Strong g,
+                                       int* size,
+                                       double** solutionStrong);
 extern "C"
 void GedimForPy_CholeskySolver(const int nRows,
                                const int numNonZeros,

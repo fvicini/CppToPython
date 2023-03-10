@@ -139,23 +139,23 @@ namespace UnitTesting
       }
     }
 
-    std::list<Eigen::Triplet<double>> stiffnessTriplets, stiffnessDirichletTriplets;
+    std::list<Eigen::Triplet<double>> stiffnessTriplets, stiffnessStrongTriplets;
     GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(Poisson::DiffusionTerm,
                                                         meshDAO,
                                                         mesh.Cell2DsMap,
                                                         problemData,
                                                         stiffnessTriplets,
-                                                        stiffnessDirichletTriplets);
+                                                        stiffnessStrongTriplets);
 
     const Eigen::VectorXd forcingTerm = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(Poisson::ForcingTerm,
                                                                                         meshDAO,
                                                                                         mesh.Cell2DsMap,
                                                                                         problemData);
 
-    const Eigen::VectorXd solutionDirichlet = GedimForPy::GeDiM4Py_Logic::AssembleDirichletTerm(Poisson::ExactSolution,
-                                                                                                meshDAO,
-                                                                                                mesh.Cell2DsMap,
-                                                                                                problemData);
+    const Eigen::VectorXd solutionStrong = GedimForPy::GeDiM4Py_Logic::AssembleStrongSolution(Poisson::ExactSolution,
+                                                                                              meshDAO,
+                                                                                              mesh.Cell2DsMap,
+                                                                                              problemData);
 
     Eigen::SparseMatrix<double> stiffness(problemData.NumberDOFs,
                                           problemData.NumberDOFs);
@@ -164,17 +164,17 @@ namespace UnitTesting
     stiffness.makeCompressed();
     stiffnessTriplets.clear();
 
-    Eigen::SparseMatrix<double> stiffnessDirichlet(problemData.NumberDOFs,
-                                                   problemData.NumberStrongs);
-    stiffnessDirichlet.setFromTriplets(stiffnessDirichletTriplets.begin(),
-                                       stiffnessDirichletTriplets.end());
-    stiffnessDirichlet.makeCompressed();
-    stiffnessDirichletTriplets.clear();
+    Eigen::SparseMatrix<double> stiffnessStrong(problemData.NumberDOFs,
+                                                problemData.NumberStrongs);
+    stiffnessStrong.setFromTriplets(stiffnessStrongTriplets.begin(),
+                                    stiffnessStrongTriplets.end());
+    stiffnessStrong.makeCompressed();
+    stiffnessStrongTriplets.clear();
 
     Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>, Eigen::Lower> linearSolver;
     linearSolver.compute(stiffness);
 
-    Eigen::VectorXd solution = linearSolver.solve(forcingTerm - stiffnessDirichlet * solutionDirichlet);
+    Eigen::VectorXd solution = linearSolver.solve(forcingTerm - stiffnessStrong * solutionStrong);
 
     // export
     {
@@ -196,7 +196,7 @@ namespace UnitTesting
               cell0Ds_numeric_solution[p] = solution[dof.Global_Index];
               break;
             case GedimForPy::DiscreteProblemData::DOF::Types::Strong:
-              cell0Ds_numeric_solution[p] = solutionDirichlet[dof.Global_Index];
+              cell0Ds_numeric_solution[p] = solutionStrong[dof.Global_Index];
               break;
             default:
               throw std::runtime_error("DOF Type " +

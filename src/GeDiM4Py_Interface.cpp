@@ -68,8 +68,8 @@ PyObject* GedimForPy_Discretize(PyObject* discreteSpace,
 void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::K k,
                                         int* numStiffnessTriplets,
                                         double** stiffnessTriplets,
-                                        int* numStiffnessDirichletTriplets,
-                                        double** stiffnessDirichletTriplets)
+                                        int* numStiffnessStrongTriplets,
+                                        double** stiffnessStrongTriplets)
 {
   GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
   GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
@@ -80,21 +80,21 @@ void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::K k,
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
-  std::list<Eigen::Triplet<double>> stiffness, stiffnessDirichlet;
+  std::list<Eigen::Triplet<double>> stiffness, stiffnessStrong;
   GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(k,
                                                       meshDAO,
                                                       mesh.Cell2DsMap,
                                                       problemData,
                                                       stiffness,
-                                                      stiffnessDirichlet);
+                                                      stiffnessStrong);
 
   GedimForPy::GeDiM4Py_Interface::ConvertTriplets(stiffness,
                                                   *numStiffnessTriplets,
                                                   *stiffnessTriplets);
 
-  GedimForPy::GeDiM4Py_Interface::ConvertTriplets(stiffnessDirichlet,
-                                                  *numStiffnessDirichletTriplets,
-                                                  *stiffnessDirichletTriplets);
+  GedimForPy::GeDiM4Py_Interface::ConvertTriplets(stiffnessStrong,
+                                                  *numStiffnessStrongTriplets,
+                                                  *stiffnessStrongTriplets);
 }
 // ***************************************************************************
 void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,
@@ -116,6 +116,27 @@ void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,
                                                                                                problemData),
                                                *size,
                                                *forcingTerm);
+}
+// ***************************************************************************
+void GedimForPy_AssembleStrongSolution(GedimForPy::GeDiM4Py_Logic::Strong g,
+                                       int* size,
+                                       double** solutionStrong)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
+  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertArray(GedimForPy::GeDiM4Py_Logic::AssembleStrongSolution(g,
+                                                                                                  meshDAO,
+                                                                                                  mesh.Cell2DsMap,
+                                                                                                  problemData),
+                                               *size,
+                                               *solutionStrong);
 }
 // ***************************************************************************
 void GedimForPy_CholeskySolver(const int nRows,

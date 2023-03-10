@@ -115,7 +115,7 @@ namespace GedimForPy
     public:
       typedef double* (*K)(const int numPoints, const double* points);
       typedef double* (*F)(const int numPoints, const double* points);
-      typedef double* (*Dirichlet)(const int numPoints, const double* points);
+      typedef double* (*Strong)(const int numPoints, const double* points);
 
     private:
 
@@ -137,17 +137,17 @@ namespace GedimForPy
                                           const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                           const DiscreteProblemData& problemData,
                                           std::list<Eigen::Triplet<double> >& stiffnessTriplets,
-                                          std::list<Eigen::Triplet<double> >& stiffnessDirichletTriplets);
+                                          std::list<Eigen::Triplet<double> >& stiffnessStrongTriplets);
 
       static Eigen::VectorXd AssembleForcingTerm(F f,
                                                  const Gedim::IMeshDAO& mesh,
                                                  const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                                  const DiscreteProblemData& problemData);
 
-      static Eigen::VectorXd AssembleDirichletTerm(Dirichlet g,
-                                                   const Gedim::IMeshDAO& mesh,
-                                                   const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
-                                                   const DiscreteProblemData& problemData);
+      static Eigen::VectorXd AssembleStrongSolution(Strong g,
+                                                    const Gedim::IMeshDAO& mesh,
+                                                    const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                    const DiscreteProblemData& problemData);
   };
 
 }
