@@ -57,9 +57,14 @@ def Initialize(config):
 	lib.GedimForPy_Initialize(config)
 	
 def CreateDomainSquare(domain):
-	lib.GedimForPy_CreateDomainSquare.argtypes = [ct.py_object]
-	lib.GedimForPy_CreateDomainSquare.restype = None
-	lib.GedimForPy_CreateDomainSquare(domain)
+	lib.GedimForPy_CreateDomainSquare.argtypes = [ct.py_object, ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_CreateDomainSquare.restype = ct.py_object
+
+	pointerMeshCoordinates = ct.POINTER(ct.c_double)()
+	meshInfo = lib.GedimForPy_CreateDomainSquare(domain, pointerMeshCoordinates)
+
+	mesh = make_nd_matrix(pointerMeshCoordinates, (3, meshInfo['NumberCell0Ds']))
+	return [meshInfo, mesh]
 	
 def Discretize(discreteSpace):
 	lib.GedimForPy_Discretize.argtypes = [ct.py_object, ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double))]
@@ -116,7 +121,17 @@ def CholeskySolver(A, f):
 def Solver(A, f):
 	return scipy.sparse.linalg.spsolve(A, f)
 
-def PlotDofs(dofs, strongs):
+def PlotMesh(mesh):	
+	fig = plt.figure(figsize=plt.figaspect(0.5))
+
+	ax1 = fig.add_subplot(1, 1, 1)
+	ax1.set_aspect('equal')
+	ax1.triplot(matplotlib.tri.Triangulation(mesh[0, :], mesh[1, :]), 'ko-', lw=1)
+	ax1.grid(True)
+	
+	plt.show()
+
+def PlotDofs(mesh, dofs, strongs):
 	x = np.concatenate((dofs[0,:], strongs[0,:]))
 	y = np.concatenate((dofs[1,:], strongs[1,:]))
 	z = np.concatenate((np.arange(0, dofs.shape[1]), np.arange(0, strongs.shape[1])))
@@ -125,12 +140,13 @@ def PlotDofs(dofs, strongs):
 
 	ax1 = fig.add_subplot(1, 1, 1)
 	ax1.set_aspect('equal')
+	ax1.triplot(matplotlib.tri.Triangulation(mesh[0, :], mesh[1, :]), 'k--', lw=1)
 	ax1.scatter(x, y, c=z)
 	ax1.grid(True)
 
 	plt.show()
 
-def PlotSolution(dofs, strongs, solutionDofs, solutionStrongs):
+def PlotSolution(mesh, dofs, strongs, solutionDofs, solutionStrongs):
 	x = np.concatenate((dofs[0,:], strongs[0,:]), axis=0)
 	y = np.concatenate((dofs[1,:], strongs[1,:]), axis=0)
 	z = np.concatenate((solutionDofs, solutionStrongs), axis=0)
@@ -141,6 +157,7 @@ def PlotSolution(dofs, strongs, solutionDofs, solutionStrongs):
 	ax1 = fig.add_subplot(1, 2, 1)
 	ax1.set_aspect('equal')
 	tpc = ax1.tripcolor(triang, z, shading='flat')
+	ax1.triplot(matplotlib.tri.Triangulation(mesh[0, :], mesh[1, :]), 'k--', lw=1)
 	fig.colorbar(tpc)
 
 	ax2 = fig.add_subplot(1, 2, 2, projection='3d')
@@ -161,16 +178,18 @@ if __name__ == '__main__':
 	print("Initialize successful")
 	
 	print("CreateDomainSquare...")
-	domain = { 'SquareEdge': 1.0, 'VerticesBoundaryCondition': [1,1,1,1], 'EdgesBoundaryCondition': [1,1,1,1], 'DiscretizationType': 1, 'MeshCellsMaximumArea': 0.1 }
-	CreateDomainSquare(domain)
+	domain = { 'SquareEdge': 1.0, 'VerticesBoundaryCondition': [1,1,1,1], 'EdgesBoundaryCondition': [1,1,1,1], 'DiscretizationType': 1, 'MeshCellsMaximumArea': 0.01 }
+	[meshInfo, mesh] = CreateDomainSquare(domain)
 	print("CreateDomainSquare successful")
+
+	PlotMesh(mesh)
 
 	print("Discretize...")
 	discreteSpace = { 'Order': 2, 'Type': 1, 'BoundaryConditionsType': [1, 2] }
 	[problemData, dofs, strongs] = Discretize(discreteSpace)
 	print("Discretize successful")
 
-	PlotDofs(dofs, strongs)
+	PlotDofs(mesh, dofs, strongs)
 
 	print("AssembleStiffnessMatrix...")
 	stiffness = AssembleStiffnessMatrix(Poisson_k, problemData)
@@ -184,6 +203,6 @@ if __name__ == '__main__':
 	solution = CholeskySolver(stiffness, forcingTerm)
 	print("CholeskySolver successful")
 
-	PlotSolution(dofs, strongs, solution, np.zeros(problemData['NumberStrongs']))
+	PlotSolution(mesh, dofs, strongs, solution, np.zeros(problemData['NumberStrongs']))
 
 	print("Test successful")

@@ -10,7 +10,8 @@
 extern "C"
 void GedimForPy_Initialize(PyObject* config);
 extern "C"
-void GedimForPy_CreateDomainSquare(PyObject* square);
+PyObject* GedimForPy_CreateDomainSquare(PyObject* square,
+                                        double** coordinates);
 extern "C"
 PyObject* GedimForPy_Discretize(PyObject* discreteSpace,
                                 double** dofsCoordinate,
@@ -51,6 +52,8 @@ namespace GedimForPy
       static InterfaceConfiguration ConvertConfiguration(PyObject* config);
       static Domain2D ConvertDomainSquare(InterfaceDataDAO& gedimData,
                                           PyObject* square);
+      static PyObject* ConvertMesh(const Gedim::IMeshDAO& mesh,
+                                   double*& coordinates);
       static DiscreteSpace ConvertDiscreteSpace(PyObject* discreteSpace);
       static PyObject* ConvertProblemData(GedimForPy::DiscreteProblemData& problemData,
                                           double*& dofsCoordinate,

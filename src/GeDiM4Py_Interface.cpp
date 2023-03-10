@@ -16,7 +16,8 @@ void GedimForPy_Initialize(PyObject* config)
                                          data);
 }
 // ***************************************************************************
-void GedimForPy_CreateDomainSquare(PyObject* square)
+PyObject* GedimForPy_CreateDomainSquare(PyObject* square,
+                                        double** coordinates)
 {
   if (!PyDict_Check(square))
     throw std::runtime_error("The input is not correct");
@@ -32,6 +33,11 @@ void GedimForPy_CreateDomainSquare(PyObject* square)
                                                                  square);
   mesh = GedimForPy::GeDiM4Py_Logic::CreateDomainMesh2D(domain2D,
                                                         gedimData);
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  return GedimForPy::GeDiM4Py_Interface::ConvertMesh(meshDAO,
+                                                     *coordinates);
 }
 // ***************************************************************************
 PyObject* GedimForPy_Discretize(PyObject* discreteSpace,
@@ -182,6 +188,21 @@ namespace GedimForPy
     domain.MeshCellsMaximumArea = PyFloat_AsDouble(PyDict_GetItemString(square, "MeshCellsMaximumArea"));
 
     return domain;
+  }
+  // ***************************************************************************
+  PyObject* GeDiM4Py_Interface::ConvertMesh(const Gedim::IMeshDAO& mesh,
+                                            double*& coordinates)
+  {
+    PyObject* meshInfo = PyDict_New();
+
+    PyDict_SetItemString(meshInfo, "NumberCell0Ds", Py_BuildValue("i", mesh.Cell0DTotalNumber()));
+    PyDict_SetItemString(meshInfo, "NumberCell1Ds", Py_BuildValue("i", mesh.Cell1DTotalNumber()));
+    PyDict_SetItemString(meshInfo, "NumberCell2Ds", Py_BuildValue("i", mesh.Cell2DTotalNumber()));
+
+    ConvertMatrix(mesh.Cell0DsCoordinates(),
+                  coordinates);
+
+    return meshInfo;
   }
   // ***************************************************************************
   DiscreteSpace GeDiM4Py_Interface::ConvertDiscreteSpace(PyObject* discreteSpace)

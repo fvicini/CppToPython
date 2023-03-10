@@ -57,7 +57,13 @@ namespace UnitTesting
     PyDict_SetItemString(square, "DiscretizationType", Py_BuildValue("i", static_cast<int>(domain_expected.DiscretizationType)));
     PyDict_SetItemString(square, "MeshCellsMaximumArea", Py_BuildValue("d", domain_expected.MeshCellsMaximumArea));
 
-    ASSERT_NO_THROW(GedimForPy_CreateDomainSquare(square));
+    double* meshCoordinates = nullptr;
+
+    ASSERT_NO_THROW(GedimForPy_CreateDomainSquare(square,
+                                                  &meshCoordinates));
+
+    delete[] meshCoordinates;
+
     ASSERT_EQ(domain_expected.Vertices,
               GedimForPy::GeDiM4Py_Interface::Domain.Vertices);
     ASSERT_EQ(domain_expected.VerticesBoundaryCondition,
