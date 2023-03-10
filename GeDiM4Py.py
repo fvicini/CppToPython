@@ -74,6 +74,9 @@ def AssembleForcingTerm(problemData):
 	size = size.value
 	return make_nd_array(pointerF, (1, size))
 
+def Solver(A, f):
+	return scipy.sparse.linalg.spsolve(A, f.T)
+
 if __name__ == '__main__':
 
 	print("Importing library...")
@@ -103,7 +106,10 @@ if __name__ == '__main__':
 
 	print("AssembleForcingTerm...")
 	forcingTerm = AssembleForcingTerm(problemData)
-	print(forcingTerm)
 	print("AssembleForcingTerm successful")
+
+	print("Solver...")
+	solution = Solver(stiffness, forcingTerm)
+	print("Solver successful")
 
 	print("Test successful")
