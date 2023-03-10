@@ -101,6 +101,21 @@ void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,
                                                *forcingTerm);
 }
 // ***************************************************************************
+void GedimForPy_CholeskySolver(const int nRows,
+                               const int numNonZeros,
+                               const double* pointerTriplets,
+                               const double* pointerF,
+                               double** solution)
+{
+  Eigen::Map<const Eigen::MatrixXd> triplets(pointerTriplets, 3, numNonZeros);
+  std::cout<< triplets<< std::endl;
+
+  int size = 0;
+  GedimForPy::GeDiM4Py_Interface::ConvertArray(Eigen::VectorXd::Zero(nRows),
+                                               size,
+                                               *solution);
+}
+// ***************************************************************************
 namespace GedimForPy
 {
   // ***************************************************************************

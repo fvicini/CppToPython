@@ -23,6 +23,12 @@ extern "C"
 void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,
                                     int* size,
                                     double** forcingTerm);
+extern "C"
+void GedimForPy_CholeskySolver(const int nRows,
+                               const int numNonZeros,
+                               const double* pointerTriplets,
+                               const double* pointerF,
+                               double** solution);
 // ***************************************************************************
 
 namespace GedimForPy
