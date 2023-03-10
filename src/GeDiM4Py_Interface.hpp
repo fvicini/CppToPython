@@ -12,7 +12,9 @@ void GedimForPy_Initialize(PyObject* config);
 extern "C"
 void GedimForPy_CreateDomainSquare(PyObject* square);
 extern "C"
-PyObject* GedimForPy_Discretize(PyObject* discreteSpace);
+PyObject* GedimForPy_Discretize(PyObject* discreteSpace,
+                                double** dofsCoordinate,
+                                double** strongsCoordinate);
 extern "C"
 void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::K k,
                                         int* numTriplets,
@@ -44,14 +46,18 @@ namespace GedimForPy
       static Domain2D ConvertDomainSquare(InterfaceDataDAO& gedimData,
                                           PyObject* square);
       static DiscreteSpace ConvertDiscreteSpace(PyObject* discreteSpace);
-      static PyObject* ConvertProblemData(GedimForPy::DiscreteProblemData& problemData);
+      static PyObject* ConvertProblemData(GedimForPy::DiscreteProblemData& problemData,
+                                          double*& dofsCoordinate,
+                                          double*& strongsCoordinate);
 
       static void ConvertTriplets(const std::list<Eigen::Triplet<double>>& triplets,
                                   int& numTriplets,
                                   double*& convertedTriplets);
-      static void ConvertVector(const Eigen::VectorXd& array,
-                                int& size,
-                                double*& convertedArray);
+      static void ConvertMatrix(const Eigen::MatrixXd& matrix,
+                                double*& convertedMatrix);
+      static void ConvertArray(const Eigen::VectorXd& array,
+                               int& size,
+                               double*& convertedArray);
   };
 }
 

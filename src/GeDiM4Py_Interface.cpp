@@ -34,7 +34,9 @@ void GedimForPy_CreateDomainSquare(PyObject* square)
                                                         gedimData);
 }
 // ***************************************************************************
-PyObject* GedimForPy_Discretize(PyObject* discreteSpace)
+PyObject* GedimForPy_Discretize(PyObject* discreteSpace,
+                                double** dofsCoordinate,
+                                double** strongsCoordinate)
 {
   if (!PyDict_Check(discreteSpace))
     throw std::runtime_error("The input is not correct");
@@ -52,7 +54,9 @@ PyObject* GedimForPy_Discretize(PyObject* discreteSpace)
   problemData = GedimForPy::GeDiM4Py_Logic::Discretize(meshDAO,
                                                        space);
 
-  return GedimForPy::GeDiM4Py_Interface::ConvertProblemData(problemData);
+  return GedimForPy::GeDiM4Py_Interface::ConvertProblemData(problemData,
+                                                            *dofsCoordinate,
+                                                            *strongsCoordinate);
 }
 // ***************************************************************************
 void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::K k,
@@ -89,12 +93,12 @@ void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
-  GedimForPy::GeDiM4Py_Interface::ConvertVector(GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(f,
-                                                                                                meshDAO,
-                                                                                                mesh.Cell2DsMap,
-                                                                                                problemData),
-                                                *size,
-                                                *forcingTerm);
+  GedimForPy::GeDiM4Py_Interface::ConvertArray(GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(f,
+                                                                                               meshDAO,
+                                                                                               mesh.Cell2DsMap,
+                                                                                               problemData),
+                                               *size,
+                                               *forcingTerm);
 }
 // ***************************************************************************
 namespace GedimForPy
@@ -173,12 +177,17 @@ namespace GedimForPy
     return space;
   }
   // ***************************************************************************
-  PyObject* GeDiM4Py_Interface::ConvertProblemData(DiscreteProblemData& problemData)
+  PyObject* GeDiM4Py_Interface::ConvertProblemData(DiscreteProblemData& problemData,
+                                                   double*& dofsCoordinate,
+                                                   double*& strongsCoordinate)
   {
     PyObject* problem = PyDict_New();
 
     PyDict_SetItemString(problem, "NumberDOFs", Py_BuildValue("i", problemData.NumberDOFs));
     PyDict_SetItemString(problem, "NumberStrongs", Py_BuildValue("i", problemData.NumberStrongs));
+
+    ConvertMatrix(problemData.DOFsCoordinate, dofsCoordinate);
+    ConvertMatrix(problemData.StrongsCoordinate, strongsCoordinate);
 
     return problem;
   }
@@ -197,9 +206,19 @@ namespace GedimForPy
       tripl.col(t++)<< triplet.row(), triplet.col(), triplet.value();
   }
   // ***************************************************************************
-  void GeDiM4Py_Interface::ConvertVector(const Eigen::VectorXd& array,
-                                         int& size,
-                                         double*& convertedArray)
+  void GeDiM4Py_Interface::ConvertMatrix(const Eigen::MatrixXd& matrix,
+                                         double*& convertedMatrix)
+  {
+    unsigned int size = matrix.rows() * matrix.cols();
+    convertedMatrix = new double[size];
+
+    Eigen::Map<Eigen::MatrixXd> mat(convertedMatrix, matrix.rows(), matrix.cols());
+    mat = matrix;
+  }
+  // ***************************************************************************
+  void GeDiM4Py_Interface::ConvertArray(const Eigen::VectorXd& array,
+                                        int& size,
+                                        double*& convertedArray)
   {
     size = array.size();
     convertedArray = new double[size];

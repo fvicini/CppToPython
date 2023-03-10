@@ -102,6 +102,8 @@ namespace GedimForPy
 
       unsigned int NumberDOFs = 0;
       unsigned int NumberStrongs = 0;
+      Eigen::MatrixXd DOFsCoordinate;
+      Eigen::MatrixXd StrongsCoordinate;
       std::vector<DOF> Cell0Ds_DOF = {};
       std::vector<DOF> Cell1Ds_DOF = {};
       std::vector<std::vector<DOF*>> Cell2Ds_DOF = {};

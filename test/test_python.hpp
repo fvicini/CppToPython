@@ -114,7 +114,15 @@ namespace UnitTesting
     PyDict_SetItemString(discreteSpace, "BoundaryConditionsType", Py_BuildValue("O", boundaryConditionTypes));
     PyDict_SetItemString(discreteSpace, "Type", Py_BuildValue("i", static_cast<unsigned int>(space_expected.Type)));
 
-    ASSERT_NO_THROW(GedimForPy_Discretize(discreteSpace));
+    double* dofsCoordinate = nullptr;
+    double* strongsCoordinate = nullptr;
+
+    ASSERT_NO_THROW(GedimForPy_Discretize(discreteSpace,
+                                          &dofsCoordinate,
+                                          &strongsCoordinate));
+    delete[] dofsCoordinate;
+    delete[] strongsCoordinate;
+
     ASSERT_EQ(space_expected.Order,
               GedimForPy::GeDiM4Py_Interface::Space.Order);
     ASSERT_EQ(space_expected.Type,

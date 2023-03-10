@@ -157,6 +157,48 @@ namespace GedimForPy
       }
     }
 
+    problemData.DOFsCoordinate.resize(3, problemData.NumberDOFs);
+    problemData.StrongsCoordinate.resize(3, problemData.NumberStrongs);
+
+    for (unsigned int p = 0; p < mesh.Cell0DTotalNumber(); p++)
+    {
+      const DiscreteProblemData::DOF& cell0D_DOF = problemData.Cell0Ds_DOF[p];
+      switch (cell0D_DOF.Type)
+      {
+        case DiscreteProblemData::DOF::Types::DOF:
+          problemData.DOFsCoordinate.col(cell0D_DOF.Global_Index)<< mesh.Cell0DCoordinates(p);
+          break;
+        case DiscreteProblemData::DOF::Types::Strong:
+          problemData.StrongsCoordinate.col(cell0D_DOF.Global_Index)<< mesh.Cell0DCoordinates(p);
+          break;
+        default:
+          throw std::runtime_error("DOF Type " +
+                                   std::to_string((unsigned int)cell0D_DOF.Type) +
+                                   " not supported");
+      }
+    }
+
+    if (space.Order == 2)
+    {
+      for (unsigned int e = 0; e < mesh.Cell1DTotalNumber(); e++)
+      {
+        const DiscreteProblemData::DOF& cell1D_DOF = problemData.Cell1Ds_DOF[e];
+        switch (cell1D_DOF.Type)
+        {
+          case DiscreteProblemData::DOF::Types::DOF:
+            problemData.DOFsCoordinate.col(cell1D_DOF.Global_Index)<< 0.5 * (mesh.Cell1DOriginCoordinates(e) + mesh.Cell1DEndCoordinates(e));;
+            break;
+          case DiscreteProblemData::DOF::Types::Strong:
+            problemData.StrongsCoordinate.col(cell1D_DOF.Global_Index)<< 0.5 * (mesh.Cell1DOriginCoordinates(e) + mesh.Cell1DEndCoordinates(e));;
+            break;
+          default:
+            throw std::runtime_error("DOF Type " +
+                                     std::to_string((unsigned int)cell1D_DOF.Type) +
+                                     " not supported");
+        }
+      }
+    }
+
     FEM_RefElement_Langrange_PCC_Triangle_2D femRefElement;
     problemData.LocalSpace = femRefElement.Compute(space.Order);
 
