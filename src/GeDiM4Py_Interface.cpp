@@ -107,11 +107,18 @@ void GedimForPy_CholeskySolver(const int nRows,
                                const double* pointerF,
                                double** solution)
 {
-  Eigen::Map<const Eigen::MatrixXd> triplets(pointerTriplets, 3, numNonZeros);
-  std::cout<< triplets<< std::endl;
+  const Eigen::SparseMatrix<double> A = GedimForPy::GeDiM4Py_Interface::ConvertSparseMatrix(nRows,
+                                                                                            nRows,
+                                                                                            numNonZeros,
+                                                                                            pointerTriplets);
+
+  Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>, Eigen::Lower> linearSolver;
+  linearSolver.compute(A);
+
+  const Eigen::VectorXd sol = linearSolver.solve(Eigen::Map<const Eigen::VectorXd>(pointerF, nRows));
 
   int size = 0;
-  GedimForPy::GeDiM4Py_Interface::ConvertArray(Eigen::VectorXd::Zero(nRows),
+  GedimForPy::GeDiM4Py_Interface::ConvertArray(sol,
                                                size,
                                                *solution);
 }
@@ -219,6 +226,26 @@ namespace GedimForPy
     unsigned int t = 0;
     for (const Eigen::Triplet<double>& triplet : triplets)
       tripl.col(t++)<< triplet.row(), triplet.col(), triplet.value();
+  }
+  // ***************************************************************************
+  Eigen::SparseMatrix<double> GeDiM4Py_Interface::ConvertSparseMatrix(const int& nRows,
+                                                                      const int& nCols,
+                                                                      const int& numNonZeros,
+                                                                      const double* pointerTriplets)
+  {
+    Eigen::Map<const Eigen::MatrixXd> triplets(pointerTriplets, 3, numNonZeros);
+
+    std::vector<Eigen::Triplet<double>> matTriplets(numNonZeros);
+    for (unsigned int t = 0; t < numNonZeros; t++)
+      matTriplets[t] = Eigen::Triplet<double>(triplets(0, t), triplets(1, t), triplets(2, t));
+
+    Eigen::SparseMatrix<double> mat(nRows,
+                                    nCols);
+    mat.setFromTriplets(matTriplets.begin(),
+                        matTriplets.end());
+    mat.makeCompressed();
+
+    return mat;
   }
   // ***************************************************************************
   void GeDiM4Py_Interface::ConvertMatrix(const Eigen::MatrixXd& matrix,

@@ -103,7 +103,7 @@ def AssembleForcingTerm(f, problemData):
 
 def CholeskySolver(A, f):
 	[rows, cols, values] = scipy.sparse.find(A)
-	nonZerosA = np.concatenate((rows, cols, values), axis=0)
+	nonZerosA = np.column_stack((rows, cols, values))
 	lib.GedimForPy_CholeskySolver.argtypes = [ct.c_int, ct.c_int, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_CholeskySolver.restype =  None
 
@@ -161,7 +161,7 @@ if __name__ == '__main__':
 	print("CreateDomainSquare successful")
 
 	print("Discretize...")
-	discreteSpace = { 'Order': 2, 'Type': 1, 'BoundaryConditionsType': [1, 2] }
+	discreteSpace = { 'Order': 1, 'Type': 1, 'BoundaryConditionsType': [1, 2] }
 	[problemData, dofs, strongs] = Discretize(discreteSpace)
 	print("Discretize successful")
 
@@ -177,7 +177,6 @@ if __name__ == '__main__':
 
 	print("CholeskySolver...")
 	solution = CholeskySolver(stiffness, forcingTerm)
-	solution = Solver(stiffness, forcingTerm)
 	print("CholeskySolver successful")
 
 	PlotSolution(dofs, strongs, solution, np.zeros(problemData['NumberStrongs']))

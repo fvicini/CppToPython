@@ -59,6 +59,10 @@ namespace GedimForPy
       static void ConvertTriplets(const std::list<Eigen::Triplet<double>>& triplets,
                                   int& numTriplets,
                                   double*& convertedTriplets);
+      static Eigen::SparseMatrix<double> ConvertSparseMatrix(const int& nRows,
+                                                             const int& nCols,
+                                                             const int& numNonZeros,
+                                                             const double* pointerTriplets);
       static void ConvertMatrix(const Eigen::MatrixXd& matrix,
                                 double*& convertedMatrix);
       static void ConvertArray(const Eigen::VectorXd& array,
