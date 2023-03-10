@@ -2,6 +2,8 @@ import ctypes as ct
 import numpy as np
 import scipy.sparse
 import sys
+import matplotlib.pyplot as plt
+import matplotlib.tri
 
 def make_nd_array(c_pointer, shape, dtype=np.double, order='F', own_data=True):
     arr_size = np.prod(shape[:]) * np.dtype(dtype).itemsize 
@@ -85,6 +87,33 @@ def AssembleForcingTerm(problemData):
 def Solver(A, f):
 	return scipy.sparse.linalg.spsolve(A, f.T)
 
+def PlotDofs(dofs, strongs):
+	x = np.concatenate((dofs[0,:], strongs[0,:]), axis=0)
+	y = np.concatenate((dofs[1,:], strongs[1,:]), axis=0)
+	triang = matplotlib.tri.Triangulation(x, y)
+	fig1, ax1 = plt.subplots()
+	ax1.set_aspect('equal')
+	ax1.triplot(triang, 'bo-', lw=1)
+	plt.show()
+
+def PlotSolution(dofs, strongs, solutionDofs, solutionStrongs):
+	x = np.concatenate((dofs[0,:], strongs[0,:]), axis=0)
+	y = np.concatenate((dofs[1,:], strongs[1,:]), axis=0)
+	z = np.concatenate((solutionDofs, solutionStrongs), axis=0)
+	triang = matplotlib.tri.Triangulation(x, y)
+	
+	fig = plt.figure(figsize=plt.figaspect(0.5))
+
+	ax1 = fig.add_subplot(1, 2, 1)
+	ax1.set_aspect('equal')
+	tpc = ax1.tripcolor(triang, z, shading='flat')
+	fig.colorbar(tpc)
+
+	ax2 = fig.add_subplot(1, 2, 2, projection='3d')
+	ax2.plot_trisurf(x, y, z, triangles=triang.triangles, cmap=plt.cm.Spectral)
+
+	plt.show()
+
 if __name__ == '__main__':
 
 	print("Importing library...")
@@ -107,6 +136,8 @@ if __name__ == '__main__':
 	[problemData, dofs, strongs] = Discretize(discreteSpace)
 	print("Discretize successful")
 
+	PlotDofs(dofs, strongs)
+
 	print("AssembleStiffnessMatrix...")
 	stiffness = AssembleStiffnessMatrix(problemData)
 	print("AssembleStiffnessMatrix successful")
@@ -118,5 +149,7 @@ if __name__ == '__main__':
 	print("Solver...")
 	solution = Solver(stiffness, forcingTerm)
 	print("Solver successful")
+
+	PlotSolution(dofs, strongs, solution, np.zeros(problemData['NumberStrongs']))
 
 	print("Test successful")
