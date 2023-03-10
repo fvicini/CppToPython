@@ -229,7 +229,6 @@ if __name__ == '__main__':
 
 	print("AssembleStrongSolution...")
 	solutionStrong = AssembleStrongSolution(Poisson_exactSolution, problemData)
-	print(solutionStrong)
 	print("AssembleStrongSolution successful")
 
 	print("CholeskySolver...")

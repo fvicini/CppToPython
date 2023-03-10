@@ -96,8 +96,23 @@ namespace GedimForPy
             DOF = 2
           };
 
+          struct BoundaryInfo
+          {
+              enum struct Types
+              {
+                Unknwon = 0,
+                Strong = 1,
+                Weak = 2,
+                None = 3
+              };
+
+              Types Type = Types::Unknwon;
+              unsigned int Marker = 0;
+          };
+
           Types Type = Types::Unknwon;
           unsigned int Global_Index = 0;
+          BoundaryInfo Boundary;
       };
 
       unsigned int NumberDOFs = 0;
@@ -116,6 +131,7 @@ namespace GedimForPy
       typedef double* (*K)(const int numPoints, const double* points);
       typedef double* (*F)(const int numPoints, const double* points);
       typedef double* (*Strong)(const int numPoints, const double* points);
+      typedef double* (*Weak)(const int numPoints, const double* points);
 
     private:
 
@@ -148,6 +164,14 @@ namespace GedimForPy
                                                     const Gedim::IMeshDAO& mesh,
                                                     const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                                     const DiscreteProblemData& problemData);
+
+      static Eigen::VectorXd AssembleWeakTerm(Weak g,
+                                              const int marker,
+                                              const Gedim::IMeshDAO& mesh,
+                                              const Eigen::VectorXd& cell2DEdgeLengths,
+                                              const Eigen::MatrixXd& cell2DEdgeTangents,
+                                              const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                              const DiscreteProblemData& problemData);
   };
 
 }
