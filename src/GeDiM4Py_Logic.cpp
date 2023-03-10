@@ -257,8 +257,10 @@ namespace GedimForPy
                                                                              cell2DMapData,
                                                                              referenceBasisFunctions);
 
-      const Eigen::VectorXd forcingTermValues = f(cell2DQuadraturePoints);
-      const Eigen::VectorXd cellForcingTerm = equation.ComputeCellForcingTerm(forcingTermValues,
+      const double* forcingTermValues = f(cell2DQuadraturePoints.cols(),
+                                          cell2DQuadraturePoints.data());
+      const Eigen::VectorXd cellForcingTerm = equation.ComputeCellForcingTerm(Eigen::Map<const Eigen::VectorXd>(forcingTermValues,
+                                                                                                                cell2DQuadraturePoints.cols()),
                                                                               basisFunctionValues2D,
                                                                               cell2DQuadratureWeights);
 

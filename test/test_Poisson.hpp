@@ -9,7 +9,7 @@ namespace UnitTesting
   {
     public:
       // ***************************************************************************
-      static const double* DiffusionTerm(const int numPoints, const double* points)
+      static double* DiffusionTerm(const int numPoints, const double* points)
       {
         double* values = new double[numPoints];
 
@@ -19,10 +19,15 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
-      static Eigen::VectorXd ForcingTerm(const Eigen::MatrixXd& points)
+      static double* ForcingTerm(const int numPoints, const double* points)
       {
-        return 32.0 * (points.row(1).array() * (1.0 - points.row(1).array()) +
-                       points.row(0).array() * (1.0 - points.row(0).array()));
+        double* values = new double[numPoints];
+
+        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+        vecValues = 32.0 * (matPoints.row(1).array() * (1.0 - matPoints.row(1).array()) +
+                            matPoints.row(0).array() * (1.0 - matPoints.row(0).array()));
+        return values;
       }
       // ***************************************************************************
       static Eigen::VectorXd ExactSolution(const Eigen::MatrixXd& points)

@@ -111,8 +111,8 @@ namespace GedimForPy
   class GeDiM4Py_Logic final
   {
     public:
-      typedef const double* (*K)(const int numPoints, const double* points);
-      typedef Eigen::VectorXd (*F)(const Eigen::MatrixXd& points);
+      typedef double* (*K)(const int numPoints, const double* points);
+      typedef double* (*F)(const int numPoints, const double* points);
 
     private:
 

@@ -24,6 +24,11 @@ def Poisson_k(numPoints, points):
 	values = np.ones((1, numPoints))
 	return values.ctypes.data
 
+def Poisson_f(numPoints, points):
+	matPoints = make_nd_array(points, (3, numPoints), np.double)
+	values = 32.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) + matPoints[0,:] * (1.0 - matPoints[0,:]))
+	return values.ctypes.data
+
 def ImportLibrary(path):
 	return ct.cdll.LoadLibrary(path)
 
@@ -50,12 +55,24 @@ def AssembleStiffnessMatrix(problemData):
 	
 	pointerT = ct.POINTER(ct.c_double)()
 	numTriplets = ct.c_int(0)
-	lib.GedimForPy_AssembleStiffnessMatrix(DiffusionFN(Poisson_k), ct.byref(numTriplets),  ct.byref(pointerT))
+	lib.GedimForPy_AssembleStiffnessMatrix(DiffusionFN(Poisson_k), ct.byref(numTriplets), ct.byref(pointerT))
 	numTriplets = numTriplets.value
 	triplets = make_nd_array(pointerT, (3, numTriplets))
 	
 	numDofs = problemData['NumberDOFs']
 	return scipy.sparse.csr_matrix((triplets[2,:], (triplets[0,:], triplets[1,:])), shape=(numDofs, numDofs))
+
+def AssembleForcingTerm(problemData):
+	ForcingTermFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
+		
+	lib.GedimForPy_AssembleForcingTerm.argtypes = [ForcingTermFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleForcingTerm.restype =  None
+	
+	pointerF = ct.POINTER(ct.c_double)()
+	size = ct.c_int(0)
+	lib.GedimForPy_AssembleForcingTerm(ForcingTermFN(Poisson_f), ct.byref(size), ct.byref(pointerF))
+	size = size.value
+	return make_nd_array(pointerF, (1, size))
 
 if __name__ == '__main__':
 
@@ -82,7 +99,11 @@ if __name__ == '__main__':
 
 	print("AssembleStiffnessMatrix...")
 	stiffness = AssembleStiffnessMatrix(problemData)
-	print(stiffness)
 	print("AssembleStiffnessMatrix successful")
+
+	print("AssembleForcingTerm...")
+	forcingTerm = AssembleForcingTerm(problemData)
+	print(forcingTerm)
+	print("AssembleForcingTerm successful")
 
 	print("Test successful")

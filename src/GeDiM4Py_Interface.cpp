@@ -73,14 +73,35 @@ void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::K k,
                                                                                                       mesh.Cell2DsMap,
                                                                                                       problemData),
                                                   *numTriplets,
-                                                  stiffnessTriplets);
+                                                  *stiffnessTriplets);
+}
+// ***************************************************************************
+void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,
+                                    int* size,
+                                    double** forcingTerm)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
+  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertVector(GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(f,
+                                                                                                meshDAO,
+                                                                                                mesh.Cell2DsMap,
+                                                                                                problemData),
+                                                *size,
+                                                *forcingTerm);
 }
 // ***************************************************************************
 namespace GedimForPy
 {
   // ***************************************************************************
   template<typename T>
-  std::vector<T> GeDiM4Py_Interface::ConvertArray(PyObject* list)
+  std::vector<T> GeDiM4Py_Interface::ConvertToArray(PyObject* list)
   {
     std::vector<T> result;
 
@@ -129,8 +150,8 @@ namespace GedimForPy
 
     domain.Vertices = gedimData.GeometryUtilities().CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
                                                                  squareEdge);
-    domain.VerticesBoundaryCondition = ConvertArray<unsigned int>(PyDict_GetItemString(square, "VerticesBoundaryCondition"));
-    domain.EdgesBoundaryCondition = ConvertArray<unsigned int>(PyDict_GetItemString(square, "EdgesBoundaryCondition"));
+    domain.VerticesBoundaryCondition = ConvertToArray<unsigned int>(PyDict_GetItemString(square, "VerticesBoundaryCondition"));
+    domain.EdgesBoundaryCondition = ConvertToArray<unsigned int>(PyDict_GetItemString(square, "EdgesBoundaryCondition"));
     domain.DiscretizationType = static_cast<Domain2D::DiscretizationTypes>(PyLong_AsLong(PyDict_GetItemString(square, "DiscretizationType")));
     domain.MeshCellsMaximumArea = PyFloat_AsDouble(PyDict_GetItemString(square, "MeshCellsMaximumArea"));
 
@@ -144,7 +165,7 @@ namespace GedimForPy
     space.Order = PyLong_AsLong(PyDict_GetItemString(discreteSpace, "Order"));
     space.Type = static_cast<DiscreteSpace::Types>(PyLong_AsLong(PyDict_GetItemString(discreteSpace, "Type")));
 
-    std::vector<unsigned int> boundaryConditionsType = ConvertArray<unsigned int>(PyDict_GetItemString(discreteSpace, "BoundaryConditionsType"));
+    std::vector<unsigned int> boundaryConditionsType = ConvertToArray<unsigned int>(PyDict_GetItemString(discreteSpace, "BoundaryConditionsType"));
     space.BoundaryConditionsType.resize(boundaryConditionsType.size());
     for (unsigned int b = 0; b < boundaryConditionsType.size(); b++)
       space.BoundaryConditionsType[b] = static_cast<DiscreteSpace::BoundaryConditionTypes>(boundaryConditionsType[b]);
@@ -164,16 +185,27 @@ namespace GedimForPy
   // ***************************************************************************
   void GeDiM4Py_Interface::ConvertTriplets(const std::list<Eigen::Triplet<double>>& triplets,
                                            int& numTriplets,
-                                           double** convertedTriplets)
+                                           double*& convertedTriplets)
   {
     numTriplets = triplets.size();
-    *convertedTriplets = new double[3 * numTriplets];
+    convertedTriplets = new double[3 * numTriplets];
 
-    Eigen::Map<Eigen::MatrixXd> tripl(*convertedTriplets, 3, numTriplets);
+    Eigen::Map<Eigen::MatrixXd> tripl(convertedTriplets, 3, numTriplets);
 
     unsigned int t = 0;
     for (const Eigen::Triplet<double>& triplet : triplets)
       tripl.col(t++)<< triplet.row(), triplet.col(), triplet.value();
+  }
+  // ***************************************************************************
+  void GeDiM4Py_Interface::ConvertVector(const Eigen::VectorXd& array,
+                                         int& size,
+                                         double*& convertedArray)
+  {
+    size = array.size();
+    convertedArray = new double[size];
+
+    Eigen::Map<Eigen::VectorXd> arr(convertedArray, size);
+    arr = array;
   }
   // ***************************************************************************
 }

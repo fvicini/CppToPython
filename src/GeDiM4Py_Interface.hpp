@@ -17,6 +17,10 @@ extern "C"
 void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::K k,
                                         int* numTriplets,
                                         double** stiffnessTriplets);
+extern "C"
+void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,
+                                    int* size,
+                                    double** forcingTerm);
 // ***************************************************************************
 
 namespace GedimForPy
@@ -33,7 +37,7 @@ namespace GedimForPy
 
     private:
       template<typename T>
-      static std::vector<T> ConvertArray(PyObject* list);
+      static std::vector<T> ConvertToArray(PyObject* list);
 
     public:
       static InterfaceConfiguration ConvertConfiguration(PyObject* config);
@@ -44,7 +48,10 @@ namespace GedimForPy
 
       static void ConvertTriplets(const std::list<Eigen::Triplet<double>>& triplets,
                                   int& numTriplets,
-                                  double** convertedTriplets);
+                                  double*& convertedTriplets);
+      static void ConvertVector(const Eigen::VectorXd& array,
+                                int& size,
+                                double*& convertedArray);
   };
 }
 
