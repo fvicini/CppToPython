@@ -7,15 +7,12 @@
 #include "GeDiM4Py_Logic.hpp"
 
 // ***************************************************************************
-typedef const double* (*ExampleFN)(const int numPoints, const double* points);
 extern "C"
 void GedimForPy_Initialize(PyObject* config);
 extern "C"
 void GedimForPy_CreateDomainSquare(PyObject* square);
 extern "C"
 PyObject* GedimForPy_Discretize(PyObject* discreteSpace);
-extern "C"
-void GedimForPy_TEST(ExampleFN k);
 extern "C"
 void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::K k,
                                         int* numTriplets,
@@ -46,7 +43,7 @@ namespace GedimForPy
       static PyObject* ConvertProblemData(GedimForPy::DiscreteProblemData& problemData);
 
       static void ConvertTriplets(const std::list<Eigen::Triplet<double>>& triplets,
-                                  int* numTriplets,
+                                  int& numTriplets,
                                   double** convertedTriplets);
   };
 }

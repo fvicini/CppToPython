@@ -1,10 +1,10 @@
 import ctypes as ct
 import numpy as np
+import scipy.sparse
 import sys
 
 def make_nd_array(c_pointer, shape, dtype=np.double, order='F', own_data=True):
     arr_size = np.prod(shape[:]) * np.dtype(dtype).itemsize 
-    print("size", arr_size)
     
     if sys.version_info.major >= 3:
         ct.pythonapi.PyMemoryView_FromMemory.restype = ct.py_object
@@ -51,20 +51,16 @@ def AssembleStiffnessMatrix(problemData):
 	pointerT = ct.POINTER(ct.c_double)()
 	numTriplets = ct.c_int(0)
 	lib.GedimForPy_AssembleStiffnessMatrix(DiffusionFN(Poisson_k), ct.byref(numTriplets),  ct.byref(pointerT))
-		
-	print(numTriplets)
-	triplets = make_nd_array(pointerT, (3, numTriplets), np.double)
+	numTriplets = numTriplets.value
+	triplets = make_nd_array(pointerT, (3, numTriplets))
 	
-	print(triplets)
-
-	numDofs = problemData('NumberDOFs')	
-	
-	return None
+	numDofs = problemData['NumberDOFs']
+	return scipy.sparse.csr_matrix((triplets[2,:], (triplets[0,:], triplets[1,:])), shape=(numDofs, numDofs))
 
 if __name__ == '__main__':
 
 	print("Importing library...")
-	lib = ImportLibrary("./release/GeDiM4Py.so")
+	lib = ImportLibrary("/home/geoscore/Desktop/GEO++/Courses/CppToPython/release/GeDiM4Py.so")
 	print(lib)
 	print("Import library successful")
 
