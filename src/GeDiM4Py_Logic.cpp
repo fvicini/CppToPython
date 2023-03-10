@@ -256,7 +256,8 @@ namespace GedimForPy
         {
           const DiscreteProblemData::DOF& dofJ = *cell2D_DOF[j];
 
-          switch (dofJ.Type) {
+          switch (dofJ.Type)
+          {
             case DiscreteProblemData::DOF::Types::DOF:
               stiffnessTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
                                                                  dofJ.Global_Index,
@@ -332,6 +333,16 @@ namespace GedimForPy
     }
 
     return forcingTerm;
+  }
+  // ***************************************************************************
+  Eigen::VectorXd GeDiM4Py_Logic::AssembleDirichletTerm(Dirichlet g,
+                                                        const Gedim::IMeshDAO& mesh,
+                                                        const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                        const DiscreteProblemData& problemData)
+  {
+    return Eigen::Map<Eigen::VectorXd>(g(problemData.NumberStrongs,
+                                         problemData.StrongsCoordinate.data()),
+                                       problemData.NumberStrongs);
   }
   // ***************************************************************************
 }

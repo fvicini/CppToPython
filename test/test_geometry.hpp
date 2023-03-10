@@ -152,32 +152,57 @@ namespace UnitTesting
                                                                                         mesh.Cell2DsMap,
                                                                                         problemData);
 
+    const Eigen::VectorXd solutionDirichlet = GedimForPy::GeDiM4Py_Logic::AssembleDirichletTerm(Poisson::ExactSolution,
+                                                                                                meshDAO,
+                                                                                                mesh.Cell2DsMap,
+                                                                                                problemData);
+
     Eigen::SparseMatrix<double> stiffness(problemData.NumberDOFs,
                                           problemData.NumberDOFs);
     stiffness.setFromTriplets(stiffnessTriplets.begin(),
                               stiffnessTriplets.end());
     stiffness.makeCompressed();
     stiffnessTriplets.clear();
+
+    Eigen::SparseMatrix<double> stiffnessDirichlet(problemData.NumberDOFs,
+                                                   problemData.NumberStrongs);
+    stiffnessDirichlet.setFromTriplets(stiffnessDirichletTriplets.begin(),
+                                       stiffnessDirichletTriplets.end());
+    stiffnessDirichlet.makeCompressed();
+    stiffnessDirichletTriplets.clear();
+
     Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>, Eigen::Lower> linearSolver;
     linearSolver.compute(stiffness);
 
-    Eigen::VectorXd solution = linearSolver.solve(forcingTerm);
+    Eigen::VectorXd solution = linearSolver.solve(forcingTerm - stiffnessDirichlet * solutionDirichlet);
 
     // export
     {
       {
         std::vector<double> cell0Ds_numeric_solution(meshDAO.Cell0DTotalNumber(),
                                                      0.0);
-        Eigen::VectorXd cell0Ds_exact_solution = Poisson::ExactSolution(meshDAO.Cell0DsCoordinates());
+        const Eigen::MatrixXd coordinates = meshDAO.Cell0DsCoordinates();
+
+        const double* cell0Ds_exact_solution = Poisson::ExactSolution(coordinates.cols(),
+                                                                      coordinates.data());
 
         for (unsigned int p = 0; p < meshDAO.Cell0DTotalNumber(); p++)
         {
           const GedimForPy::DiscreteProblemData::DOF& dof = problemData.Cell0Ds_DOF[p];
 
-          if (dof.Type != GedimForPy::DiscreteProblemData::DOF::Types::DOF)
-            continue;
-
-          cell0Ds_numeric_solution[p] = solution[dof.Global_Index];
+          switch (dof.Type)
+          {
+            case GedimForPy::DiscreteProblemData::DOF::Types::DOF:
+              cell0Ds_numeric_solution[p] = solution[dof.Global_Index];
+              break;
+            case GedimForPy::DiscreteProblemData::DOF::Types::Strong:
+              cell0Ds_numeric_solution[p] = solutionDirichlet[dof.Global_Index];
+              break;
+            default:
+              throw std::runtime_error("DOF Type " +
+                                       std::to_string((unsigned int)dof.Type) +
+                                       " not supported");
+          }
         }
 
         Gedim::VTKUtilities exporter;
@@ -187,8 +212,8 @@ namespace UnitTesting
                                {
                                  "cell0Ds_exact_solution",
                                  Gedim::VTPProperty::Formats::Points,
-                                 static_cast<unsigned int>(cell0Ds_exact_solution.size()),
-                                 cell0Ds_exact_solution.data()
+                                 static_cast<unsigned int>(coordinates.cols()),
+                                 cell0Ds_exact_solution
                                },
                                {
                                  "cell0Ds_numeric_solution",
@@ -199,6 +224,8 @@ namespace UnitTesting
                              });
         exporter.Export(exportFolder +
                         "/Solution.vtu");
+
+        delete[] cell0Ds_exact_solution;
       }
     }
 

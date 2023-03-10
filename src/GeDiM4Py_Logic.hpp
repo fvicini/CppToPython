@@ -115,6 +115,7 @@ namespace GedimForPy
     public:
       typedef double* (*K)(const int numPoints, const double* points);
       typedef double* (*F)(const int numPoints, const double* points);
+      typedef double* (*Dirichlet)(const int numPoints, const double* points);
 
     private:
 
@@ -142,6 +143,11 @@ namespace GedimForPy
                                                  const Gedim::IMeshDAO& mesh,
                                                  const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                                  const DiscreteProblemData& problemData);
+
+      static Eigen::VectorXd AssembleDirichletTerm(Dirichlet g,
+                                                   const Gedim::IMeshDAO& mesh,
+                                                   const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                   const DiscreteProblemData& problemData);
   };
 
 }

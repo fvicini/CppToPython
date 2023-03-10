@@ -30,23 +30,41 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
-      static Eigen::VectorXd ExactSolution(const Eigen::MatrixXd& points)
+      static double* ExactSolution(const int numPoints, const double* points)
       {
-        return 16.0 * (points.row(1).array() * (1.0 - points.row(1).array()) *
-                       points.row(0).array() * (1.0 - points.row(0).array()));
+        double* values = new double[numPoints];
+
+        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+
+        vecValues = 16.0 * (matPoints.row(1).array() * (1.0 - matPoints.row(1).array()) *
+                            matPoints.row(0).array() * (1.0 - matPoints.row(0).array())) + 1.1;
+        return values;
       }
       // ***************************************************************************
-      static Eigen::VectorXd ExactDerivativeSolution(const unsigned int& direction,
-                                                     const Eigen::MatrixXd& points)
+      static double* ExactDerivativeSolution(const unsigned int& direction,
+                                             const int numPoints,
+                                             const double* points)
       {
+        double* values = new double[numPoints];
+
+        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+
         if(direction == 0)
-          return 16.0 * (1.0 - 2.0 * points.row(0).array()) * points.row(1).array() * (1.0 - points.row(1).array());
+          vecValues = 16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
+                      matPoints.row(1).array() *
+                      (1.0 - matPoints.row(1).array());
         else if (direction == 1)
-          return 16.0 * (1.0 - 2.0 * points.row(1).array()) * points.row(0).array() * (1.0 - points.row(0).array());
+          vecValues = 16.0 * (1.0 - 2.0 * matPoints.row(1).array()) *
+                      matPoints.row(0).array() *
+                      (1.0 - matPoints.row(0).array());
         else if (direction == 2)
-          return Eigen::VectorXd::Zero(points.cols());
+          vecValues.setZero();
         else
           throw std::runtime_error("Error on direction");
+
+        return values;
       }
       // ***************************************************************************
   };
