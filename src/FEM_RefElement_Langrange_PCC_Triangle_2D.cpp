@@ -239,9 +239,20 @@ namespace GedimForPy
     }
   }
   // ***************************************************************************
+  MatrixXd FEM_RefElement_Langrange_PCC_Triangle_2D::BasisFunctionsOnPoints(const LocalSpace& localSpace,
+                                                                            const Gedim::MapTriangle::MapTriangleData& mapData,
+                                                                            const Eigen::MatrixXd& points) const
+  {
+    Gedim::MapTriangle mapTriangle;
+    return Reference_BasisFunctions(localSpace,
+                                    mapTriangle.FInv(mapData,
+                                                     points));
+
+  }
+  // ***************************************************************************
   std::vector<MatrixXd> FEM_RefElement_Langrange_PCC_Triangle_2D::BasisFunctionDerivatives(const LocalSpace& localSpace,
-                                                                                               const Gedim::MapTriangle::MapTriangleData& mapData,
-                                                                                               const std::vector<Eigen::MatrixXd>& reference_values) const
+                                                                                           const Gedim::MapTriangle::MapTriangleData& mapData,
+                                                                                           const std::vector<Eigen::MatrixXd>& reference_values) const
   {
     std::vector<Eigen::MatrixXd> basisFunctionsDerivativeValues(2,
                                                                 Eigen::MatrixXd::Zero(reference_values[0].rows(),
@@ -258,6 +269,18 @@ namespace GedimForPy
     }
 
     return basisFunctionsDerivativeValues;
+  }
+  // ***************************************************************************
+  std::vector<MatrixXd> FEM_RefElement_Langrange_PCC_Triangle_2D::BasisFunctionDerivativesOnPoints(const LocalSpace& localSpace,
+                                                                                                   const Gedim::MapTriangle::MapTriangleData& mapData,
+                                                                                                   const Eigen::MatrixXd& points) const
+  {
+    Gedim::MapTriangle mapTriangle;
+    return BasisFunctionDerivatives(localSpace,
+                                    mapData,
+                                    Reference_BasisFunctionDerivatives(localSpace,
+                                                                       mapTriangle.FInv(mapData,
+                                                                                        points)));
   }
   // ***************************************************************************
 }

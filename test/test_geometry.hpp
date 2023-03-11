@@ -34,8 +34,8 @@ namespace UnitTesting
     GedimForPy::Domain2D domain;
     domain.Vertices = gedimData.GeometryUtilities().CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
                                                                  1.0);
-    domain.VerticesBoundaryCondition = std::vector<unsigned int> { 1, 1, 1, 1 };
-    domain.EdgesBoundaryCondition = std::vector<unsigned int> { 1, 1, 1, 1 };
+    domain.VerticesBoundaryCondition = { 1, 1, 1, 1 };
+    domain.EdgesBoundaryCondition = { 1, 2, 1, 4 };
     domain.DiscretizationType = GedimForPy::Domain2D::DiscretizationTypes::Triangular;
     domain.MeshCellsMaximumArea = 0.1;
 
@@ -152,7 +152,23 @@ namespace UnitTesting
                                                                                         mesh.Cell2DsMap,
                                                                                         problemData);
 
+    const Eigen::VectorXd weakTerm_Right = GedimForPy::GeDiM4Py_Logic::AssembleWeakTerm(Poisson::WeakTerm_Right,
+                                                                                        2,
+                                                                                        meshDAO,
+                                                                                        mesh.MeshGeometricData.Cell2DsEdgeLengths,
+                                                                                        mesh.MeshGeometricData.Cell2DsEdgeTangents,
+                                                                                        mesh.Cell2DsMap,
+                                                                                        problemData);
+    const Eigen::VectorXd weakTerm_Left = GedimForPy::GeDiM4Py_Logic::AssembleWeakTerm(Poisson::WeakTerm_Left,
+                                                                                       4,
+                                                                                       meshDAO,
+                                                                                       mesh.MeshGeometricData.Cell2DsEdgeLengths,
+                                                                                       mesh.MeshGeometricData.Cell2DsEdgeTangents,
+                                                                                       mesh.Cell2DsMap,
+                                                                                       problemData);
+
     const Eigen::VectorXd solutionStrong = GedimForPy::GeDiM4Py_Logic::AssembleStrongSolution(Poisson::ExactSolution,
+                                                                                              1,
                                                                                               meshDAO,
                                                                                               mesh.Cell2DsMap,
                                                                                               problemData);

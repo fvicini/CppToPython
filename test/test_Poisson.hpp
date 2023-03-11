@@ -67,6 +67,34 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
+      static double* WeakTerm_Right(const int numPoints, const double* points)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+
+        vecValues = 16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
+                    matPoints.row(1).array() *
+                    (1.0 - matPoints.row(1).array());
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* WeakTerm_Left(const int numPoints, const double* points)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+
+        vecValues = - 16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
+                    matPoints.row(1).array() *
+                    (1.0 - matPoints.row(1).array());
+
+        return values;
+      }
+      // ***************************************************************************
   };
 }
 

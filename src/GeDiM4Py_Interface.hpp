@@ -28,6 +28,7 @@ void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,
                                     double** forcingTerm);
 extern "C"
 void GedimForPy_AssembleStrongSolution(GedimForPy::GeDiM4Py_Logic::Strong g,
+                                       int marker,
                                        int* size,
                                        double** solutionStrong);
 extern "C"

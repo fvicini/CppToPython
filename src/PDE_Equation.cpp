@@ -33,4 +33,14 @@ namespace GedimForPy
         forcingTermValues;
   }
   // ***************************************************************************
+  VectorXd PDE_Equation::ComputeCellWeakTerm(const Eigen::VectorXd& weakTermValues,
+                                             const Eigen::MatrixXd& basisFunctionValues,
+                                             const Eigen::VectorXd& quadratureWeights)
+  {
+    return
+        basisFunctionValues.transpose() *
+        quadratureWeights.asDiagonal() *
+        weakTermValues;
+  }
+  // ***************************************************************************
 }

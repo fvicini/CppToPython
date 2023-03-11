@@ -40,7 +40,7 @@ namespace GedimForPy
                                                   InterfaceDataDAO& gedimData)
   {
     Domain2DMesh mesh;
-    Gedim::MeshMatricesDAO domainMesh(mesh.Mesh);
+    Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
     switch (domain.DiscretizationType)
     {
@@ -48,11 +48,11 @@ namespace GedimForPy
       {
         gedimData.MeshUtilities().CreateTriangularMesh(domain.Vertices,
                                                        domain.MeshCellsMaximumArea,
-                                                       domainMesh);
+                                                       meshDAO);
         gedimData.MeshUtilities().ChangePolygonMeshMarkers(domain.Vertices,
                                                            domain.VerticesBoundaryCondition,
                                                            domain.EdgesBoundaryCondition,
-                                                           domainMesh);
+                                                           meshDAO);
       }
         break;
       default:
@@ -62,9 +62,12 @@ namespace GedimForPy
     }
 
     Gedim::MapTriangle mapTriangle;
-    mesh.Cell2DsMap.resize(domainMesh.Cell2DTotalNumber());
-    for (unsigned int c = 0; c < domainMesh.Cell2DTotalNumber(); c++)
-      mesh.Cell2DsMap.at(c) = mapTriangle.Compute(domainMesh.Cell2DVerticesCoordinates(c));
+    mesh.Cell2DsMap.resize(meshDAO.Cell2DTotalNumber());
+    for (unsigned int c = 0; c < meshDAO.Cell2DTotalNumber(); c++)
+      mesh.Cell2DsMap.at(c) = mapTriangle.Compute(meshDAO.Cell2DVerticesCoordinates(c));
+
+    mesh.MeshGeometricData = gedimData.MeshUtilities().FillMesh2DGeometricData(gedimData.GeometryUtilities(),
+                                                                               meshDAO);
 
     return mesh;
   }
@@ -245,7 +248,6 @@ namespace GedimForPy
 
     for (unsigned int cell2DIndex = 0; cell2DIndex < mesh.Cell2DTotalNumber(); cell2DIndex++)
     {
-      // Compute cell geometric properties
       const Gedim::MapTriangle::MapTriangleData& cell2DMapData = cell2DsMap.at(cell2DIndex);
 
       const Eigen::MatrixXd cell2DQuadraturePoints = mapTriangle.F(cell2DMapData,
@@ -322,7 +324,6 @@ namespace GedimForPy
 
     for (unsigned int cell2DIndex = 0; cell2DIndex < mesh.Cell2DTotalNumber(); cell2DIndex++)
     {
-      // Compute cell geometric properties
       const Gedim::MapTriangle::MapTriangleData& cell2DMapData = cell2DsMap.at(cell2DIndex);
 
       const Eigen::MatrixXd cell2DQuadraturePoints = mapTriangle.F(cell2DMapData,
@@ -358,23 +359,61 @@ namespace GedimForPy
   }
   // ***************************************************************************
   Eigen::VectorXd GeDiM4Py_Logic::AssembleStrongSolution(Strong g,
+                                                         const unsigned int& marker,
                                                          const Gedim::IMeshDAO& mesh,
                                                          const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                                          const DiscreteProblemData& problemData)
   {
-    return Eigen::Map<Eigen::VectorXd>(g(problemData.NumberStrongs,
-                                         problemData.StrongsCoordinate.data()),
-                                       problemData.NumberStrongs);
+    Eigen::VectorXd strongSolution = Eigen::VectorXd::Zero(problemData.NumberStrongs);
+
+    for (unsigned int v = 0; v < mesh.Cell0DTotalNumber(); v++)
+    {
+      const DiscreteProblemData::DOF& dof = problemData.Cell0Ds_DOF[v];
+
+      if (dof.Boundary.Type != DiscreteProblemData::DOF::BoundaryInfo::Types::Strong)
+        continue;
+
+      if (dof.Boundary.Marker != marker)
+        continue;
+
+      const Eigen::Vector3d coordinate = problemData.StrongsCoordinate.col(dof.Global_Index);
+
+      strongSolution[dof.Global_Index] = *g(1,
+                                            coordinate.data());
+    }
+
+    if (problemData.LocalSpace.Order == 2)
+    {
+      for (unsigned int e = 0; e < mesh.Cell1DTotalNumber(); e++)
+      {
+        const DiscreteProblemData::DOF& dof = problemData.Cell1Ds_DOF[e];
+
+        if (dof.Boundary.Type != DiscreteProblemData::DOF::BoundaryInfo::Types::Strong)
+          continue;
+
+        if (dof.Boundary.Marker != marker)
+          continue;
+
+        const Eigen::Vector3d coordinate = problemData.StrongsCoordinate.col(dof.Global_Index);
+
+        strongSolution[dof.Global_Index] = *g(1,
+                                              coordinate.data());
+      }
+    }
+
+    return strongSolution;
   }
   // ***************************************************************************
   Eigen::VectorXd GeDiM4Py_Logic::AssembleWeakTerm(Weak g,
-                                                   const int marker,
+                                                   const unsigned int& marker,
                                                    const Gedim::IMeshDAO& mesh,
-                                                   const Eigen::VectorXd& cell2DEdgeLengths,
-                                                   const Eigen::MatrixXd& cell2DEdgeTangents,
+                                                   const std::vector<Eigen::VectorXd>& cell2DsEdgeLengths,
+                                                   const std::vector<Eigen::MatrixXd>& cell2DsEdgeTangents,
                                                    const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                                    const DiscreteProblemData& problemData)
   {
+    Eigen::VectorXd weakTerm = Eigen::VectorXd::Zero(problemData.NumberDOFs);
+
     FEM_RefElement_Langrange_PCC_Triangle_2D femValues;
     Gedim::MapTriangle mapTriangle;
     const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& localSpace = problemData.LocalSpace;
@@ -387,109 +426,67 @@ namespace GedimForPy
 
     for (unsigned int cell2DIndex = 0; cell2DIndex < mesh.Cell2DTotalNumber(); cell2DIndex++)
     {
-      const std::vector<DiscreteProblemData::DOF*>& cell2D_DOF = problemData.Cell2Ds_DOF[cell2DIndex];
-
-      bool hasWeakCondition = false;
-      for(unsigned int i = 0; i < numLocals; i ++)
-      {
-        const DiscreteProblemData::DOF& dofI = *cell2D_DOF[i];
-
-        if (dofI.Boundary.Type != DiscreteProblemData::DOF::BoundaryInfo::Types::Weak)
-          continue;
-
-        if (dofI.Boundary.Marker != marker)
-          continue;
-
-        hasWeakCondition = true;
-      }
-
-      if (!hasWeakCondition)
-        continue;
+      const Gedim::MapTriangle::MapTriangleData& cell2DMapData = cell2DsMap.at(cell2DIndex);
+      const Eigen::VectorXd& cell2DEdgeLengths = cell2DsEdgeLengths[cell2DIndex];
+      const Eigen::MatrixXd& cell2DEdgeTangents = cell2DsEdgeTangents[cell2DIndex];
 
       for(unsigned int ed = 0; ed < 3; ed ++)
       {
         const unsigned int cell1DIndex = mesh.Cell2DEdge(cell2DIndex,
-                                                           ed);
-        if (!dofManager.IsCellWeakBoundaryCondition(cell1DIndex, 1))
+                                                         ed);
+        const unsigned int cell0DOriginIndex = mesh.Cell1DOrigin(cell1DIndex);
+        const unsigned int cell0DEndIndex = mesh.Cell1DEnd(cell1DIndex);
+
+        const DiscreteProblemData::DOF& dofOrigin = problemData.Cell0Ds_DOF[cell0DOriginIndex];
+        const DiscreteProblemData::DOF& dofEnd = problemData.Cell0Ds_DOF[cell0DOriginIndex];
+        const DiscreteProblemData::DOF& dofEdge = problemData.Cell1Ds_DOF[cell1DIndex];
+
+        const bool isDofOriginWeak = (dofOrigin.Boundary.Type == DiscreteProblemData::DOF::BoundaryInfo::Types::Weak &&
+                                      dofOrigin.Boundary.Marker == marker);
+        const bool isDofEndWeak = (dofEnd.Boundary.Type == DiscreteProblemData::DOF::BoundaryInfo::Types::Weak &&
+                                   dofEnd.Boundary.Marker == marker);
+        const bool isDofEdgeWeak = (dofEdge.Boundary.Type == DiscreteProblemData::DOF::BoundaryInfo::Types::Weak &&
+                                    dofEdge.Boundary.Marker == marker);
+
+        if (!isDofOriginWeak && !isDofEndWeak && !isDofEdgeWeak)
           continue;
 
-        const unsigned int edgeMarker = dofManager.CellMarker(cell1DIndex, 1);
-
-        // map edge internal quadrature points
         const Eigen::Vector3d& edgeStart = mesh.Cell1DOriginCoordinates(cell1DIndex);
         const Eigen::Vector3d& edgeTangent = cell2DEdgeTangents.col(ed);
 
-        const unsigned int numEdgeWeakQuadraturePoints = weakReferenceSegmentPoints.cols();
-        Eigen::MatrixXd weakQuadraturePoints(3, numEdgeWeakQuadraturePoints);
-        for (unsigned int q = 0; q < numEdgeWeakQuadraturePoints; q++)
+        const unsigned int numEdgeQuadraturePoints = localSpace.ReferenceElement.BorderQuadrature.Points.cols();
+        Eigen::MatrixXd weakQuadraturePoints(3, numEdgeQuadraturePoints);
+        for (unsigned int q = 0; q < numEdgeQuadraturePoints; q++)
         {
           weakQuadraturePoints.col(q) = edgeStart +
-                                        weakReferenceSegmentPoints(0, q) *
+                                        localSpace.ReferenceElement.BorderQuadrature.Points(0, q) *
                                         edgeTangent;
         }
-        const double absMapDeterminant = std::abs(cell2DEdgeLengths[ed]);
-        const Eigen::MatrixXd weakQuadratureWeights = weakReferenceSegmentWeights *
-                                               absMapDeterminant;
 
-        const Eigen::MatrixXd weakBasisFunctionsValues = femValues.ComputeBasisFunctionValues(localSpace,
-                                                                                       cell2DMapData,
-                                                                                       weakQuadraturePoints);
+        const Eigen::MatrixXd weakQuadratureWeights = localSpace.ReferenceElement.BorderQuadrature.Weights *
+                                                      std::abs(cell2DEdgeLengths[ed]);
 
-        const Eigen::VectorXd neumannValues = weakBoundaryCondition.Evaluate(edgeMarker,
-                                                                      weakQuadraturePoints);
+        const Eigen::MatrixXd weakBasisFunctionsValues = femValues.BasisFunctionsOnPoints(localSpace,
+                                                                                          cell2DMapData,
+                                                                                          weakQuadraturePoints);
 
-        // compute values of Neumann condition
-        const Eigen::VectorXd neumannContributions = weakBasisFunctionsValues.transpose() *
-                                              weakQuadratureWeights.asDiagonal() *
-                                              neumannValues;
+        const double* weakTermValues = g(numEdgeQuadraturePoints,
+                                         weakQuadraturePoints.data());
+        const Eigen::VectorXd neumannContributions = equation.ComputeCellWeakTerm(Eigen::Map<const Eigen::VectorXd>(weakTermValues,
+                                                                                                                    numLocals),
+                                                                                  weakBasisFunctionsValues,
+                                                                                  weakQuadratureWeights);
 
-        // add contributions relative to edge extrema.
-        for (unsigned int p = 0; p < 2; p++)
-        {
-          const unsigned int vertexLocalIndex = (ed + p) % 3;
-          const unsigned int vertexGlobalIndex = mesh.Cell1DVertex(cell1DIndex,
-                                                                   p);
-
-          if (dofManager.CellMarker(vertexGlobalIndex, 0) != edgeMarker)
-            continue;
-
-          const unsigned int numCell0DLocals = dofManager.NumberLocals(vertexGlobalIndex,
-                                                                       0);
-          const unsigned int cell0DStartingLocalIdex = localSpace.Dof0DsIndex[vertexLocalIndex];
-          const unsigned int cell0DEndingLocalIdex = localSpace.Dof0DsIndex[vertexLocalIndex + 1];
-          Gedim::Output::Assert((cell0DEndingLocalIdex - cell0DStartingLocalIdex) ==
-                                numCell0DLocals);
-
-          for (unsigned int l = 0; l < numCell0DLocals; l++)
-          {
-            if (!dofManager.IsWeakBoundaryCondition(vertexGlobalIndex, l, 0))
-              continue;
-
-            const int globalNeumann_i = dofManager.GlobalIndex(vertexGlobalIndex,
-                                                               l,
-                                                               0);
-            rightHandSide.AddValue(globalNeumann_i,
-                                   neumannContributions(cell0DStartingLocalIdex + l));
-          }
-        }
-
-        const unsigned int numCell1DLocals = dofManager.NumberLocals(cell1DIndex,
-                                                                     1);
-        const unsigned int cell1DStartingLocalIdex = localSpace.Dof1DsIndex[ed];
-        const unsigned int cell1DEndingLocalIdex = localSpace.Dof1DsIndex[ed + 1];
-        Gedim::Output::Assert((cell1DEndingLocalIdex - cell1DStartingLocalIdex) ==
-                              numCell1DLocals);
-
-        // add contributions relative to edge internal dofs
-        for (unsigned int l = 0; l < numCell1DLocals; l++)
-        {
-          const int globalNeumann_i = dofManager.GlobalIndex(cell1DIndex, l, 1);
-
-          rightHandSide.AddValue(globalNeumann_i,
-                                 neumannContributions(cell1DStartingLocalIdex + l));
-        }
+        if (isDofOriginWeak)
+          weakTerm[dofOrigin.Global_Index] += neumannContributions[localSpace.Dof0DsIndex[ed]];
+        if (isDofEndWeak)
+          weakTerm[dofEnd.Global_Index] += neumannContributions[localSpace.Dof0DsIndex[(ed + 1) % 3]];
+        if (isDofEdgeWeak)
+          weakTerm[dofEdge.Global_Index] += neumannContributions[localSpace.Dof1DsIndex[ed]];
       }
     }
+
+    return weakTerm;
   }
   // ***************************************************************************
 }

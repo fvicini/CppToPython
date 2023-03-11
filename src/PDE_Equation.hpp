@@ -17,6 +17,10 @@ namespace GedimForPy
       static Eigen::VectorXd ComputeCellForcingTerm(const Eigen::VectorXd& forcingTermValues,
                                                     const Eigen::MatrixXd& basisFunctionValues,
                                                     const Eigen::VectorXd& quadratureWeights);
+
+      static Eigen::VectorXd ComputeCellWeakTerm(const Eigen::VectorXd& weakTermValues,
+                                                 const Eigen::MatrixXd& basisFunctionValues,
+                                                 const Eigen::VectorXd& quadratureWeights);
   };
 }
 

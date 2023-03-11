@@ -119,6 +119,7 @@ void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,
 }
 // ***************************************************************************
 void GedimForPy_AssembleStrongSolution(GedimForPy::GeDiM4Py_Logic::Strong g,
+                                       int marker,
                                        int* size,
                                        double** solutionStrong)
 {
@@ -132,6 +133,7 @@ void GedimForPy_AssembleStrongSolution(GedimForPy::GeDiM4Py_Logic::Strong g,
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
   GedimForPy::GeDiM4Py_Interface::ConvertArray(GedimForPy::GeDiM4Py_Logic::AssembleStrongSolution(g,
+                                                                                                  marker,
                                                                                                   meshDAO,
                                                                                                   mesh.Cell2DsMap,
                                                                                                   problemData),

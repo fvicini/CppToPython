@@ -61,7 +61,7 @@ namespace GedimForPy
   {
       Gedim::MeshMatrices Mesh;
       std::vector<Gedim::MapTriangle::MapTriangleData> Cell2DsMap;
-
+      Gedim::MeshUtilities::MeshGeometricData2D MeshGeometricData;
   };
 
   struct DiscreteSpace final
@@ -161,15 +161,16 @@ namespace GedimForPy
                                                  const DiscreteProblemData& problemData);
 
       static Eigen::VectorXd AssembleStrongSolution(Strong g,
+                                                    const unsigned int& marker,
                                                     const Gedim::IMeshDAO& mesh,
                                                     const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                                     const DiscreteProblemData& problemData);
 
       static Eigen::VectorXd AssembleWeakTerm(Weak g,
-                                              const int marker,
+                                              const unsigned int& marker,
                                               const Gedim::IMeshDAO& mesh,
-                                              const Eigen::VectorXd& cell2DEdgeLengths,
-                                              const Eigen::MatrixXd& cell2DEdgeTangents,
+                                              const std::vector<Eigen::VectorXd>& cell2DsEdgeLengths,
+                                              const std::vector<Eigen::MatrixXd>& cell2DsEdgeTangents,
                                               const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                               const DiscreteProblemData& problemData);
   };
