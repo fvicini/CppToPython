@@ -12,9 +12,9 @@ namespace GedimForPy
 {
   struct InterfaceData final
   {
-      Gedim::GeometryUtilitiesConfig* p_geometryUtilitiesConfig;
-      Gedim::GeometryUtilities* p_geometryUtilities;
-      Gedim::MeshUtilities* p_meshUtilities;
+      Gedim::GeometryUtilitiesConfig* p_geometryUtilitiesConfig = nullptr;
+      Gedim::GeometryUtilities* p_geometryUtilities = nullptr;
+      Gedim::MeshUtilities* p_meshUtilities = nullptr;
   };
 
   class InterfaceDataDAO final
@@ -22,13 +22,11 @@ namespace GedimForPy
     private:
       InterfaceData& data;
 
-      void Construct();
-      void Destroy();
-
     public:
-      InterfaceDataDAO(InterfaceData& data) : data(data) { Construct(); }
-      ~InterfaceDataDAO() { Destroy(); }
+      InterfaceDataDAO(InterfaceData& data) : data(data) { }
+      ~InterfaceDataDAO() { }
 
+      void Destroy();
       Gedim::GeometryUtilitiesConfig& GeometryUtilitiesConfig() { return *data.p_geometryUtilitiesConfig; }
       Gedim::GeometryUtilities& GeometryUtilities() { return *data.p_geometryUtilities; }
       Gedim::MeshUtilities& MeshUtilities() { return *data.p_meshUtilities; }

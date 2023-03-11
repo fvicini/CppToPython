@@ -6,13 +6,6 @@
 namespace GedimForPy
 {
   // ***************************************************************************
-  void InterfaceDataDAO::Construct()
-  {
-    data.p_geometryUtilitiesConfig = nullptr;
-    data.p_geometryUtilities = nullptr;
-    data.p_meshUtilities = nullptr;
-  }
-  // ***************************************************************************
   void InterfaceDataDAO::Destroy()
   {
     delete data.p_meshUtilities;

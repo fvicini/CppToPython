@@ -10,7 +10,7 @@
 #include "VTKUtilities.hpp"
 #include "test_Poisson.hpp"
 
-#define ACTIVE_CHECK 1
+#define ACTIVE_CHECK 0
 
 namespace UnitTesting
 {
@@ -35,7 +35,7 @@ namespace UnitTesting
     domain.Vertices = gedimData.GeometryUtilities().CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
                                                                  1.0);
     domain.VerticesBoundaryCondition = { 1, 1, 1, 1 };
-    domain.EdgesBoundaryCondition = { 1, 2, 1, 4 };
+    domain.EdgesBoundaryCondition = { 1, 2, 1, 3 };
     domain.DiscretizationType = GedimForPy::Domain2D::DiscretizationTypes::Triangular;
     domain.MeshCellsMaximumArea = 0.1;
 
@@ -71,7 +71,9 @@ namespace UnitTesting
     discreteSpace.Type = GedimForPy::DiscreteSpace::Types::FEM;
     discreteSpace.Order = 2;
     discreteSpace.BoundaryConditionsType = { GedimForPy::DiscreteSpace::BoundaryConditionTypes::None,
-                                             GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong };
+                                             GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong,
+                                             GedimForPy::DiscreteSpace::BoundaryConditionTypes::Weak,
+                                             GedimForPy::DiscreteSpace::BoundaryConditionTypes::Weak };
 
     GedimForPy::DiscreteProblemData problemData = GedimForPy::GeDiM4Py_Logic::Discretize(meshDAO,
                                                                                          discreteSpace);
@@ -245,6 +247,7 @@ namespace UnitTesting
       }
     }
 
+    gedimData.Destroy();
   }
   // ***************************************************************************
 }

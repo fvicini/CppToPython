@@ -198,6 +198,8 @@ namespace UnitTesting
       }
     }
 
+    gedimData.Destroy();
+
     Py_Finalize();
   }
   // ***************************************************************************
