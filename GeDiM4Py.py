@@ -147,12 +147,12 @@ def AssembleStrongSolution(g, marker, problemData):
 def AssembleWeakTerm(g, marker, problemData):
 	WeakTermFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 		
-	lib.GedimForPy_AssembleForcingTerm.argtypes = [WeakTermFN, ct.c_int, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
-	lib.GedimForPy_AssembleForcingTerm.restype =  None
+	lib.GedimForPy_AssembleWeakTerm.argtypes = [WeakTermFN, ct.c_int, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleWeakTerm.restype =  None
 	
 	pointerWeak = ct.POINTER(ct.c_double)()
 	size = ct.c_int(0)
-	lib.GedimForPy_AssembleForcingTerm(WeakTermFN(f), marker, ct.byref(size), ct.byref(pointerWeak))
+	lib.GedimForPy_AssembleWeakTerm(WeakTermFN(g), marker, ct.byref(size), ct.byref(pointerWeak))
 	size = size.value
 	return make_nd_array(pointerWeak, size)
 
@@ -259,7 +259,7 @@ if __name__ == '__main__':
 	print("AssembleWeakTerm successful")
 
 	print("CholeskySolver...")
-	solution = CholeskySolver(stiffness, forcingTerm - stiffnessStrong @ solutionStrong)
+	solution = CholeskySolver(stiffness, forcingTerm - stiffnessStrong @ solutionStrong + weakTerm_right + weakTerm_left)
 	print("CholeskySolver successful")
 
 	PlotSolution(mesh, dofs, strongs, solution, solutionStrong)
