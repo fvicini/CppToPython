@@ -400,6 +400,7 @@ namespace GedimForPy
   Eigen::VectorXd GeDiM4Py_Logic::AssembleWeakTerm(Weak g,
                                                    const unsigned int& marker,
                                                    const Gedim::IMeshDAO& mesh,
+                                                   const std::vector<Eigen::MatrixXd>& cell2DsVertices,
                                                    const std::vector<Eigen::VectorXd>& cell2DsEdgeLengths,
                                                    const std::vector<Eigen::MatrixXd>& cell2DsEdgeTangents,
                                                    const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
@@ -412,26 +413,25 @@ namespace GedimForPy
     const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& localSpace = problemData.LocalSpace;
     PDE_Equation equation;
 
-    const Eigen::MatrixXd referenceBasisFunctions = femValues.Reference_BasisFunctions(localSpace,
-                                                                                       localSpace.ReferenceElement.InternalQuadrature.Points);
-
-    const unsigned int numLocals = problemData.LocalSpace.NumberBasisFunctions;
-
     for (unsigned int cell2DIndex = 0; cell2DIndex < mesh.Cell2DTotalNumber(); cell2DIndex++)
     {
       const Gedim::MapTriangle::MapTriangleData& cell2DMapData = cell2DsMap.at(cell2DIndex);
+      const Eigen::MatrixXd& cell2DVertices = cell2DsVertices[cell2DIndex];
       const Eigen::VectorXd& cell2DEdgeLengths = cell2DsEdgeLengths[cell2DIndex];
       const Eigen::MatrixXd& cell2DEdgeTangents = cell2DsEdgeTangents[cell2DIndex];
 
-      for(unsigned int ed = 0; ed < 3; ed ++)
+      for(unsigned int ed = 0; ed < 3; ed++)
       {
         const unsigned int cell1DIndex = mesh.Cell2DEdge(cell2DIndex,
                                                          ed);
         const unsigned int cell0DOriginIndex = mesh.Cell1DOrigin(cell1DIndex);
         const unsigned int cell0DEndIndex = mesh.Cell1DEnd(cell1DIndex);
 
+        if (mesh.Cell1DMarker(cell1DIndex) != marker)
+          continue;
+
         const DiscreteProblemData::DOF& dofOrigin = problemData.Cell0Ds_DOF[cell0DOriginIndex];
-        const DiscreteProblemData::DOF& dofEnd = problemData.Cell0Ds_DOF[cell0DOriginIndex];
+        const DiscreteProblemData::DOF& dofEnd = problemData.Cell0Ds_DOF[cell0DEndIndex];
         const DiscreteProblemData::DOF& dofEdge = problemData.Cell1Ds_DOF[cell1DIndex];
 
         const bool isDofOriginWeak = (dofOrigin.Boundary.Type == DiscreteProblemData::DOF::BoundaryInfo::Types::Weak &&
@@ -444,7 +444,7 @@ namespace GedimForPy
         if (!isDofOriginWeak && !isDofEndWeak && !isDofEdgeWeak)
           continue;
 
-        const Eigen::Vector3d& edgeStart = mesh.Cell1DOriginCoordinates(cell1DIndex);
+        const Eigen::Vector3d& edgeStart = cell2DVertices.col(ed);
         const Eigen::Vector3d& edgeTangent = cell2DEdgeTangents.col(ed);
 
         const unsigned int numEdgeQuadraturePoints = localSpace.ReferenceElement.BorderQuadrature.Points.cols();
@@ -466,7 +466,7 @@ namespace GedimForPy
         const double* weakTermValues = g(numEdgeQuadraturePoints,
                                          weakQuadraturePoints.data());
         const Eigen::VectorXd neumannContributions = equation.ComputeCellWeakTerm(Eigen::Map<const Eigen::VectorXd>(weakTermValues,
-                                                                                                                    numLocals),
+                                                                                                                    numEdgeQuadraturePoints),
                                                                                   weakBasisFunctionsValues,
                                                                                   weakQuadratureWeights);
 

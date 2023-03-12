@@ -58,6 +58,16 @@ def Poisson_exactSolution(numPoints, points):
 	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
 	values = 16.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) * matPoints[0,:] * (1.0 - matPoints[0,:])) + 1.1
 	return values.ctypes.data
+	
+def Poisson_weakTerm_right(numPoints, points):
+	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
+	values = 16.0 * (1.0 - 2.0 * matPoints[0,:]) * matPoints[1,:] * (1.0 - matPoints[1,:])
+	return values.ctypes.data
+	
+def Poisson_weakTerm_left(numPoints, points):
+	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
+	values = -16.0 * (1.0 - 2.0 * matPoints[0,:]) * matPoints[1,:] * (1.0 - matPoints[1,:])
+	return values.ctypes.data
 
 def ImportLibrary(path):
 	return ct.cdll.LoadLibrary(path)
@@ -122,17 +132,29 @@ def AssembleForcingTerm(f, problemData):
 	size = size.value
 	return make_nd_array(pointerF, size)
 
-def AssembleStrongSolution(g, problemData):
+def AssembleStrongSolution(g, marker, problemData):
 	StrongFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 		
-	lib.GedimForPy_AssembleStrongSolution.argtypes = [StrongFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleStrongSolution.argtypes = [StrongFN, ct.c_int, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_AssembleStrongSolution.restype =  None
 	
 	pointerStrongSolution = ct.POINTER(ct.c_double)()
 	size = ct.c_int(0)
-	lib.GedimForPy_AssembleStrongSolution(StrongFN(g), ct.byref(size), ct.byref(pointerStrongSolution))
+	lib.GedimForPy_AssembleStrongSolution(StrongFN(g), marker, ct.byref(size), ct.byref(pointerStrongSolution))
 	size = size.value
 	return make_nd_array(pointerStrongSolution, size)
+
+def AssembleWeakTerm(g, marker, problemData):
+	WeakTermFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
+		
+	lib.GedimForPy_AssembleForcingTerm.argtypes = [WeakTermFN, ct.c_int, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleForcingTerm.restype =  None
+	
+	pointerWeak = ct.POINTER(ct.c_double)()
+	size = ct.c_int(0)
+	lib.GedimForPy_AssembleForcingTerm(WeakTermFN(f), marker, ct.byref(size), ct.byref(pointerWeak))
+	size = size.value
+	return make_nd_array(pointerWeak, size)
 
 def CholeskySolver(A, f):
 	[rows, cols, values] = scipy.sparse.find(A)
@@ -206,14 +228,14 @@ if __name__ == '__main__':
 	print("Initialize successful")
 	
 	print("CreateDomainSquare...")
-	domain = { 'SquareEdge': 1.0, 'VerticesBoundaryCondition': [1,1,1,1], 'EdgesBoundaryCondition': [1,1,1,1], 'DiscretizationType': 1, 'MeshCellsMaximumArea': 0.01 }
+	domain = { 'SquareEdge': 1.0, 'VerticesBoundaryCondition': [1,1,1,1], 'EdgesBoundaryCondition': [1,2,1,3], 'DiscretizationType': 1, 'MeshCellsMaximumArea': 0.01 }
 	[meshInfo, mesh] = CreateDomainSquare(domain)
 	print("CreateDomainSquare successful")
 
 	PlotMesh(mesh)
 
 	print("Discretize...")
-	discreteSpace = { 'Order': 2, 'Type': 1, 'BoundaryConditionsType': [1, 2] }
+	discreteSpace = { 'Order': 2, 'Type': 1, 'BoundaryConditionsType': [1, 2, 3, 3] }
 	[problemData, dofs, strongs] = Discretize(discreteSpace)
 	print("Discretize successful")
 
@@ -228,8 +250,13 @@ if __name__ == '__main__':
 	print("AssembleForcingTerm successful")
 
 	print("AssembleStrongSolution...")
-	solutionStrong = AssembleStrongSolution(Poisson_exactSolution, problemData)
+	solutionStrong = AssembleStrongSolution(Poisson_exactSolution, 1, problemData)
 	print("AssembleStrongSolution successful")
+	
+	print("AssembleWeakTerm...")
+	weakTerm_right = AssembleWeakTerm(Poisson_weakTerm_right, 2, problemData)
+	weakTerm_left = AssembleWeakTerm(Poisson_weakTerm_left, 3, problemData)
+	print("AssembleWeakTerm successful")
 
 	print("CholeskySolver...")
 	solution = CholeskySolver(stiffness, forcingTerm - stiffnessStrong @ solutionStrong)

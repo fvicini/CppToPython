@@ -10,7 +10,7 @@
 #include "VTKUtilities.hpp"
 #include "test_Poisson.hpp"
 
-#define ACTIVE_CHECK 0
+#define ACTIVE_CHECK 1
 
 namespace UnitTesting
 {
@@ -79,8 +79,8 @@ namespace UnitTesting
                                                                                          discreteSpace);
 
 #if ACTIVE_CHECK == 1
-    ASSERT_EQ(25, problemData.NumberDOFs);
-    ASSERT_EQ(16, problemData.NumberStrongs);
+    ASSERT_EQ(31, problemData.NumberDOFs);
+    ASSERT_EQ(10, problemData.NumberStrongs);
     ASSERT_EQ(13, problemData.Cell0Ds_DOF.size());
     ASSERT_EQ(28, problemData.Cell1Ds_DOF.size());
 #endif
@@ -157,13 +157,15 @@ namespace UnitTesting
     const Eigen::VectorXd weakTerm_Right = GedimForPy::GeDiM4Py_Logic::AssembleWeakTerm(Poisson::WeakTerm_Right,
                                                                                         2,
                                                                                         meshDAO,
+                                                                                        mesh.MeshGeometricData.Cell2DsVertices,
                                                                                         mesh.MeshGeometricData.Cell2DsEdgeLengths,
                                                                                         mesh.MeshGeometricData.Cell2DsEdgeTangents,
                                                                                         mesh.Cell2DsMap,
                                                                                         problemData);
     const Eigen::VectorXd weakTerm_Left = GedimForPy::GeDiM4Py_Logic::AssembleWeakTerm(Poisson::WeakTerm_Left,
-                                                                                       4,
+                                                                                       3,
                                                                                        meshDAO,
+                                                                                       mesh.MeshGeometricData.Cell2DsVertices,
                                                                                        mesh.MeshGeometricData.Cell2DsEdgeLengths,
                                                                                        mesh.MeshGeometricData.Cell2DsEdgeTangents,
                                                                                        mesh.Cell2DsMap,
@@ -192,7 +194,10 @@ namespace UnitTesting
     Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>, Eigen::Lower> linearSolver;
     linearSolver.compute(stiffness);
 
-    Eigen::VectorXd solution = linearSolver.solve(forcingTerm - stiffnessStrong * solutionStrong);
+    Eigen::VectorXd solution = linearSolver.solve(forcingTerm -
+                                                  stiffnessStrong * solutionStrong +
+                                                  weakTerm_Left +
+                                                  weakTerm_Right);
 
     // export
     {

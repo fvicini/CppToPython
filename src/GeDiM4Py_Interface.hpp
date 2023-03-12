@@ -32,6 +32,11 @@ void GedimForPy_AssembleStrongSolution(GedimForPy::GeDiM4Py_Logic::Strong g,
                                        int* size,
                                        double** solutionStrong);
 extern "C"
+void GedimForPy_AssembleWeakTerm(GedimForPy::GeDiM4Py_Logic::Weak g,
+                                 int marker,
+                                 int* size,
+                                 double** weakTerm);
+extern "C"
 void GedimForPy_CholeskySolver(const int nRows,
                                const int numNonZeros,
                                const double* pointerTriplets,

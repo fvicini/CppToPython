@@ -167,6 +167,7 @@ namespace GedimForPy
       static Eigen::VectorXd AssembleWeakTerm(Weak g,
                                               const unsigned int& marker,
                                               const Gedim::IMeshDAO& mesh,
+                                              const std::vector<Eigen::MatrixXd>& cell2DsVertices,
                                               const std::vector<Eigen::VectorXd>& cell2DsEdgeLengths,
                                               const std::vector<Eigen::MatrixXd>& cell2DsEdgeTangents,
                                               const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,

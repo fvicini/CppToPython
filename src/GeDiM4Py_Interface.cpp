@@ -141,6 +141,32 @@ void GedimForPy_AssembleStrongSolution(GedimForPy::GeDiM4Py_Logic::Strong g,
                                                *solutionStrong);
 }
 // ***************************************************************************
+void GedimForPy_AssembleWeakTerm(GedimForPy::GeDiM4Py_Logic::Weak g,
+                                 int marker,
+                                 int* size,
+                                 double** weakTerm)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
+  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertArray(GedimForPy::GeDiM4Py_Logic::AssembleWeakTerm(g,
+                                                                                            marker,
+                                                                                            meshDAO,
+                                                                                            mesh.MeshGeometricData.Cell2DsVertices,
+                                                                                            mesh.MeshGeometricData.Cell2DsEdgeLengths,
+                                                                                            mesh.MeshGeometricData.Cell2DsEdgeTangents,
+                                                                                            mesh.Cell2DsMap,
+                                                                                            problemData),
+                                               *size,
+                                               *weakTerm);
+}
+// ***************************************************************************
 void GedimForPy_CholeskySolver(const int nRows,
                                const int numNonZeros,
                                const double* pointerTriplets,
