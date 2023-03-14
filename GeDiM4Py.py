@@ -241,7 +241,21 @@ def LUSolver(A, f):
 
 	return make_nd_array(pointerSolution, A.shape[0])
 
-def Solver(A, f):
+def ComputeErrorL2(u, solution, solutionStrong):
+	ExactFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
+	lib.GedimForPy_ComputeErrorL2.argtypes = [ExactFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+	lib.GedimForPy_ComputeErrorL2.restype =  ct.c_double
+
+	return lib.GedimForPy_ComputeErrorL2(ExactFN(u), solution, solutionStrong)
+
+def ComputeErrorH1(uDer, solution, solutionStrong):
+	ExactDerivativeFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
+	lib.GedimForPy_ComputeErrorH1.argtypes = [ExactDerivativeFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+	lib.GedimForPy_ComputeErrorH1.restype =  ct.c_double
+
+	return lib.GedimForPy_ComputeErrorH1(ExactDerivativeFN(uDer), solution, solutionStrong)
+
+def PythonSolver(A, f):
 	return scipy.sparse.linalg.spsolve(A, f)
 
 def PlotMesh(mesh):	
@@ -346,6 +360,16 @@ if __name__ == '__main__':
 			weakTerm_right + \
 			weakTerm_left)
 	print("Solver successful")
+
+	print("ComputeErrorL2...")
+	errorL2 = ComputeErrorL2(Poisson_exactSolution, solution, solutionStrong)
+	print("errorL2", errorL2)
+	print("ComputeErrorL2 successful")
+
+	print("ComputeErrorH1...")
+	errorH1 = ComputeErrorH1(Poisson_exactDerivativeSolution, solution, solutionStrong)
+	print("errorH1", errorH1)
+	print("ComputeErrorH1 successful")
 
 	PlotSolution(mesh, dofs, strongs, solution, solutionStrong)
 
