@@ -60,6 +60,14 @@ void GedimForPy_LUSolver(const int nRows,
                          const double* pointerTriplets,
                          const double* pointerF,
                          double** solution);
+extern "C"
+double GedimForPy_ComputeErrorL2(GedimForPy::GeDiM4Py_Logic::Exact u,
+                                 const double* pointerNumericSolution,
+                                 const double* pointerStrongSolution);
+extern "C"
+double GedimForPy_ComputeErrorH1(GedimForPy::GeDiM4Py_Logic::ExactDerivative uDer,
+                                 const double* pointerNumericSolution,
+                                 const double* pointerStrongSolution);
 // ***************************************************************************
 
 namespace GedimForPy

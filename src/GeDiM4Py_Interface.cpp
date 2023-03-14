@@ -275,6 +275,54 @@ void GedimForPy_LUSolver(const int nRows,
                                                *solution);
 }
 // ***************************************************************************
+double GedimForPy_ComputeErrorL2(GedimForPy::GeDiM4Py_Logic::Exact u,
+                                 const double* pointerNumericSolution,
+                                 const double* pointerStrongSolution)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
+  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  const Eigen::VectorXd cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(u,
+                                                                                    Eigen::Map<const Eigen::VectorXd>(pointerNumericSolution,
+                                                                                                                      problemData.NumberDOFs),
+                                                                                    Eigen::Map<const Eigen::VectorXd>(pointerStrongSolution,
+                                                                                                                      problemData.NumberStrongs),
+                                                                                    meshDAO,
+                                                                                    mesh.Cell2DsMap,
+                                                                                    problemData);
+  return sqrt(cell2DsErrorL2.sum());
+}
+// ***************************************************************************
+double GedimForPy_ComputeErrorH1(GedimForPy::GeDiM4Py_Logic::ExactDerivative uDer,
+                                 const double* pointerNumericSolution,
+                                 const double* pointerStrongSolution)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
+  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  const Eigen::VectorXd cell2DsErrorH1 = GedimForPy::GeDiM4Py_Logic::ComputeErrorH1(uDer,
+                                                                                    Eigen::Map<const Eigen::VectorXd>(pointerNumericSolution,
+                                                                                                                      problemData.NumberDOFs),
+                                                                                    Eigen::Map<const Eigen::VectorXd>(pointerStrongSolution,
+                                                                                                                      problemData.NumberStrongs),
+                                                                                    meshDAO,
+                                                                                    mesh.Cell2DsMap,
+                                                                                    problemData);
+  return sqrt(cell2DsErrorH1.sum());
+}
+// ***************************************************************************
 namespace GedimForPy
 {
   // ***************************************************************************
