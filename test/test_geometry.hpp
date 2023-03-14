@@ -32,6 +32,7 @@ namespace UnitTesting
                                          data));
 
     const std::vector<double> meshSize = { 0.1, 0.01, 0.001 };
+    const unsigned int order = 2;
 
     for (unsigned int m = 0; m < meshSize.size(); m++)
     {
@@ -39,7 +40,7 @@ namespace UnitTesting
       domain.Vertices = gedimData.GeometryUtilities().CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
                                                                    1.0);
       domain.VerticesBoundaryCondition = { 1, 1, 1, 1 };
-      domain.EdgesBoundaryCondition = { 1, 1, 1, 1 };
+      domain.EdgesBoundaryCondition = { 1, 2, 1, 3 };
       domain.DiscretizationType = GedimForPy::Domain2D::DiscretizationTypes::Triangular;
       domain.MeshCellsMaximumArea = meshSize[m];
 
@@ -73,7 +74,7 @@ namespace UnitTesting
 
       GedimForPy::DiscreteSpace discreteSpace;
       discreteSpace.Type = GedimForPy::DiscreteSpace::Types::FEM;
-      discreteSpace.Order = 1;
+      discreteSpace.Order = order;
       discreteSpace.BoundaryConditionsType = { GedimForPy::DiscreteSpace::BoundaryConditionTypes::None,
                                                GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong,
                                                GedimForPy::DiscreteSpace::BoundaryConditionTypes::Weak,

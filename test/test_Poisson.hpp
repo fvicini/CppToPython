@@ -9,8 +9,8 @@ namespace UnitTesting
   {
     public:
       static constexpr double A() { return 10.0; }
-      static constexpr double B() { return 0.0; }
-      static constexpr double C() { return 0.0; }
+      static constexpr double B() { return 0.1; }
+      static constexpr double C() { return 2.0; }
 
       // ***************************************************************************
       static double* DiffusionTerm(const int numPoints, const double* points)
