@@ -223,7 +223,7 @@ namespace GedimForPy
     return problemData;
   }
   // ***************************************************************************
-  void GeDiM4Py_Logic::AssembleStiffnessMatrix(K k,
+  void GeDiM4Py_Logic::AssembleStiffnessMatrix(A a,
                                                const Gedim::IMeshDAO& mesh,
                                                const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                                const DiscreteProblemData& problemData,
@@ -252,7 +252,7 @@ namespace GedimForPy
                                                                                                               cell2DMapData,
                                                                                                               referenceBasisFunctionDerivatives);
 
-      const double* diffusioTermValues = k(cell2DQuadraturePoints.cols(),
+      const double* diffusioTermValues = a(cell2DQuadraturePoints.cols(),
                                            cell2DQuadraturePoints.data());
       const Eigen::MatrixXd cellMatrixA = equation.ComputeStiffnessMatrix(numLocals,
                                                                           basisFunctionDerivativeValues2D,
@@ -284,6 +284,164 @@ namespace GedimForPy
               stiffnessStrongTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
                                                                        dofJ.Global_Index,
                                                                        cellMatrixA(i, j)));
+              break;
+            default:
+              throw std::runtime_error("DOF Type " +
+                                       std::to_string((unsigned int)dofJ.Type) +
+                                       " not supported");
+          }
+
+          if (dofJ.Type != DiscreteProblemData::DOF::Types::DOF)
+            continue;
+        }
+      }
+    }
+  }
+  // ***************************************************************************
+  void GeDiM4Py_Logic::AssembleAdvectionMatrix(B b,
+                                               const Gedim::IMeshDAO& mesh,
+                                               const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                               const DiscreteProblemData& problemData,
+                                               std::list<Eigen::Triplet<double>>& advectionTriplets,
+                                               std::list<Eigen::Triplet<double>>& advectionStrongTriplets)
+  {
+    FEM_RefElement_Langrange_PCC_Triangle_2D femValues;
+    Gedim::MapTriangle mapTriangle;
+    const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& localSpace = problemData.LocalSpace;
+    PDE_Equation equation;
+
+    const Eigen::MatrixXd referenceBasisFunctions = femValues.Reference_BasisFunctions(localSpace,
+                                                                                       localSpace.ReferenceElement.InternalQuadrature.Points);
+    const std::vector<Eigen::MatrixXd> referenceBasisFunctionDerivatives = femValues.Reference_BasisFunctionDerivatives(localSpace,
+                                                                                                                        localSpace.ReferenceElement.InternalQuadrature.Points);
+    const unsigned int numLocals = problemData.LocalSpace.NumberBasisFunctions;
+
+    for (unsigned int cell2DIndex = 0; cell2DIndex < mesh.Cell2DTotalNumber(); cell2DIndex++)
+    {
+      const Gedim::MapTriangle::MapTriangleData& cell2DMapData = cell2DsMap.at(cell2DIndex);
+
+      const Eigen::MatrixXd cell2DQuadraturePoints = mapTriangle.F(cell2DMapData,
+                                                                   localSpace.ReferenceElement.InternalQuadrature.Points);
+      const Eigen::MatrixXd cell2DQuadratureWeights = localSpace.ReferenceElement.InternalQuadrature.Weights *
+                                                      abs(cell2DMapData.DetB);
+
+      const Eigen::MatrixXd basisFunctionValues2D = femValues.BasisFunctions(localSpace,
+                                                                             cell2DMapData,
+                                                                             referenceBasisFunctions);
+
+      const std::vector<Eigen::MatrixXd> basisFunctionDerivativeValues2D = femValues.BasisFunctionDerivatives(localSpace,
+                                                                                                              cell2DMapData,
+                                                                                                              referenceBasisFunctionDerivatives);
+
+      const double* advectionTermValues = b(cell2DQuadraturePoints.cols(),
+                                            cell2DQuadraturePoints.data());
+      const Eigen::MatrixXd cellMatrixB = equation.ComputeCellAdvectionMatrix(numLocals,
+                                                                              Eigen::Map<const Eigen::MatrixXd>(advectionTermValues,
+                                                                                                                2,
+                                                                                                                cell2DQuadraturePoints.cols()),
+                                                                              basisFunctionValues2D,
+                                                                              basisFunctionDerivativeValues2D,
+                                                                              cell2DQuadratureWeights);
+
+      const std::vector<DiscreteProblemData::DOF*>& cell2D_DOF = problemData.Cell2Ds_DOF[cell2DIndex];
+
+      for (unsigned int i = 0; i < numLocals; i++)
+      {
+        const DiscreteProblemData::DOF& dofI = *cell2D_DOF[i];
+
+        if (dofI.Type != DiscreteProblemData::DOF::Types::DOF)
+          continue;
+
+        for (unsigned int j = 0; j < numLocals; j++)
+        {
+          const DiscreteProblemData::DOF& dofJ = *cell2D_DOF[j];
+
+          switch (dofJ.Type)
+          {
+            case DiscreteProblemData::DOF::Types::DOF:
+              advectionTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
+                                                                 dofJ.Global_Index,
+                                                                 cellMatrixB(i, j)));
+              break;
+            case DiscreteProblemData::DOF::Types::Strong:
+              advectionStrongTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
+                                                                       dofJ.Global_Index,
+                                                                       cellMatrixB(i, j)));
+              break;
+            default:
+              throw std::runtime_error("DOF Type " +
+                                       std::to_string((unsigned int)dofJ.Type) +
+                                       " not supported");
+          }
+
+          if (dofJ.Type != DiscreteProblemData::DOF::Types::DOF)
+            continue;
+        }
+      }
+    }
+  }
+  // ***************************************************************************
+  void GeDiM4Py_Logic::AssembleReactionMatrix(C c,
+                                              const Gedim::IMeshDAO& mesh,
+                                              const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                              const DiscreteProblemData& problemData,
+                                              std::list<Eigen::Triplet<double> >& reactionTriplets,
+                                              std::list<Eigen::Triplet<double> >& reactionStrongTriplets)
+  {
+    FEM_RefElement_Langrange_PCC_Triangle_2D femValues;
+    Gedim::MapTriangle mapTriangle;
+    const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& localSpace = problemData.LocalSpace;
+    PDE_Equation equation;
+
+    const Eigen::MatrixXd referenceBasisFunctions = femValues.Reference_BasisFunctions(localSpace,
+                                                                                       localSpace.ReferenceElement.InternalQuadrature.Points);
+
+    const unsigned int numLocals = problemData.LocalSpace.NumberBasisFunctions;
+
+    for (unsigned int cell2DIndex = 0; cell2DIndex < mesh.Cell2DTotalNumber(); cell2DIndex++)
+    {
+      const Gedim::MapTriangle::MapTriangleData& cell2DMapData = cell2DsMap.at(cell2DIndex);
+
+      const Eigen::MatrixXd cell2DQuadraturePoints = mapTriangle.F(cell2DMapData,
+                                                                   localSpace.ReferenceElement.InternalQuadrature.Points);
+      const Eigen::MatrixXd cell2DQuadratureWeights = localSpace.ReferenceElement.InternalQuadrature.Weights *
+                                                      abs(cell2DMapData.DetB);
+
+      const Eigen::MatrixXd basisFunctionValues2D = femValues.BasisFunctions(localSpace,
+                                                                             cell2DMapData,
+                                                                             referenceBasisFunctions);
+
+      const double* reactionTermValues = c(cell2DQuadraturePoints.cols(),
+                                           cell2DQuadraturePoints.data());
+      const Eigen::MatrixXd cellMatrixC = equation.ComputeCellReactionMatrix(Eigen::Map<const Eigen::VectorXd>(reactionTermValues,
+                                                                                                               cell2DQuadraturePoints.cols()),
+                                                                             basisFunctionValues2D,
+                                                                             cell2DQuadratureWeights);
+
+      const std::vector<DiscreteProblemData::DOF*>& cell2D_DOF = problemData.Cell2Ds_DOF[cell2DIndex];
+
+      for (unsigned int i = 0; i < numLocals; i++)
+      {
+        const DiscreteProblemData::DOF& dofI = *cell2D_DOF[i];
+
+        if (dofI.Type != DiscreteProblemData::DOF::Types::DOF)
+          continue;
+
+        for (unsigned int j = 0; j < numLocals; j++)
+        {
+          const DiscreteProblemData::DOF& dofJ = *cell2D_DOF[j];
+
+          switch (dofJ.Type)
+          {
+            case DiscreteProblemData::DOF::Types::DOF:
+              reactionTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
+                                                                dofJ.Global_Index,
+                                                                cellMatrixC(i, j)));
+              break;
+            case DiscreteProblemData::DOF::Types::Strong:
+              reactionStrongTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
+                                                                      dofJ.Global_Index,
+                                                                      cellMatrixC(i, j)));
               break;
             default:
               throw std::runtime_error("DOF Type " +

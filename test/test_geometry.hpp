@@ -148,6 +148,20 @@ namespace UnitTesting
                                                         problemData,
                                                         stiffnessTriplets,
                                                         stiffnessStrongTriplets);
+    std::list<Eigen::Triplet<double>> advectionTriplets, advectionStrongTriplets;
+    GedimForPy::GeDiM4Py_Logic::AssembleAdvectionMatrix(Poisson::AdvectionTerm,
+                                                        meshDAO,
+                                                        mesh.Cell2DsMap,
+                                                        problemData,
+                                                        advectionTriplets,
+                                                        advectionStrongTriplets);
+    std::list<Eigen::Triplet<double>> reactionTriplets, reactionStrongTriplets;
+    GedimForPy::GeDiM4Py_Logic::AssembleReactionMatrix(Poisson::ReactionTerm,
+                                                       meshDAO,
+                                                       mesh.Cell2DsMap,
+                                                       problemData,
+                                                       reactionTriplets,
+                                                       reactionStrongTriplets);
 
     const Eigen::VectorXd forcingTerm = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(Poisson::ForcingTerm,
                                                                                         meshDAO,
@@ -184,6 +198,20 @@ namespace UnitTesting
     stiffness.makeCompressed();
     stiffnessTriplets.clear();
 
+    Eigen::SparseMatrix<double> advection(problemData.NumberDOFs,
+                                          problemData.NumberDOFs);
+    advection.setFromTriplets(advectionTriplets.begin(),
+                              advectionTriplets.end());
+    advection.makeCompressed();
+    advectionTriplets.clear();
+
+    Eigen::SparseMatrix<double> reaction(problemData.NumberDOFs,
+                                         problemData.NumberDOFs);
+    reaction.setFromTriplets(reactionTriplets.begin(),
+                             reactionTriplets.end());
+    reaction.makeCompressed();
+    reactionTriplets.clear();
+
     Eigen::SparseMatrix<double> stiffnessStrong(problemData.NumberDOFs,
                                                 problemData.NumberStrongs);
     stiffnessStrong.setFromTriplets(stiffnessStrongTriplets.begin(),
@@ -191,11 +219,27 @@ namespace UnitTesting
     stiffnessStrong.makeCompressed();
     stiffnessStrongTriplets.clear();
 
+    Eigen::SparseMatrix<double> advectionStrong(problemData.NumberDOFs,
+                                                problemData.NumberStrongs);
+    advectionStrong.setFromTriplets(advectionStrongTriplets.begin(),
+                                    advectionStrongTriplets.end());
+    advectionStrong.makeCompressed();
+    advectionStrongTriplets.clear();
+
+    Eigen::SparseMatrix<double> reactionStrong(problemData.NumberDOFs,
+                                               problemData.NumberStrongs);
+    reactionStrong.setFromTriplets(reactionStrongTriplets.begin(),
+                                   reactionStrongTriplets.end());
+    reactionStrong.makeCompressed();
+    reactionStrongTriplets.clear();
+
     Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>, Eigen::Lower> linearSolver;
-    linearSolver.compute(stiffness);
+    linearSolver.compute(stiffness + advection + reaction);
 
     Eigen::VectorXd solution = linearSolver.solve(forcingTerm -
-                                                  stiffnessStrong * solutionStrong +
+                                                  (stiffnessStrong +
+                                                   advectionStrong +
+                                                   reactionStrong) * solutionStrong +
                                                   weakTerm_Left +
                                                   weakTerm_Right);
 

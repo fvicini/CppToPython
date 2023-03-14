@@ -13,7 +13,14 @@ namespace GedimForPy
                                                     const std::vector<Eigen::MatrixXd>& basisFunctionDerivativeValues,
                                                     const Eigen::VectorXd& diffusionTermValues,
                                                     const Eigen::VectorXd& quadratureWeights);
-
+      static Eigen::MatrixXd ComputeCellAdvectionMatrix(const unsigned int& numCellDofs,
+                                                        const Eigen::MatrixXd& advectionTermValues,
+                                                        const Eigen::MatrixXd& basisFunctionValues,
+                                                        const std::vector<Eigen::MatrixXd>& basisFunctionDerivativeValues,
+                                                        const Eigen::VectorXd& quadratureWeights);
+      static Eigen::MatrixXd ComputeCellReactionMatrix(const Eigen::VectorXd& reactionTermValues,
+                                                       const Eigen::MatrixXd& basisFunctionValues,
+                                                       const Eigen::VectorXd& quadratureWeights);
       static Eigen::VectorXd ComputeCellForcingTerm(const Eigen::VectorXd& forcingTermValues,
                                                     const Eigen::MatrixXd& basisFunctionValues,
                                                     const Eigen::VectorXd& quadratureWeights);

@@ -19,6 +19,27 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
+      static double* AdvectionTerm(const int numPoints, const double* points)
+      {
+        double* values = new double[2 * numPoints];
+
+        Eigen::Map<Eigen::MatrixXd> matValues(values, 2, numPoints);
+        matValues.row(0).setConstant(1.0);
+        matValues.row(1).setConstant(1.0);
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* ReactionTerm(const int numPoints, const double* points)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+        vecValues.setConstant(1.0);
+
+        return values;
+      }
+      // ***************************************************************************
       static double* ForcingTerm(const int numPoints, const double* points)
       {
         double* values = new double[numPoints];
@@ -26,7 +47,17 @@ namespace UnitTesting
         Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
         vecValues = 32.0 * (matPoints.row(1).array() * (1.0 - matPoints.row(1).array()) +
-                            matPoints.row(0).array() * (1.0 - matPoints.row(0).array()));
+                            matPoints.row(0).array() * (1.0 - matPoints.row(0).array())) +
+                    16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
+                    matPoints.row(1).array() *
+                    (1.0 - matPoints.row(1).array()) +
+                    16.0 * (1.0 - 2.0 * matPoints.row(1).array()) *
+                    matPoints.row(0).array() *
+                    (1.0 - matPoints.row(0).array()) +
+                    16.0 * (matPoints.row(1).array() *
+                            (1.0 - matPoints.row(1).array()) *
+                            matPoints.row(0).array() *
+                            (1.0 - matPoints.row(0).array())) + 1.1;
         return values;
       }
       // ***************************************************************************

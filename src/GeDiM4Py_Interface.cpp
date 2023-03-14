@@ -65,7 +65,7 @@ PyObject* GedimForPy_Discretize(PyObject* discreteSpace,
                                                             *strongsCoordinate);
 }
 // ***************************************************************************
-void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::K k,
+void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::A k,
                                         int* numStiffnessTriplets,
                                         double** stiffnessTriplets,
                                         int* numStiffnessStrongTriplets,

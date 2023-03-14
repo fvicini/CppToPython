@@ -126,7 +126,9 @@ namespace GedimForPy
   class GeDiM4Py_Logic final
   {
     public:
-      typedef double* (*K)(const int numPoints, const double* points);
+      typedef double* (*A)(const int numPoints, const double* points);
+      typedef double* (*B)(const int numPoints, const double* points);
+      typedef double* (*C)(const int numPoints, const double* points);
       typedef double* (*F)(const int numPoints, const double* points);
       typedef double* (*Strong)(const int numPoints, const double* points);
       typedef double* (*Weak)(const int numPoints, const double* points);
@@ -146,12 +148,24 @@ namespace GedimForPy
       static DiscreteProblemData Discretize(const Gedim::IMeshDAO& mesh,
                                             const DiscreteSpace& space);
 
-      static void AssembleStiffnessMatrix(K k,
+      static void AssembleStiffnessMatrix(A a,
                                           const Gedim::IMeshDAO& mesh,
                                           const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                           const DiscreteProblemData& problemData,
                                           std::list<Eigen::Triplet<double> >& stiffnessTriplets,
                                           std::list<Eigen::Triplet<double> >& stiffnessStrongTriplets);
+      static void AssembleAdvectionMatrix(B b,
+                                          const Gedim::IMeshDAO& mesh,
+                                          const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                          const DiscreteProblemData& problemData,
+                                          std::list<Eigen::Triplet<double>>& advectionTriplets,
+                                          std::list<Eigen::Triplet<double>>& advectionStrongTriplets);
+      static void AssembleReactionMatrix(C c,
+                                         const Gedim::IMeshDAO& mesh,
+                                         const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                         const DiscreteProblemData& problemData,
+                                         std::list<Eigen::Triplet<double>>& reactionTriplets,
+                                         std::list<Eigen::Triplet<double>>& reactionStrongTriplets);
 
       static Eigen::VectorXd AssembleForcingTerm(F f,
                                                  const Gedim::IMeshDAO& mesh,

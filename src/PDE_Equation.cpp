@@ -23,6 +23,33 @@ namespace GedimForPy
     return cellMatrixA;
   }
   // ***************************************************************************
+  MatrixXd PDE_Equation::ComputeCellAdvectionMatrix(const unsigned int& numCellDofs,
+                                                    const Eigen::MatrixXd& advectionTermValues,
+                                                    const Eigen::MatrixXd& basisFunctionValues,
+                                                    const std::vector<Eigen::MatrixXd>& basisFunctionDerivativeValues,
+                                                    const Eigen::VectorXd& quadratureWeights)
+  {
+    Eigen::MatrixXd cellMatrixA;
+    cellMatrixA.setZero(numCellDofs,
+                        numCellDofs);
+
+    for(unsigned int i = 0; i < basisFunctionDerivativeValues.size(); i++)
+      cellMatrixA += basisFunctionValues.transpose() *
+                     quadratureWeights.cwiseProduct(advectionTermValues.row(i)).asDiagonal() *
+                     basisFunctionDerivativeValues[i];
+
+    return cellMatrixA;
+  }
+  // ***************************************************************************
+  MatrixXd PDE_Equation::ComputeCellReactionMatrix(const Eigen::VectorXd& reactionTermValues,
+                                                   const Eigen::MatrixXd& basisFunctionValues,
+                                                   const Eigen::VectorXd& quadratureWeights)
+  {
+    return basisFunctionValues.transpose() *
+        quadratureWeights.cwiseProduct(reactionTermValues).asDiagonal() *
+        basisFunctionValues;
+  }
+  // ***************************************************************************
   Eigen::VectorXd PDE_Equation::ComputeCellForcingTerm(const Eigen::VectorXd& forcingTermValues,
                                                        const Eigen::MatrixXd& basisFunctionValues,
                                                        const Eigen::VectorXd& quadratureWeights)
