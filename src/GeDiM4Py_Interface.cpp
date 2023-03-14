@@ -58,6 +58,7 @@ PyObject* GedimForPy_Discretize(PyObject* discreteSpace,
 
   space = GedimForPy::GeDiM4Py_Interface::ConvertDiscreteSpace(discreteSpace);
   problemData = GedimForPy::GeDiM4Py_Logic::Discretize(meshDAO,
+                                                       mesh.MeshGeometricData,
                                                        space);
 
   return GedimForPy::GeDiM4Py_Interface::ConvertProblemData(problemData,

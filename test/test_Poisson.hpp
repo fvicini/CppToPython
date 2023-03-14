@@ -8,13 +8,17 @@ namespace UnitTesting
   class Poisson final
   {
     public:
+      static constexpr double A() { return 10.0; }
+      static constexpr double B() { return 0.0; }
+      static constexpr double C() { return 0.0; }
+
       // ***************************************************************************
       static double* DiffusionTerm(const int numPoints, const double* points)
       {
         double* values = new double[numPoints];
 
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-        vecValues.setConstant(10.0);
+        vecValues.setConstant(A());
 
         return values;
       }
@@ -24,8 +28,8 @@ namespace UnitTesting
         double* values = new double[2 * numPoints];
 
         Eigen::Map<Eigen::MatrixXd> matValues(values, 2, numPoints);
-        matValues.row(0).setConstant(0.1);
-        matValues.row(1).setConstant(0.1);
+        matValues.row(0).setConstant(B());
+        matValues.row(1).setConstant(B());
 
         return values;
       }
@@ -35,7 +39,7 @@ namespace UnitTesting
         double* values = new double[numPoints];
 
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-        vecValues.setConstant(2.0);
+        vecValues.setConstant(C());
 
         return values;
       }
@@ -46,19 +50,19 @@ namespace UnitTesting
 
         Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-        vecValues = 10.0 * 32.0 * (matPoints.row(1).array() * (1.0 - matPoints.row(1).array()) +
-                                   matPoints.row(0).array() * (1.0 - matPoints.row(0).array())) +
-                    0.1 * 16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
+        vecValues = A() * 32.0 * (matPoints.row(1).array() * (1.0 - matPoints.row(1).array()) +
+                                  matPoints.row(0).array() * (1.0 - matPoints.row(0).array())) +
+                    B() * 16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
                     matPoints.row(1).array() *
                     (1.0 - matPoints.row(1).array()) +
-                    0.1 * 6.0 * (1.0 - 2.0 * matPoints.row(1).array()) *
+                    B() * 6.0 * (1.0 - 2.0 * matPoints.row(1).array()) *
                     matPoints.row(0).array() *
                     (1.0 - matPoints.row(0).array()) +
-                    2.0 * 16.0 * (matPoints.row(1).array() *
+                    C() * 16.0 * (matPoints.row(1).array() *
                                   (1.0 - matPoints.row(1).array()) *
                                   matPoints.row(0).array() *
                                   (1.0 - matPoints.row(0).array())) +
-                    2.0 * 1.1;
+                    C() * 1.1;
         return values;
       }
       // ***************************************************************************
@@ -106,7 +110,7 @@ namespace UnitTesting
         Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
 
-        vecValues = 10.0 * 16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
+        vecValues = A() * 16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
                     matPoints.row(1).array() *
                     (1.0 - matPoints.row(1).array());
 
@@ -120,7 +124,7 @@ namespace UnitTesting
         Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
 
-        vecValues = - 10.0 * 16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
+        vecValues = - A() * 16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
                     matPoints.row(1).array() *
                     (1.0 - matPoints.row(1).array());
 

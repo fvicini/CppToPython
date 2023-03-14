@@ -66,6 +66,7 @@ namespace GedimForPy
   }
   // ***************************************************************************
   DiscreteProblemData GeDiM4Py_Logic::Discretize(const Gedim::IMeshDAO& mesh,
+                                                 const Gedim::MeshUtilities::MeshGeometricData2D& meshGeometricData,
                                                  const DiscreteSpace& space)
   {
     DiscreteProblemData problemData;
@@ -80,6 +81,8 @@ namespace GedimForPy
                                std::to_string(space.Order) +
                                " not supported");
 
+    problemData.H = *max_element(std::begin(meshGeometricData.Cell2DsDiameters),
+                                 std::end(meshGeometricData.Cell2DsDiameters));
     problemData.NumberDOFs = 0;
     problemData.NumberStrongs = 0;
     problemData.Cell0Ds_DOF.resize(mesh.Cell0DTotalNumber());

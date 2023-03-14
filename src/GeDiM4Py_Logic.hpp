@@ -113,6 +113,7 @@ namespace GedimForPy
           BoundaryInfo Boundary;
       };
 
+      double H = 0.0;
       unsigned int NumberDOFs = 0;
       unsigned int NumberStrongs = 0;
       Eigen::MatrixXd DOFsCoordinate;
@@ -148,6 +149,7 @@ namespace GedimForPy
                                              InterfaceDataDAO& gedimData);
 
       static DiscreteProblemData Discretize(const Gedim::IMeshDAO& mesh,
+                                            const Gedim::MeshUtilities::MeshGeometricData2D& meshGeometricData,
                                             const DiscreteSpace& space);
 
       static void AssembleStiffnessMatrix(A a,
