@@ -35,7 +35,7 @@ namespace GedimForPy
 
     for(unsigned int i = 0; i < basisFunctionDerivativeValues.size(); i++)
       cellMatrixA += basisFunctionValues.transpose() *
-                     quadratureWeights.cwiseProduct(advectionTermValues.row(i)).asDiagonal() *
+                     quadratureWeights.cwiseProduct(advectionTermValues.row(i).transpose()).asDiagonal() *
                      basisFunctionDerivativeValues[i];
 
     return cellMatrixA;

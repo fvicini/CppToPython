@@ -14,7 +14,7 @@ namespace UnitTesting
         double* values = new double[numPoints];
 
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-        vecValues.setConstant(1.0);
+        vecValues.setConstant(10.0);
 
         return values;
       }
@@ -24,8 +24,8 @@ namespace UnitTesting
         double* values = new double[2 * numPoints];
 
         Eigen::Map<Eigen::MatrixXd> matValues(values, 2, numPoints);
-        matValues.row(0).setConstant(1.0);
-        matValues.row(1).setConstant(1.0);
+        matValues.row(0).setConstant(0.1);
+        matValues.row(1).setConstant(0.1);
 
         return values;
       }
@@ -35,7 +35,7 @@ namespace UnitTesting
         double* values = new double[numPoints];
 
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-        vecValues.setConstant(1.0);
+        vecValues.setConstant(2.0);
 
         return values;
       }
@@ -46,18 +46,19 @@ namespace UnitTesting
 
         Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-        vecValues = 32.0 * (matPoints.row(1).array() * (1.0 - matPoints.row(1).array()) +
-                            matPoints.row(0).array() * (1.0 - matPoints.row(0).array())) +
-                    16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
+        vecValues = 10.0 * 32.0 * (matPoints.row(1).array() * (1.0 - matPoints.row(1).array()) +
+                                   matPoints.row(0).array() * (1.0 - matPoints.row(0).array())) +
+                    0.1 * 16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
                     matPoints.row(1).array() *
                     (1.0 - matPoints.row(1).array()) +
-                    16.0 * (1.0 - 2.0 * matPoints.row(1).array()) *
+                    0.1 * 6.0 * (1.0 - 2.0 * matPoints.row(1).array()) *
                     matPoints.row(0).array() *
                     (1.0 - matPoints.row(0).array()) +
-                    16.0 * (matPoints.row(1).array() *
-                            (1.0 - matPoints.row(1).array()) *
-                            matPoints.row(0).array() *
-                            (1.0 - matPoints.row(0).array())) + 1.1;
+                    2.0 * 16.0 * (matPoints.row(1).array() *
+                                  (1.0 - matPoints.row(1).array()) *
+                                  matPoints.row(0).array() *
+                                  (1.0 - matPoints.row(0).array())) +
+                    2.0 * 1.1;
         return values;
       }
       // ***************************************************************************
@@ -105,7 +106,7 @@ namespace UnitTesting
         Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
 
-        vecValues = 16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
+        vecValues = 10.0 * 16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
                     matPoints.row(1).array() *
                     (1.0 - matPoints.row(1).array());
 
@@ -119,7 +120,7 @@ namespace UnitTesting
         Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
 
-        vecValues = - 16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
+        vecValues = - 10.0 * 16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
                     matPoints.row(1).array() *
                     (1.0 - matPoints.row(1).array());
 

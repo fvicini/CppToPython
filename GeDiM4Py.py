@@ -46,29 +46,23 @@ def make_nd_array(c_pointer, size, dtype=np.double, order='F', own_data=True):
         return arr
 
 def Poisson_a(numPoints, points):
-	values = np.ones((1, numPoints))
+	values = np.ones((1, numPoints)) * 10.0
 	return values.ctypes.data
 
 def Poisson_b(numPoints, points):
-	values = np.zeros((2, numPoints))
+	values = np.zeros((2, numPoints)) * 0.1
 	return values.ctypes.data
 
 def Poisson_c(numPoints, points):
-	values = np.ones((1, numPoints))
+	values = np.ones((1, numPoints)) * 2.0
 	return values.ctypes.data
-
-# def Poisson_f(numPoints, points):
-# 	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
-# 	values = 32.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) + matPoints[0,:] * (1.0 - matPoints[0,:])) + \
-# 	16.0 * (1.0 - 2.0 * matPoints[0,:]) * matPoints[1,:] * (1.0 - matPoints[1,:]) + \
-# 	16.0 * (1.0 - 2.0 * matPoints[1,:]) * matPoints[0,:] * (1.0 - matPoints[0,:]) + \
-# 	16.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) * matPoints[0,:] * (1.0 - matPoints[0,:])) + 1.1
-# 	return values.ctypes.data
 
 def Poisson_f(numPoints, points):
 	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
-	values = 32.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) + matPoints[0,:] * (1.0 - matPoints[0,:])) + \
-	16.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) * matPoints[0,:] * (1.0 - matPoints[0,:])) + 1.1
+	values = 10.0 * 32.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) + matPoints[0,:] * (1.0 - matPoints[0,:])) + \
+	0.1 * 16.0 * (1.0 - 2.0 * matPoints[0,:]) * matPoints[1,:] * (1.0 - matPoints[1,:]) + \
+	0.1 * 16.0 * (1.0 - 2.0 * matPoints[1,:]) * matPoints[0,:] * (1.0 - matPoints[0,:]) + \
+	2.0 * 16.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) * matPoints[0,:] * (1.0 - matPoints[0,:])) + 1.1
 	return values.ctypes.data
 
 def Poisson_exactSolution(numPoints, points):
@@ -88,12 +82,12 @@ def Poisson_exactDerivativeSolution(direction, numPoints, points):
 
 def Poisson_weakTerm_right(numPoints, points):
 	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
-	values = 16.0 * (1.0 - 2.0 * matPoints[0,:]) * matPoints[1,:] * (1.0 - matPoints[1,:])
+	values = 10.0 * 16.0 * (1.0 - 2.0 * matPoints[0,:]) * matPoints[1,:] * (1.0 - matPoints[1,:])
 	return values.ctypes.data
 	
 def Poisson_weakTerm_left(numPoints, points):
 	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
-	values = -16.0 * (1.0 - 2.0 * matPoints[0,:]) * matPoints[1,:] * (1.0 - matPoints[1,:])
+	values = - 10.0 * 16.0 * (1.0 - 2.0 * matPoints[0,:]) * matPoints[1,:] * (1.0 - matPoints[1,:])
 	return values.ctypes.data
 
 def ImportLibrary(path):
