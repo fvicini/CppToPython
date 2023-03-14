@@ -17,11 +17,23 @@ PyObject* GedimForPy_Discretize(PyObject* discreteSpace,
                                 double** dofsCoordinate,
                                 double** strongsCoordinate);
 extern "C"
-void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::A k,
+void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::A a,
                                         int* numStiffnessTriplets,
                                         double** stiffnessTriplets,
                                         int* numStiffnessStrongTriplets,
                                         double** stiffnessStrongTriplets);
+extern "C"
+void GedimForPy_AssembleAdvectionMatrix(GedimForPy::GeDiM4Py_Logic::B b,
+                                        int* numAdvectionTriplets,
+                                        double** advectionTriplets,
+                                        int* numAdvectionStrongTriplets,
+                                        double** advectionStrongTriplets);
+extern "C"
+void GedimForPy_AssembleReactionMatrix(GedimForPy::GeDiM4Py_Logic::C c,
+                                       int* numReactionTriplets,
+                                       double** reactionTriplets,
+                                       int* numReactionStrongTriplets,
+                                       double** reactionStrongTriplets);
 extern "C"
 void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,
                                     int* size,
@@ -42,6 +54,12 @@ void GedimForPy_CholeskySolver(const int nRows,
                                const double* pointerTriplets,
                                const double* pointerF,
                                double** solution);
+extern "C"
+void GedimForPy_LUSolver(const int nRows,
+                         const int numNonZeros,
+                         const double* pointerTriplets,
+                         const double* pointerF,
+                         double** solution);
 // ***************************************************************************
 
 namespace GedimForPy
