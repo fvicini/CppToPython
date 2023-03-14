@@ -45,7 +45,15 @@ def make_nd_array(c_pointer, size, dtype=np.double, order='F', own_data=True):
     else:
         return arr
 
-def Poisson_k(numPoints, points):
+def Poisson_a(numPoints, points):
+	values = np.ones((1, numPoints))
+	return values.ctypes.data
+
+def Poisson_b(numPoints, points):
+	values = np.ones((2, numPoints))
+	return values.ctypes.data
+
+def Poisson_c(numPoints, points):
 	values = np.ones((1, numPoints))
 	return values.ctypes.data
 
@@ -100,25 +108,65 @@ def Discretize(discreteSpace):
 
 	return [problemData, dofs, strongs]
 	
-def AssembleStiffnessMatrix(k, problemData):
+def AssembleStiffnessMatrix(a, problemData):
 	DiffusionFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 		
 	lib.GedimForPy_AssembleStiffnessMatrix.argtypes = [DiffusionFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_AssembleStiffnessMatrix.restype =  None
 	
-	pointerStifness = ct.POINTER(ct.c_double)()
+	pointerStiffness = ct.POINTER(ct.c_double)()
 	numStiffnessTriplets = ct.c_int(0)
-	pointerStifnessStrong = ct.POINTER(ct.c_double)()
+	pointerStiffnessStrong = ct.POINTER(ct.c_double)()
 	numStiffnessStrongTriplets = ct.c_int(0)
-	lib.GedimForPy_AssembleStiffnessMatrix(DiffusionFN(k), ct.byref(numStiffnessTriplets), ct.byref(pointerStifness), ct.byref(numStiffnessStrongTriplets), ct.byref(pointerStifnessStrong))
+	lib.GedimForPy_AssembleStiffnessMatrix(DiffusionFN(a), ct.byref(numStiffnessTriplets), ct.byref(pointerStiffness), ct.byref(numStiffnessStrongTriplets), ct.byref(pointerStiffnessStrong))
 	
 	numDofs = problemData['NumberDOFs']
 	numStrongs = problemData['NumberStrongs']
 
-	stifness = make_np_sparse(numDofs, numDofs, numStiffnessTriplets, pointerStifness)
-	stifnessStrong = make_np_sparse(numDofs, numStrongs, numStiffnessStrongTriplets, pointerStifnessStrong)
+	stiffness = make_np_sparse(numDofs, numDofs, numStiffnessTriplets, pointerStiffness)
+	stiffnessStrong = make_np_sparse(numDofs, numStrongs, numStiffnessStrongTriplets, pointerStiffnessStrong)
 
-	return [stifness, stifnessStrong]
+	return [stiffness, stiffnessStrong]
+
+def AssembleAdvectionMatrix(b, problemData):
+	AdvectionFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
+		
+	lib.GedimForPy_AssembleAdvectionMatrix.argtypes = [AdvectionFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleAdvectionMatrix.restype =  None
+	
+	pointerAdvection = ct.POINTER(ct.c_double)()
+	numAdvectionTriplets = ct.c_int(0)
+	pointerAdvectionStrong = ct.POINTER(ct.c_double)()
+	numAdvectionStrongTriplets = ct.c_int(0)
+	lib.GedimForPy_AssembleAdvectionMatrix(AdvectionFN(b), ct.byref(numAdvectionTriplets), ct.byref(pointerAdvection), ct.byref(numAdvectionStrongTriplets), ct.byref(pointerAdvectionStrong))
+	
+	numDofs = problemData['NumberDOFs']
+	numStrongs = problemData['NumberStrongs']
+
+	advection = make_np_sparse(numDofs, numDofs, numAdvectionTriplets, pointerAdvection)
+	advectionStrong = make_np_sparse(numDofs, numStrongs, numAdvectionStrongTriplets, pointerAdvectionStrong)
+
+	return [advection, advectionStrong]
+
+def AssembleReactionMatrix(c, problemData):
+	ReactionFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
+		
+	lib.GedimForPy_AssembleReactionMatrix.argtypes = [ReactionFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleReactionMatrix.restype =  None
+	
+	pointerReaction = ct.POINTER(ct.c_double)()
+	numReactionTriplets = ct.c_int(0)
+	pointerReactionStrong = ct.POINTER(ct.c_double)()
+	numReactionStrongTriplets = ct.c_int(0)
+	lib.GedimForPy_AssembleReactionMatrix(ReactionFN(c), ct.byref(numReactionTriplets), ct.byref(pointerReaction), ct.byref(numReactionStrongTriplets), ct.byref(pointerReactionStrong))
+	
+	numDofs = problemData['NumberDOFs']
+	numStrongs = problemData['NumberStrongs']
+
+	reaction = make_np_sparse(numDofs, numDofs, numReactionTriplets, pointerReaction)
+	reactionStrong = make_np_sparse(numDofs, numStrongs, numReactionStrongTriplets, pointerReactionStrong)
+
+	return [reaction, reactionStrong]
 
 def AssembleForcingTerm(f, problemData):
 	ForcingTermFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
@@ -242,8 +290,16 @@ if __name__ == '__main__':
 	PlotDofs(mesh, dofs, strongs)
 
 	print("AssembleStiffnessMatrix...")
-	[stiffness, stiffnessStrong] = AssembleStiffnessMatrix(Poisson_k, problemData)
+	[stiffness, stiffnessStrong] = AssembleStiffnessMatrix(Poisson_a, problemData)
 	print("AssembleStiffnessMatrix successful")
+
+	print("AssembleAdvectionMatrix...")
+	[advection, advectionStrong] = AssembleAdvectionMatrix(Poisson_b, problemData)
+	print("AssembleAdvectionMatrix successful")
+
+	print("AssembleReactionMatrix...")
+	[reaction, reactionStrong] = AssembleReactionMatrix(Poisson_c, problemData)
+	print("AssembleReactionMatrix successful")
 
 	print("AssembleForcingTerm...")
 	forcingTerm = AssembleForcingTerm(Poisson_f, problemData)
