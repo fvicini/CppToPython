@@ -245,7 +245,7 @@ namespace GedimForPy
 
       const Eigen::MatrixXd cell2DQuadraturePoints = mapTriangle.F(cell2DMapData,
                                                                    localSpace.ReferenceElement.InternalQuadrature.Points);
-      const Eigen::MatrixXd cell2DQuadratureWeights = localSpace.ReferenceElement.InternalQuadrature.Weights *
+      const Eigen::VectorXd cell2DQuadratureWeights = localSpace.ReferenceElement.InternalQuadrature.Weights *
                                                       abs(cell2DMapData.DetB);
 
       const std::vector<Eigen::MatrixXd> basisFunctionDerivativeValues2D = femValues.BasisFunctionDerivatives(localSpace,
@@ -322,7 +322,7 @@ namespace GedimForPy
 
       const Eigen::MatrixXd cell2DQuadraturePoints = mapTriangle.F(cell2DMapData,
                                                                    localSpace.ReferenceElement.InternalQuadrature.Points);
-      const Eigen::MatrixXd cell2DQuadratureWeights = localSpace.ReferenceElement.InternalQuadrature.Weights *
+      const Eigen::VectorXd cell2DQuadratureWeights = localSpace.ReferenceElement.InternalQuadrature.Weights *
                                                       abs(cell2DMapData.DetB);
 
       const Eigen::MatrixXd basisFunctionValues2D = femValues.BasisFunctions(localSpace,
@@ -404,7 +404,7 @@ namespace GedimForPy
 
       const Eigen::MatrixXd cell2DQuadraturePoints = mapTriangle.F(cell2DMapData,
                                                                    localSpace.ReferenceElement.InternalQuadrature.Points);
-      const Eigen::MatrixXd cell2DQuadratureWeights = localSpace.ReferenceElement.InternalQuadrature.Weights *
+      const Eigen::VectorXd cell2DQuadratureWeights = localSpace.ReferenceElement.InternalQuadrature.Weights *
                                                       abs(cell2DMapData.DetB);
 
       const Eigen::MatrixXd basisFunctionValues2D = femValues.BasisFunctions(localSpace,
@@ -479,7 +479,7 @@ namespace GedimForPy
 
       const Eigen::MatrixXd cell2DQuadraturePoints = mapTriangle.F(cell2DMapData,
                                                                    localSpace.ReferenceElement.InternalQuadrature.Points);
-      const Eigen::MatrixXd cell2DQuadratureWeights = localSpace.ReferenceElement.InternalQuadrature.Weights *
+      const Eigen::VectorXd cell2DQuadratureWeights = localSpace.ReferenceElement.InternalQuadrature.Weights *
                                                       abs(cell2DMapData.DetB);
 
       const Eigen::MatrixXd basisFunctionValues2D = femValues.BasisFunctions(localSpace,
@@ -638,6 +638,146 @@ namespace GedimForPy
     }
 
     return weakTerm;
+  }
+  // ***************************************************************************
+  Eigen::VectorXd GeDiM4Py_Logic::ComputeErrorL2(Exact u,
+                                                 const Eigen::VectorXd& numeric,
+                                                 const Eigen::VectorXd& strong,
+                                                 const Gedim::IMeshDAO& mesh,
+                                                 const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                 const DiscreteProblemData& problemData)
+  {
+    Eigen::VectorXd errorL2 = Eigen::VectorXd::Zero(mesh.Cell2DTotalNumber());
+
+    FEM_RefElement_Langrange_PCC_Triangle_2D femValues;
+    Gedim::MapTriangle mapTriangle;
+    const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& localSpace = problemData.LocalSpace;
+    PDE_Equation equation;
+
+    const Eigen::MatrixXd referenceBasisFunctions = femValues.Reference_BasisFunctions(localSpace,
+                                                                                       localSpace.ReferenceElement.InternalQuadrature.Points);
+
+    const unsigned int numLocals = problemData.LocalSpace.NumberBasisFunctions;
+
+    for (unsigned int cell2DIndex = 0; cell2DIndex < mesh.Cell2DTotalNumber(); cell2DIndex++)
+    {
+      const Gedim::MapTriangle::MapTriangleData& cell2DMapData = cell2DsMap.at(cell2DIndex);
+
+      const Eigen::MatrixXd cell2DQuadraturePoints = mapTriangle.F(cell2DMapData,
+                                                                   localSpace.ReferenceElement.InternalQuadrature.Points);
+      const Eigen::VectorXd cell2DQuadratureWeights = localSpace.ReferenceElement.InternalQuadrature.Weights *
+                                                      abs(cell2DMapData.DetB);
+
+      const Eigen::MatrixXd basisFunctionValues2D = femValues.BasisFunctions(localSpace,
+                                                                             cell2DMapData,
+                                                                             referenceBasisFunctions);
+
+      const std::vector<DiscreteProblemData::DOF*>& cell2D_DOF = problemData.Cell2Ds_DOF[cell2DIndex];
+
+      Eigen::VectorXd localNumericSolution = Eigen::VectorXd::Zero(numLocals);
+      for(unsigned int i = 0; i < numLocals; ++i)
+      {
+        const DiscreteProblemData::DOF& dofI = *cell2D_DOF[i];
+
+        switch (dofI.Type)
+        {
+          case DiscreteProblemData::DOF::Types::DOF:
+            localNumericSolution[i] = numeric[dofI.Global_Index];
+            break;
+          case DiscreteProblemData::DOF::Types::Strong:
+            localNumericSolution[i] = strong[dofI.Global_Index];
+            break;
+          default:
+            throw std::runtime_error("DOF Type " +
+                                     std::to_string((unsigned int)dofI.Type) +
+                                     " not supported");
+        }
+      }
+
+      const double* exactSolutionValues = u(cell2DQuadraturePoints.cols(),
+                                            cell2DQuadraturePoints.data());
+
+      const Eigen::VectorXd localError = (basisFunctionValues2D * localNumericSolution -
+                                          Eigen::Map<const Eigen::VectorXd>(exactSolutionValues,
+                                                                            cell2DQuadraturePoints.cols())).array().square();
+
+      errorL2[cell2DIndex] = cell2DQuadratureWeights.transpose() * localError;
+    }
+
+    return errorL2;
+  }
+  // ***************************************************************************
+  Eigen::VectorXd GeDiM4Py_Logic::ComputeErrorH1(ExactDerivative uDer,
+                                                 const Eigen::VectorXd& numeric,
+                                                 const Eigen::VectorXd& strong,
+                                                 const Gedim::IMeshDAO& mesh,
+                                                 const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                 const DiscreteProblemData& problemData)
+  {
+    Eigen::VectorXd errorH1 = Eigen::VectorXd::Zero(mesh.Cell2DTotalNumber());
+
+    FEM_RefElement_Langrange_PCC_Triangle_2D femValues;
+    Gedim::MapTriangle mapTriangle;
+    const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& localSpace = problemData.LocalSpace;
+    PDE_Equation equation;
+
+    const std::vector<Eigen::MatrixXd> referenceBasisFunctionDerivatives = femValues.Reference_BasisFunctionDerivatives(localSpace,
+                                                                                                                        localSpace.ReferenceElement.InternalQuadrature.Points);
+    const unsigned int numLocals = problemData.LocalSpace.NumberBasisFunctions;
+
+    for (unsigned int cell2DIndex = 0; cell2DIndex < mesh.Cell2DTotalNumber(); cell2DIndex++)
+    {
+      const Gedim::MapTriangle::MapTriangleData& cell2DMapData = cell2DsMap.at(cell2DIndex);
+
+      const Eigen::MatrixXd cell2DQuadraturePoints = mapTriangle.F(cell2DMapData,
+                                                                   localSpace.ReferenceElement.InternalQuadrature.Points);
+      const Eigen::VectorXd cell2DQuadratureWeights = localSpace.ReferenceElement.InternalQuadrature.Weights *
+                                                      abs(cell2DMapData.DetB);
+
+      const std::vector<Eigen::MatrixXd> basisFunctionDerivativeValues2D = femValues.BasisFunctionDerivatives(localSpace,
+                                                                                                              cell2DMapData,
+                                                                                                              referenceBasisFunctionDerivatives);
+
+      const std::vector<DiscreteProblemData::DOF*>& cell2D_DOF = problemData.Cell2Ds_DOF[cell2DIndex];
+
+      Eigen::VectorXd localNumericSolution = Eigen::VectorXd::Zero(numLocals);
+      for(unsigned int i = 0; i < numLocals; ++i)
+      {
+        const DiscreteProblemData::DOF& dofI = *cell2D_DOF[i];
+
+        switch (dofI.Type)
+        {
+          case DiscreteProblemData::DOF::Types::DOF:
+            localNumericSolution[i] = numeric[dofI.Global_Index];
+            break;
+          case DiscreteProblemData::DOF::Types::Strong:
+            localNumericSolution[i] = strong[dofI.Global_Index];
+            break;
+          default:
+            throw std::runtime_error("DOF Type " +
+                                     std::to_string((unsigned int)dofI.Type) +
+                                     " not supported");
+        }
+      }
+
+      std::vector<double*> exactSolutionDerivativeValues(2, nullptr);
+      for (unsigned int dim = 0; dim < 2; dim++)
+        exactSolutionDerivativeValues[dim] = uDer(dim,
+                                                  cell2DQuadraturePoints.cols(),
+                                                  cell2DQuadraturePoints.data());
+
+      Eigen::VectorXd localError = Eigen::VectorXd::Zero(cell2DQuadraturePoints.cols());
+      for (unsigned int dim = 0; dim < 2; dim++)
+      {
+        localError.array() += (basisFunctionDerivativeValues2D[dim] * localNumericSolution -
+                               Eigen::Map<const Eigen::VectorXd>(exactSolutionDerivativeValues[dim],
+                                                                 cell2DQuadraturePoints.cols())).array().square();
+      }
+
+      errorH1[cell2DIndex] = cell2DQuadratureWeights.transpose() * localError;
+    }
+
+    return errorH1;
   }
   // ***************************************************************************
 }

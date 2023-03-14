@@ -132,6 +132,8 @@ namespace GedimForPy
       typedef double* (*F)(const int numPoints, const double* points);
       typedef double* (*Strong)(const int numPoints, const double* points);
       typedef double* (*Weak)(const int numPoints, const double* points);
+      typedef double* (*Exact)(const int numPoints, const double* points);
+      typedef double* (*ExactDerivative)(const int direction, const int numPoints, const double* points);
 
     private:
 
@@ -186,6 +188,19 @@ namespace GedimForPy
                                               const std::vector<Eigen::MatrixXd>& cell2DsEdgeTangents,
                                               const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                               const DiscreteProblemData& problemData);
+
+      static Eigen::VectorXd ComputeErrorL2(Exact u,
+                                            const Eigen::VectorXd& numeric,
+                                            const Eigen::VectorXd& strong,
+                                            const Gedim::IMeshDAO& mesh,
+                                            const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                            const DiscreteProblemData& problemData);
+      static Eigen::VectorXd ComputeErrorH1(ExactDerivative uDer,
+                                            const Eigen::VectorXd& numeric,
+                                            const Eigen::VectorXd& strong,
+                                            const Gedim::IMeshDAO& mesh,
+                                            const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                            const DiscreteProblemData& problemData);
   };
 
 }

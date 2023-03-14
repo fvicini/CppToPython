@@ -10,7 +10,7 @@
 #include "VTKUtilities.hpp"
 #include "test_Poisson.hpp"
 
-#define ACTIVE_CHECK 0
+#define ACTIVE_CHECK 1
 
 namespace UnitTesting
 {
@@ -37,7 +37,7 @@ namespace UnitTesting
     domain.VerticesBoundaryCondition = { 1, 1, 1, 1 };
     domain.EdgesBoundaryCondition = { 1, 2, 1, 3 };
     domain.DiscretizationType = GedimForPy::Domain2D::DiscretizationTypes::Triangular;
-    domain.MeshCellsMaximumArea = 0.001;
+    domain.MeshCellsMaximumArea = 0.1;
 
     GedimForPy::Domain2DMesh mesh = GedimForPy::GeDiM4Py_Logic::CreateDomainMesh2D(domain,
                                                                                    gedimData);
@@ -236,12 +236,25 @@ namespace UnitTesting
     Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>, Eigen::Lower> linearSolver;
     linearSolver.compute(stiffness + advection + reaction);
 
-    Eigen::VectorXd solution = linearSolver.solve(forcingTerm -
-                                                  (stiffnessStrong +
-                                                   advectionStrong +
-                                                   reactionStrong) * solutionStrong +
-                                                  weakTerm_Left +
-                                                  weakTerm_Right);
+    const Eigen::VectorXd solution = linearSolver.solve(forcingTerm -
+                                                        (stiffnessStrong +
+                                                         advectionStrong +
+                                                         reactionStrong) * solutionStrong +
+                                                        weakTerm_Left +
+                                                        weakTerm_Right);
+
+    const Eigen::VectorXd cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(Poisson::ExactSolution,
+                                                                                      solution,
+                                                                                      solutionStrong,
+                                                                                      meshDAO,
+                                                                                      mesh.Cell2DsMap,
+                                                                                      problemData);
+    const Eigen::VectorXd cell2DsErrorH1 = GedimForPy::GeDiM4Py_Logic::ComputeErrorH1(Poisson::ExactDerivativeSolution,
+                                                                                      solution,
+                                                                                      solutionStrong,
+                                                                                      meshDAO,
+                                                                                      mesh.Cell2DsMap,
+                                                                                      problemData);
 
     // export
     {
@@ -287,6 +300,18 @@ namespace UnitTesting
                                  Gedim::VTPProperty::Formats::Points,
                                  static_cast<unsigned int>(cell0Ds_numeric_solution.size()),
                                  cell0Ds_numeric_solution.data()
+                               },
+                               {
+                                 "cell2Ds_errorL2",
+                                 Gedim::VTPProperty::Formats::Cells,
+                                 static_cast<unsigned int>(cell2DsErrorL2.size()),
+                                 cell2DsErrorL2.data()
+                               },
+                               {
+                                 "cell2Ds_errorH1",
+                                 Gedim::VTPProperty::Formats::Cells,
+                                 static_cast<unsigned int>(cell2DsErrorH1.size()),
+                                 cell2DsErrorH1.data()
                                }
                              });
         exporter.Export(exportFolder +

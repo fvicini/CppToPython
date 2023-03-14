@@ -74,7 +74,7 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
-      static double* ExactDerivativeSolution(const unsigned int& direction,
+      static double* ExactDerivativeSolution(const int direction,
                                              const int numPoints,
                                              const double* points)
       {
