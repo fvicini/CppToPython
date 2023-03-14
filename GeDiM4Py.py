@@ -50,23 +50,42 @@ def Poisson_a(numPoints, points):
 	return values.ctypes.data
 
 def Poisson_b(numPoints, points):
-	values = np.ones((2, numPoints))
+	values = np.zeros((2, numPoints))
 	return values.ctypes.data
 
 def Poisson_c(numPoints, points):
 	values = np.ones((1, numPoints))
 	return values.ctypes.data
 
+# def Poisson_f(numPoints, points):
+# 	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
+# 	values = 32.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) + matPoints[0,:] * (1.0 - matPoints[0,:])) + \
+# 	16.0 * (1.0 - 2.0 * matPoints[0,:]) * matPoints[1,:] * (1.0 - matPoints[1,:]) + \
+# 	16.0 * (1.0 - 2.0 * matPoints[1,:]) * matPoints[0,:] * (1.0 - matPoints[0,:]) + \
+# 	16.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) * matPoints[0,:] * (1.0 - matPoints[0,:])) + 1.1
+# 	return values.ctypes.data
+
 def Poisson_f(numPoints, points):
 	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
-	values = 32.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) + matPoints[0,:] * (1.0 - matPoints[0,:]))
+	values = 32.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) + matPoints[0,:] * (1.0 - matPoints[0,:])) + \
+	16.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) * matPoints[0,:] * (1.0 - matPoints[0,:])) + 1.1
 	return values.ctypes.data
 
 def Poisson_exactSolution(numPoints, points):
 	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
 	values = 16.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) * matPoints[0,:] * (1.0 - matPoints[0,:])) + 1.1
 	return values.ctypes.data
-	
+
+def Poisson_exactDerivativeSolution(direction, numPoints, points):
+	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
+	if direction == 0:
+		values = 16.0 * (1.0 - 2.0 * matPoints[0,:]) * matPoints[1,:] * (1.0 - matPoints[1,:])
+	elif direction == 1:
+		values = 16.0 * (1.0 - 2.0 * matPoints[1,:]) * matPoints[0,:] * (1.0 - matPoints[0,:])
+	else:
+		values = 0.0
+	return values.ctypes.data
+
 def Poisson_weakTerm_right(numPoints, points):
 	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
 	values = 16.0 * (1.0 - 2.0 * matPoints[0,:]) * matPoints[1,:] * (1.0 - matPoints[1,:])
@@ -216,6 +235,18 @@ def CholeskySolver(A, f):
 
 	return make_nd_array(pointerSolution, A.shape[0])
 
+def LUSolver(A, f):
+	[rows, cols, values] = scipy.sparse.find(A)
+	nonZerosA = np.column_stack((rows, cols, values))
+	lib.GedimForPy_LUSolver.argtypes = [ct.c_int, ct.c_int, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_LUSolver.restype =  None
+
+	pointerSolution = ct.POINTER(ct.c_double)()
+
+	lib.GedimForPy_LUSolver(A.shape[0], rows.shape[0], nonZerosA, f, ct.byref(pointerSolution))
+
+	return make_nd_array(pointerSolution, A.shape[0])
+
 def Solver(A, f):
 	return scipy.sparse.linalg.spsolve(A, f)
 
@@ -314,9 +345,13 @@ if __name__ == '__main__':
 	weakTerm_left = AssembleWeakTerm(Poisson_weakTerm_left, 3, problemData)
 	print("AssembleWeakTerm successful")
 
-	print("CholeskySolver...")
-	solution = CholeskySolver(stiffness, forcingTerm - stiffnessStrong @ solutionStrong + weakTerm_right + weakTerm_left)
-	print("CholeskySolver successful")
+	print("Solver...")
+	solution = LUSolver(stiffness + advection + reaction, \
+		    forcingTerm - \
+		    (stiffnessStrong + advectionStrong + reactionStrong) @ solutionStrong + \
+			weakTerm_right + \
+			weakTerm_left)
+	print("Solver successful")
 
 	PlotSolution(mesh, dofs, strongs, solution, solutionStrong)
 
