@@ -53,11 +53,9 @@ namespace UnitTesting
         vecValues = A() * 32.0 * (matPoints.row(1).array() * (1.0 - matPoints.row(1).array()) +
                                   matPoints.row(0).array() * (1.0 - matPoints.row(0).array())) +
                     B() * 16.0 * (1.0 - 2.0 * matPoints.row(0).array()) *
-                    matPoints.row(1).array() *
-                    (1.0 - matPoints.row(1).array()) +
-                    B() * 6.0 * (1.0 - 2.0 * matPoints.row(1).array()) *
-                    matPoints.row(0).array() *
-                    (1.0 - matPoints.row(0).array()) +
+                    matPoints.row(1).array() * (1.0 - matPoints.row(1).array()) +
+                    B() * 16.0 * (1.0 - 2.0 * matPoints.row(1).array()) *
+                    matPoints.row(0).array() * (1.0 - matPoints.row(0).array()) +
                     C() * 16.0 * (matPoints.row(1).array() *
                                   (1.0 - matPoints.row(1).array()) *
                                   matPoints.row(0).array() *

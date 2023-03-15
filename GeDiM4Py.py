@@ -322,7 +322,7 @@ if __name__ == '__main__':
 	Initialize(config)
 	
 	meshSizes = [0.1, 0.01, 0.001 ]
-	order = 1
+	order = 2
 
 	for meshSize in meshSizes:
 		domain = { 'SquareEdge': 1.0, 'VerticesBoundaryCondition': [1,1,1,1], 'EdgesBoundaryCondition': [1,2,1,3], 'DiscretizationType': 1, 'MeshCellsMaximumArea': meshSize }

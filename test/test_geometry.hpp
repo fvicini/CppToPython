@@ -32,7 +32,7 @@ namespace UnitTesting
                                          data));
 
     const std::vector<double> meshSize = { 0.1, 0.01, 0.001 };
-    const unsigned int order = 1;
+    const unsigned int order = 2;
 
     for (unsigned int m = 0; m < meshSize.size(); m++)
     {
