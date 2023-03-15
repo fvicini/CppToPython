@@ -423,6 +423,7 @@ namespace GedimForPy
 
     PyDict_SetItemString(problem, "NumberDOFs", Py_BuildValue("i", problemData.NumberDOFs));
     PyDict_SetItemString(problem, "NumberStrongs", Py_BuildValue("i", problemData.NumberStrongs));
+    PyDict_SetItemString(problem, "H", Py_BuildValue("d", problemData.H));
 
     ConvertMatrix(problemData.DOFsCoordinate, dofsCoordinate);
     ConvertMatrix(problemData.StrongsCoordinate, strongsCoordinate);

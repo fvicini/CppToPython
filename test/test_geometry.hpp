@@ -31,7 +31,7 @@ namespace UnitTesting
     ASSERT_NO_THROW(interface.Initialize(interfaceConfig,
                                          data));
 
-    const std::vector<double> meshSize = { 0.1, 0.01, 0.001 };
+    const std::vector<double> meshSize = { 0.1, 0.01, 0.001, 0.0001 };
     const unsigned int order = 2;
 
     for (unsigned int m = 0; m < meshSize.size(); m++)
