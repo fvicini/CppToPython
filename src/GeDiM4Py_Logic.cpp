@@ -763,17 +763,15 @@ namespace GedimForPy
         }
       }
 
-      std::vector<double*> exactSolutionDerivativeValues(2, nullptr);
-      for (unsigned int dim = 0; dim < 2; dim++)
-        exactSolutionDerivativeValues[dim] = uDer(dim,
-                                                  cell2DQuadraturePoints.cols(),
-                                                  cell2DQuadraturePoints.data());
-
       Eigen::VectorXd localError = Eigen::VectorXd::Zero(cell2DQuadraturePoints.cols());
       for (unsigned int dim = 0; dim < 2; dim++)
       {
+        double* exactSolutionDerivativeValues = uDer(dim,
+                                                     cell2DQuadraturePoints.cols(),
+                                                     cell2DQuadraturePoints.data());
+
         localError.array() += (basisFunctionDerivativeValues2D[dim] * localNumericSolution -
-                               Eigen::Map<const Eigen::VectorXd>(exactSolutionDerivativeValues[dim],
+                               Eigen::Map<const Eigen::VectorXd>(exactSolutionDerivativeValues,
                                                                  cell2DQuadraturePoints.cols())).array().square();
       }
 

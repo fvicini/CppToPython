@@ -53,15 +53,15 @@ def Poisson_C():
 	return 2.0
 
 def Poisson_a(numPoints, points):
-	values = np.ones((1, numPoints)) * Poisson_A()
+	values = np.ones(numPoints) * Poisson_A()
 	return values.ctypes.data
 
 def Poisson_b(numPoints, points):
-	values = np.zeros((2, numPoints)) * Poisson_B()
+	values = np.ones((2, numPoints)) * Poisson_B()
 	return values.ctypes.data
 
 def Poisson_c(numPoints, points):
-	values = np.ones((1, numPoints)) * Poisson_C()
+	values = np.ones(numPoints) * Poisson_C()
 	return values.ctypes.data
 
 def Poisson_f(numPoints, points):
@@ -79,12 +79,14 @@ def Poisson_exactSolution(numPoints, points):
 
 def Poisson_exactDerivativeSolution(direction, numPoints, points):
 	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
+
 	if direction == 0:
 		values = 16.0 * (1.0 - 2.0 * matPoints[0,:]) * matPoints[1,:] * (1.0 - matPoints[1,:])
 	elif direction == 1:
 		values = 16.0 * (1.0 - 2.0 * matPoints[1,:]) * matPoints[0,:] * (1.0 - matPoints[0,:])
 	else:
-		values = 0.0
+		values = np.zeros(numPoints)
+
 	return values.ctypes.data
 
 def Poisson_weakTerm_right(numPoints, points):
@@ -316,69 +318,49 @@ if __name__ == '__main__':
 	print(lib)
 	print("Import library successful")
 
-	print("Initialize...")
 	config = { 'GeometricTolerance': 1.0e-8 }
 	Initialize(config)
-	print("Initialize successful")
 	
-	print("CreateDomainSquare...")
-	domain = { 'SquareEdge': 1.0, 'VerticesBoundaryCondition': [1,1,1,1], 'EdgesBoundaryCondition': [1,2,1,3], 'DiscretizationType': 1, 'MeshCellsMaximumArea': 0.01 }
-	[meshInfo, mesh] = CreateDomainSquare(domain)
-	print("CreateDomainSquare successful")
+	meshSizes = [0.1, 0.01, 0.001 ]
+	order = 1
 
-	PlotMesh(mesh)
+	for meshSize in meshSizes:
+		domain = { 'SquareEdge': 1.0, 'VerticesBoundaryCondition': [1,1,1,1], 'EdgesBoundaryCondition': [1,2,1,3], 'DiscretizationType': 1, 'MeshCellsMaximumArea': meshSize }
+		[meshInfo, mesh] = CreateDomainSquare(domain)
 
-	print("Discretize...")
-	discreteSpace = { 'Order': 2, 'Type': 1, 'BoundaryConditionsType': [1, 2, 3, 3] }
-	[problemData, dofs, strongs] = Discretize(discreteSpace)
-	print("Discretize successful")
+		# PlotMesh(mesh)
 
-	PlotDofs(mesh, dofs, strongs)
+		discreteSpace = { 'Order': order, 'Type': 1, 'BoundaryConditionsType': [1, 2, 3, 3] }
+		[problemData, dofs, strongs] = Discretize(discreteSpace)
 
-	print("AssembleStiffnessMatrix...")
-	[stiffness, stiffnessStrong] = AssembleStiffnessMatrix(Poisson_a, problemData)
-	print("AssembleStiffnessMatrix successful")
+		# PlotDofs(mesh, dofs, strongs)
 
-	print("AssembleAdvectionMatrix...")
-	[advection, advectionStrong] = AssembleAdvectionMatrix(Poisson_b, problemData)
-	print("AssembleAdvectionMatrix successful")
+		[stiffness, stiffnessStrong] = AssembleStiffnessMatrix(Poisson_a, problemData)
 
-	print("AssembleReactionMatrix...")
-	[reaction, reactionStrong] = AssembleReactionMatrix(Poisson_c, problemData)
-	print("AssembleReactionMatrix successful")
+		[advection, advectionStrong] = AssembleAdvectionMatrix(Poisson_b, problemData)
 
-	print("AssembleForcingTerm...")
-	forcingTerm = AssembleForcingTerm(Poisson_f, problemData)
-	print("AssembleForcingTerm successful")
+		[reaction, reactionStrong] = AssembleReactionMatrix(Poisson_c, problemData)
 
-	print("AssembleStrongSolution...")
-	solutionStrong = AssembleStrongSolution(Poisson_exactSolution, 1, problemData)
-	print("AssembleStrongSolution successful")
-	
-	print("AssembleWeakTerm...")
-	weakTerm_right = AssembleWeakTerm(Poisson_weakTerm_right, 2, problemData)
-	weakTerm_left = AssembleWeakTerm(Poisson_weakTerm_left, 3, problemData)
-	print("AssembleWeakTerm successful")
+		forcingTerm = AssembleForcingTerm(Poisson_f, problemData)
 
-	print("Solver...")
-	solution = LUSolver(stiffness + advection + reaction, \
-		    forcingTerm - \
-		    (stiffnessStrong + advectionStrong + reactionStrong) @ solutionStrong + \
-			weakTerm_right + \
-			weakTerm_left)
-	print("Solver successful")
+		solutionStrong = AssembleStrongSolution(Poisson_exactSolution, 1, problemData)
+		
+		weakTerm_right = AssembleWeakTerm(Poisson_weakTerm_right, 2, problemData)
+		weakTerm_left = AssembleWeakTerm(Poisson_weakTerm_left, 3, problemData)
 
-	print("ComputeErrorL2...")
-	errorL2 = ComputeErrorL2(Poisson_exactSolution, solution, solutionStrong)
-	print("ComputeErrorL2 successful")
+		solution = LUSolver(stiffness + advection + reaction, \
+				forcingTerm - \
+				(stiffnessStrong + advectionStrong + reactionStrong) @ solutionStrong + \
+				weakTerm_right + \
+				weakTerm_left)
 
-	print("ComputeErrorH1...")
-	errorH1 = ComputeErrorH1(Poisson_exactDerivativeSolution, solution, solutionStrong)
-	print("ComputeErrorH1 successful")
+		errorL2 = ComputeErrorL2(Poisson_exactSolution, solution, solutionStrong)
 
-	print("dofs", "h", "errorL2", "errorH1")
-	print(problemData['NumberDOFs'], problemData['H'], errorL2, errorH1)
+		errorH1 = ComputeErrorH1(Poisson_exactDerivativeSolution, solution, solutionStrong)
 
-	PlotSolution(mesh, dofs, strongs, solution, solutionStrong)
+		print("dofs", "h", "errorL2", "errorH1")
+		print(problemData['NumberDOFs'], '{:.16e}'.format(problemData['H']), '{:.16e}'.format(errorL2), '{:.16e}'.format(errorH1))
+
+		# PlotSolution(mesh, dofs, strongs, solution, solutionStrong)
 
 	print("Test successful")
