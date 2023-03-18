@@ -121,6 +121,16 @@ def CreateDomainSquare(domain):
 
 	mesh = make_nd_matrix(pointerMeshCoordinates, (3, meshInfo['NumberCell0Ds']))
 	return [meshInfo, mesh]
+
+def CreateDomainRectangle(domain):
+	lib.GedimForPy_CreateDomainRectangle.argtypes = [ct.py_object, ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_CreateDomainRectangle.restype = ct.py_object
+
+	pointerMeshCoordinates = ct.POINTER(ct.c_double)()
+	meshInfo = lib.GedimForPy_CreateDomainRectangle(domain, pointerMeshCoordinates)
+
+	mesh = make_nd_matrix(pointerMeshCoordinates, (3, meshInfo['NumberCell0Ds']))
+	return [meshInfo, mesh]
 	
 def Discretize(discreteSpace):
 	lib.GedimForPy_Discretize.argtypes = [ct.py_object, ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double))]
@@ -329,6 +339,9 @@ if __name__ == '__main__':
 	for meshSize in meshSizes:
 		domain = { 'SquareEdge': 1.0, 'VerticesBoundaryCondition': [1,1,1,1], 'EdgesBoundaryCondition': [1,2,1,3], 'DiscretizationType': 1, 'MeshCellsMaximumArea': meshSize }
 		[meshInfo, mesh] = CreateDomainSquare(domain)
+
+		domain = { 'RectangleBase': 1.0, 'RectangleHeight': 1.0, 'VerticesBoundaryCondition': [1,1,1,1], 'EdgesBoundaryCondition': [1,2,1,3], 'DiscretizationType': 1, 'MeshCellsMaximumArea': meshSize }
+		[meshInfo, mesh] = CreateDomainRectangle(domain)
 
 		PlotMesh(mesh)
 

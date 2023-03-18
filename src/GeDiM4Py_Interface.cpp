@@ -40,6 +40,30 @@ PyObject* GedimForPy_CreateDomainSquare(PyObject* square,
                                                      *coordinates);
 }
 // ***************************************************************************
+PyObject* GedimForPy_CreateDomainRectangle(PyObject* rectangle,
+                                           double** coordinates)
+{
+  if (!PyDict_Check(rectangle))
+    throw std::runtime_error("The input is not correct");
+
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+
+  GedimForPy::InterfaceDataDAO gedimData = GedimForPy::InterfaceDataDAO(data);
+
+  domain2D = GedimForPy::GeDiM4Py_Interface::ConvertDomainRectangle(gedimData,
+                                                                    rectangle);
+  mesh = GedimForPy::GeDiM4Py_Logic::CreateDomainMesh2D(domain2D,
+                                                        gedimData);
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  return GedimForPy::GeDiM4Py_Interface::ConvertMesh(meshDAO,
+                                                     *coordinates);
+}
+// ***************************************************************************
 PyObject* GedimForPy_Discretize(PyObject* discreteSpace,
                                 double** dofsCoordinate,
                                 double** strongsCoordinate)
@@ -381,6 +405,25 @@ namespace GedimForPy
     domain.EdgesBoundaryCondition = ConvertToArray<unsigned int>(PyDict_GetItemString(square, "EdgesBoundaryCondition"));
     domain.DiscretizationType = static_cast<Domain2D::DiscretizationTypes>(PyLong_AsLong(PyDict_GetItemString(square, "DiscretizationType")));
     domain.MeshCellsMaximumArea = PyFloat_AsDouble(PyDict_GetItemString(square, "MeshCellsMaximumArea"));
+
+    return domain;
+  }
+  // ***************************************************************************
+  Domain2D GeDiM4Py_Interface::ConvertDomainRectangle(GedimForPy::InterfaceDataDAO& gedimData,
+                                                      PyObject* rectangle)
+  {
+    Domain2D domain;
+
+    const double rectangleBase = PyFloat_AsDouble(PyDict_GetItemString(rectangle, "RectangleBase"));
+    const double rectangleHeight = PyFloat_AsDouble(PyDict_GetItemString(rectangle, "RectangleHeight"));
+
+    domain.Vertices = gedimData.GeometryUtilities().CreateRectangle(Eigen::Vector3d(0.0, 0.0, 0.0),
+                                                                    rectangleBase,
+                                                                    rectangleHeight);
+    domain.VerticesBoundaryCondition = ConvertToArray<unsigned int>(PyDict_GetItemString(rectangle, "VerticesBoundaryCondition"));
+    domain.EdgesBoundaryCondition = ConvertToArray<unsigned int>(PyDict_GetItemString(rectangle, "EdgesBoundaryCondition"));
+    domain.DiscretizationType = static_cast<Domain2D::DiscretizationTypes>(PyLong_AsLong(PyDict_GetItemString(rectangle, "DiscretizationType")));
+    domain.MeshCellsMaximumArea = PyFloat_AsDouble(PyDict_GetItemString(rectangle, "MeshCellsMaximumArea"));
 
     return domain;
   }
