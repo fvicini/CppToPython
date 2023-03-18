@@ -64,6 +64,11 @@ namespace GedimForPy
 
     return mesh;
   }
+
+  Domain2DMesh GeDiM4Py_Logic::ImportDomainMesh2D(const ImportMesh2D& domain, InterfaceDataDAO& gedimData)
+  {
+
+  }
   // ***************************************************************************
   DiscreteProblemData GeDiM4Py_Logic::Discretize(const Gedim::IMeshDAO& mesh,
                                                  const Gedim::MeshUtilities::MeshGeometricData2D& meshGeometricData,

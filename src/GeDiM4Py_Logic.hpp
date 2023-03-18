@@ -55,6 +55,12 @@ namespace GedimForPy
       double MeshCellsMaximumArea = 0.0;
   };
 
+  struct ImportMesh2D final
+  {
+     std::string InputFolder = "";
+     char Separator = ';';
+  };
+
   struct Domain2DMesh final
   {
       Gedim::MeshMatrices Mesh;
@@ -146,6 +152,9 @@ namespace GedimForPy
                              InterfaceData& data);
 
       static Domain2DMesh CreateDomainMesh2D(const Domain2D& domain,
+                                             InterfaceDataDAO& gedimData);
+
+      static Domain2DMesh ImportDomainMesh2D(const ImportMesh2D& domain,
                                              InterfaceDataDAO& gedimData);
 
       static DiscreteProblemData Discretize(const Gedim::IMeshDAO& mesh,
