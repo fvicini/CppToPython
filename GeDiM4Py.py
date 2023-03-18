@@ -89,6 +89,11 @@ def Poisson_exactDerivativeSolution(direction, numPoints, points):
 
 	return values.ctypes.data
 
+def Poisson_strongTerm(numPoints, points):
+	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
+	values = 16.0 * (matPoints[1,:] * (1.0 - matPoints[1,:]) * matPoints[0,:] * (1.0 - matPoints[0,:])) + 1.1
+	return values.ctypes.data
+
 def Poisson_weakTerm_right(numPoints, points):
 	matPoints = make_nd_matrix(points, (3, numPoints), np.double)
 	values = Poisson_A() * 16.0 * (1.0 - 2.0 * matPoints[0,:]) * matPoints[1,:] * (1.0 - matPoints[1,:])
@@ -313,27 +318,24 @@ def PlotSolution(mesh, dofs, strongs, solutionDofs, solutionStrongs):
 
 if __name__ == '__main__':
 
-	print("Importing library...")
 	lib = ImportLibrary("/home/geoscore/Desktop/GEO++/Courses/CppToPython/release/GeDiM4Py.so")
-	print(lib)
-	print("Import library successful")
 
 	config = { 'GeometricTolerance': 1.0e-8 }
 	Initialize(config)
 	
-	meshSizes = [0.1, 0.01, 0.001 ]
+	meshSizes = [0.1 ]
 	order = 2
 
 	for meshSize in meshSizes:
 		domain = { 'SquareEdge': 1.0, 'VerticesBoundaryCondition': [1,1,1,1], 'EdgesBoundaryCondition': [1,2,1,3], 'DiscretizationType': 1, 'MeshCellsMaximumArea': meshSize }
 		[meshInfo, mesh] = CreateDomainSquare(domain)
 
-		# PlotMesh(mesh)
+		PlotMesh(mesh)
 
 		discreteSpace = { 'Order': order, 'Type': 1, 'BoundaryConditionsType': [1, 2, 3, 3] }
 		[problemData, dofs, strongs] = Discretize(discreteSpace)
 
-		# PlotDofs(mesh, dofs, strongs)
+		PlotDofs(mesh, dofs, strongs)
 
 		[stiffness, stiffnessStrong] = AssembleStiffnessMatrix(Poisson_a, problemData)
 
@@ -343,7 +345,7 @@ if __name__ == '__main__':
 
 		forcingTerm = AssembleForcingTerm(Poisson_f, problemData)
 
-		solutionStrong = AssembleStrongSolution(Poisson_exactSolution, 1, problemData)
+		solutionStrong = AssembleStrongSolution(Poisson_strongTerm, 1, problemData)
 		
 		weakTerm_right = AssembleWeakTerm(Poisson_weakTerm_right, 2, problemData)
 		weakTerm_left = AssembleWeakTerm(Poisson_weakTerm_left, 3, problemData)
@@ -361,6 +363,4 @@ if __name__ == '__main__':
 		print("dofs", "h", "errorL2", "errorH1")
 		print(problemData['NumberDOFs'], '{:.16e}'.format(problemData['H']), '{:.16e}'.format(errorL2), '{:.16e}'.format(errorH1))
 
-		# PlotSolution(mesh, dofs, strongs, solution, solutionStrong)
-
-	print("Test successful")
+		PlotSolution(mesh, dofs, strongs, solution, solutionStrong)
