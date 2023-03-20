@@ -16,12 +16,12 @@ namespace UnitTesting
       {
         double* values = new double[numPoints];
 
-        Eigen::Map<Eigen::MatrixXd> matValues(values, 2, numPoints);
+        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
 
         for (unsigned int p = 0; p < numPoints; p++)
         {
-          if (matValues(0, p) * matValues(0, p) + matValues(1, p) * matValues(1, p) <= R() * R())
+          if (matPoints(0, p) * matPoints(0, p) + matPoints(1, p) * matPoints(1, p) <= (R() * R() + 1.0e-16))
             vecValues[p] = K();
           else
             vecValues[p] = 1.0;

@@ -499,7 +499,7 @@ namespace UnitTesting
           const Eigen::MatrixXd coordinates = meshDAO.Cell0DsCoordinates();
 
           const double* cell0Ds_diffusion = HeatConductivity::DiffusionTerm(coordinates.cols(),
-                                                                                 coordinates.data());
+                                                                            coordinates.data());
 
           for (unsigned int p = 0; p < meshDAO.Cell0DTotalNumber(); p++)
           {
