@@ -1,4 +1,5 @@
 #include "GeDiM4Py_Interface.hpp"
+#include "FileTextReader.hpp"
 #include "MeshMatricesDAO.hpp"
 
 // ***************************************************************************
@@ -64,12 +65,8 @@ PyObject* GedimForPy_CreateDomainRectangle(PyObject* rectangle,
                                                      *coordinates);
 }
 // ***************************************************************************
-PyObject* GedimForPy_ImportDomainMesh2D(PyObject* importData,
-                                        double** coordinates)
+PyObject* GedimForPy_ImportDomainMesh2D(double** coordinates)
 {
-  if (!PyDict_Check(importData))
-    throw std::runtime_error("The input is not correct");
-
   GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
   GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
   GedimForPy::ImportMesh2D& domain2D = GedimForPy::GeDiM4Py_Interface::DomainImported;
@@ -77,8 +74,7 @@ PyObject* GedimForPy_ImportDomainMesh2D(PyObject* importData,
 
   GedimForPy::InterfaceDataDAO gedimData = GedimForPy::InterfaceDataDAO(data);
 
-  domain2D = GedimForPy::GeDiM4Py_Interface::ConvertDomainImport(gedimData,
-                                                                 importData);
+  domain2D = GedimForPy::GeDiM4Py_Interface::ConvertDomainImport(gedimData);
   mesh = GedimForPy::GeDiM4Py_Logic::ImportDomainMesh2D(domain2D,
                                                         gedimData);
 
@@ -453,13 +449,25 @@ namespace GedimForPy
     return domain;
   }
   // ***************************************************************************
-  ImportMesh2D GeDiM4Py_Interface::ConvertDomainImport(InterfaceDataDAO& gedimData,
-                                                       PyObject* import)
+  ImportMesh2D GeDiM4Py_Interface::ConvertDomainImport(InterfaceDataDAO& gedimData)
   {
     ImportMesh2D domain;
 
-    domain.InputFolder = PyFloat_AsDouble(PyDict_GetItemString(import, "InputFolder"));
-    domain.Separator = PyFloat_AsDouble(PyDict_GetItemString(import, "Separator"));
+    std::vector<std::string> inputFolders;
+    Gedim::FileReader csvFileReader("./ImportMesh.csv");
+
+    if (!csvFileReader.Open())
+      throw runtime_error("File ImportMesh.csv not found in folder ./");
+
+    csvFileReader.GetAllLines(inputFolders);
+    csvFileReader.Close();
+
+    unsigned int numInputFolders = inputFolders.size() - 1;
+    if (numInputFolders != 1)
+      throw runtime_error("File ImportMesh.csv wrong");
+
+    domain.InputFolder = inputFolders[1];
+    domain.Separator = ';';
 
     return domain;
   }

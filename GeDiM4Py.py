@@ -73,12 +73,12 @@ def CreateDomainRectangle(domain, lib):
 	mesh = make_nd_matrix(pointerMeshCoordinates, (3, meshInfo['NumberCell0Ds']))
 	return [meshInfo, mesh]
 
-def ImportDomainMesh2D(domain, lib):
-	lib.GedimForPy_ImportDomainMesh2D.argtypes = [ct.py_object, ct.POINTER(ct.POINTER(ct.c_double))]
+def ImportDomainMesh2D(lib):
+	lib.GedimForPy_ImportDomainMesh2D.argtypes = [ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_ImportDomainMesh2D.restype = ct.py_object
 
 	pointerMeshCoordinates = ct.POINTER(ct.c_double)()
-	meshInfo = lib.GedimForPy_ImportDomainMesh2D(domain, pointerMeshCoordinates)
+	meshInfo = lib.GedimForPy_ImportDomainMesh2D(pointerMeshCoordinates)
 
 	mesh = make_nd_matrix(pointerMeshCoordinates, (3, meshInfo['NumberCell0Ds']))
 	return [meshInfo, mesh]

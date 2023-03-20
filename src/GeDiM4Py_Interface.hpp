@@ -18,8 +18,7 @@ extern "C"
 PyObject* GedimForPy_CreateDomainRectangle(PyObject* rectangle,
                                            double** coordinates);
 extern "C"
-PyObject* GedimForPy_ImportDomainMesh2D(PyObject* importData,
-                                        double** coordinates);
+PyObject* GedimForPy_ImportDomainMesh2D(double** coordinates);
 
 extern "C"
 PyObject* GedimForPy_Discretize(PyObject* discreteSpace,
@@ -102,8 +101,7 @@ namespace GedimForPy
                                           PyObject* square);
       static Domain2D ConvertDomainRectangle(InterfaceDataDAO& gedimData,
                                              PyObject* rectangle);
-      static ImportMesh2D ConvertDomainImport(InterfaceDataDAO& gedimData,
-                                              PyObject* import);
+      static ImportMesh2D ConvertDomainImport(InterfaceDataDAO& gedimData);
       static PyObject* ConvertMesh(const Gedim::IMeshDAO& mesh,
                                    double*& coordinates);
       static DiscreteSpace ConvertDiscreteSpace(PyObject* discreteSpace);

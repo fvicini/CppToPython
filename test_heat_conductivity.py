@@ -12,7 +12,7 @@ def Heat_k(numPoints, points):
 	matPoints = gedim.make_nd_matrix(points, (3, numPoints), np.double)
 	values = np.ones(numPoints)
 	for p in range(0, numPoints):
-		if matPoints[0,p] * matPoints[0,p] + matPoints[1,p] * matPoints[1,p] <= (Heat_R() * Heat_R() + 1.0e-16):
+		if (matPoints[0,p] * matPoints[0,p] + matPoints[1,p] * matPoints[1,p]) <= (Heat_R() * Heat_R() + 1.0e-16):
 			values[p] = Heat_K()
 	return values.ctypes.data
 
@@ -27,24 +27,21 @@ if __name__ == '__main__':
 	config = { 'GeometricTolerance': 1.0e-8 }
 	gedim.Initialize(config, lib)
 	
-	meshSizes = [0.1]
 	order = 2
 
-	for meshSize in meshSizes:
-		domain = { 'SquareEdge': 1.0, 'VerticesBoundaryCondition': [1,2,3,2], 'EdgesBoundaryCondition': [1,2,3,2], 'DiscretizationType': 1, 'MeshCellsMaximumArea': meshSize }
-		[meshInfo, mesh] = gedim.CreateDomainSquare(domain, lib)
+	[meshInfo, mesh] = gedim.ImportDomainMesh2D(lib)
 
-		gedim.PlotMesh(mesh)
+	gedim.PlotMesh(mesh)
 
-		discreteSpace = { 'Order': order, 'Type': 1, 'BoundaryConditionsType': [1, 3, 2, 2] }
-		[problemData, dofs, strongs] = gedim.Discretize(discreteSpace, lib)
+	discreteSpace = { 'Order': order, 'Type': 1, 'BoundaryConditionsType': [1, 3, 3, 2] }
+	[problemData, dofs, strongs] = gedim.Discretize(discreteSpace, lib)
 
-		gedim.PlotDofs(mesh, dofs, strongs)
+	gedim.PlotDofs(mesh, dofs, strongs)
 
-		[stiffness, stiffnessStrong] = gedim.AssembleStiffnessMatrix(Heat_k, problemData, lib)
-		
-		weakTerm_down = gedim.AssembleWeakTerm(Heat_weakTerm_down, 2, problemData, lib)
+	[stiffness, stiffnessStrong] = gedim.AssembleStiffnessMatrix(Heat_k, problemData, lib)
+	
+	weakTerm_down = gedim.AssembleWeakTerm(Heat_weakTerm_down, 1, problemData, lib)
 
-		solution = gedim.LUSolver(stiffness, weakTerm_down, lib)
+	solution = gedim.LUSolver(stiffness, weakTerm_down, lib)
 
-		gedim.PlotSolution(mesh, dofs, strongs, solution, np.zeros(problemData['NumberStrongs']))
+	gedim.PlotSolution(mesh, dofs, strongs, solution, np.zeros(problemData['NumberStrongs']))
