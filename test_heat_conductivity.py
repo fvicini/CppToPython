@@ -22,7 +22,7 @@ def Heat_weakTerm_down(numPoints, points):
 	
 if __name__ == '__main__':
 
-	lib = gedim.ImportLibrary("/home/geoscore/Desktop/GEO++/Courses/CppToPython/release/GeDiM4Py.so")
+	lib = gedim.ImportLibrary("./release/GeDiM4Py.so")
 
 	config = { 'GeometricTolerance': 1.0e-8 }
 	gedim.Initialize(config, lib)
