@@ -151,6 +151,47 @@ namespace GedimForPy
                                          cell1Ds.Cell2Ds,
                                          meshDAO);
 
+    {
+      std::vector<std::string> cell2DsLines;
+      Gedim::FileReader csvFileReader(domain.InputFolder + "/Cell2DsMarker.csv");
+
+      if (!csvFileReader.Open())
+        throw runtime_error("File not found in folder " + domain.InputFolder);
+
+      csvFileReader.GetAllLines(cell2DsLines);
+      csvFileReader.Close();
+
+      unsigned int numCell2Ds = cell2DsLines.size() - 1;
+      if (numCell2Ds == 0)
+        throw runtime_error("File cell2DsMarker empty");
+
+      char temp;
+      unsigned int cell2DIndex, vertexIndex, marker;
+      for (unsigned int t = 0; t < numCell2Ds; t++)
+      {
+        istringstream converter(cell2DsLines[t + 1]);
+
+        converter >> cell2DIndex;
+        if (domain.Separator != ' ')
+          converter >> temp;
+        converter >> vertexIndex;
+        if (domain.Separator != ' ')
+          converter >> temp;
+        converter >> marker;
+
+
+        if (marker != 0)
+        {
+          const unsigned int correctedIndex = (vertexIndex + 1) % 3;
+          const unsigned int cell1DIndex = meshDAO.Cell2DEdge(cell2DIndex, correctedIndex);
+
+          meshDAO.Cell0DSetMarker(meshDAO.Cell1DOrigin(cell1DIndex), marker);
+          meshDAO.Cell0DSetMarker(meshDAO.Cell1DEnd(cell1DIndex), marker);
+          meshDAO.Cell1DSetMarker(cell1DIndex, marker);
+        }
+      }
+    }
+
     Gedim::MapTriangle mapTriangle;
     mesh.Cell2DsMap.resize(meshDAO.Cell2DTotalNumber());
     for (unsigned int c = 0; c < meshDAO.Cell2DTotalNumber(); c++)

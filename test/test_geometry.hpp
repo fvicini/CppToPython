@@ -381,9 +381,9 @@ namespace UnitTesting
       }
 
 #if ACTIVE_CHECK == 1
-      ASSERT_EQ(13, mesh.Mesh.NumberCell0D);
-      ASSERT_EQ(28, mesh.Mesh.NumberCell1D);
-      ASSERT_EQ(16, mesh.Mesh.NumberCell2D);
+      ASSERT_EQ(197, mesh.Mesh.NumberCell0D);
+      ASSERT_EQ(537, mesh.Mesh.NumberCell1D);
+      ASSERT_EQ(341, mesh.Mesh.NumberCell2D);
 #endif
 
       GedimForPy::DiscreteSpace discreteSpace;
@@ -391,18 +391,18 @@ namespace UnitTesting
       discreteSpace.Order = order;
       discreteSpace.BoundaryConditionsType = { GedimForPy::DiscreteSpace::BoundaryConditionTypes::None,
                                                GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong,
-                                               GedimForPy::DiscreteSpace::BoundaryConditionTypes::Weak,
-                                               GedimForPy::DiscreteSpace::BoundaryConditionTypes::Weak };
+                                               GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong,
+                                               GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong };
 
       GedimForPy::DiscreteProblemData problemData = GedimForPy::GeDiM4Py_Logic::Discretize(meshDAO,
                                                                                            mesh.MeshGeometricData,
                                                                                            discreteSpace);
 
 #if ACTIVE_CHECK == 1
-      ASSERT_EQ(31, problemData.NumberDOFs);
-      ASSERT_EQ(10, problemData.NumberStrongs);
-      ASSERT_EQ(13, problemData.Cell0Ds_DOF.size());
-      ASSERT_EQ(28, problemData.Cell1Ds_DOF.size());
+      ASSERT_EQ(632, problemData.NumberDOFs);
+      ASSERT_EQ(102, problemData.NumberStrongs);
+      ASSERT_EQ(197, problemData.Cell0Ds_DOF.size());
+      ASSERT_EQ(537, problemData.Cell1Ds_DOF.size());
 #endif
 
       // export
@@ -488,23 +488,6 @@ namespace UnitTesting
                                                                                           mesh.Cell2DsMap,
                                                                                           problemData);
 
-      const Eigen::VectorXd weakTerm_Right = GedimForPy::GeDiM4Py_Logic::AssembleWeakTerm(Poisson::WeakTerm_Right,
-                                                                                          2,
-                                                                                          meshDAO,
-                                                                                          mesh.MeshGeometricData.Cell2DsVertices,
-                                                                                          mesh.MeshGeometricData.Cell2DsEdgeLengths,
-                                                                                          mesh.MeshGeometricData.Cell2DsEdgeTangents,
-                                                                                          mesh.Cell2DsMap,
-                                                                                          problemData);
-      const Eigen::VectorXd weakTerm_Left = GedimForPy::GeDiM4Py_Logic::AssembleWeakTerm(Poisson::WeakTerm_Left,
-                                                                                         3,
-                                                                                         meshDAO,
-                                                                                         mesh.MeshGeometricData.Cell2DsVertices,
-                                                                                         mesh.MeshGeometricData.Cell2DsEdgeLengths,
-                                                                                         mesh.MeshGeometricData.Cell2DsEdgeTangents,
-                                                                                         mesh.Cell2DsMap,
-                                                                                         problemData);
-
       const Eigen::VectorXd solutionStrong = GedimForPy::GeDiM4Py_Logic::AssembleStrongSolution(Poisson::ExactSolution,
                                                                                                 1,
                                                                                                 meshDAO,
@@ -559,9 +542,7 @@ namespace UnitTesting
       const Eigen::VectorXd solution = linearSolver.solve(forcingTerm -
                                                           (stiffnessStrong +
                                                            advectionStrong +
-                                                           reactionStrong) * solutionStrong +
-                                                          weakTerm_Left +
-                                                          weakTerm_Right);
+                                                           reactionStrong) * solutionStrong);
 
       const Eigen::VectorXd cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(Poisson::ExactSolution,
                                                                                         solution,
