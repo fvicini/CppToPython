@@ -1,4 +1,5 @@
 #include "GeDiM4Py_Interface.hpp"
+#include "FileTextReader.hpp"
 #include "MeshMatricesDAO.hpp"
 
 // ***************************************************************************
@@ -32,6 +33,49 @@ PyObject* GedimForPy_CreateDomainSquare(PyObject* square,
   domain2D = GedimForPy::GeDiM4Py_Interface::ConvertDomainSquare(gedimData,
                                                                  square);
   mesh = GedimForPy::GeDiM4Py_Logic::CreateDomainMesh2D(domain2D,
+                                                        gedimData);
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  return GedimForPy::GeDiM4Py_Interface::ConvertMesh(meshDAO,
+                                                     *coordinates);
+}
+// ***************************************************************************
+PyObject* GedimForPy_CreateDomainRectangle(PyObject* rectangle,
+                                           double** coordinates)
+{
+  if (!PyDict_Check(rectangle))
+    throw std::runtime_error("The input is not correct");
+
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+
+  GedimForPy::InterfaceDataDAO gedimData = GedimForPy::InterfaceDataDAO(data);
+
+  domain2D = GedimForPy::GeDiM4Py_Interface::ConvertDomainRectangle(gedimData,
+                                                                    rectangle);
+  mesh = GedimForPy::GeDiM4Py_Logic::CreateDomainMesh2D(domain2D,
+                                                        gedimData);
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  return GedimForPy::GeDiM4Py_Interface::ConvertMesh(meshDAO,
+                                                     *coordinates);
+}
+// ***************************************************************************
+PyObject* GedimForPy_ImportDomainMesh2D(double** coordinates)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::ImportMesh2D& domain2D = GedimForPy::GeDiM4Py_Interface::DomainImported;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+
+  GedimForPy::InterfaceDataDAO gedimData = GedimForPy::InterfaceDataDAO(data);
+
+  domain2D = GedimForPy::GeDiM4Py_Interface::ConvertDomainImport(gedimData);
+  mesh = GedimForPy::GeDiM4Py_Logic::ImportDomainMesh2D(domain2D,
                                                         gedimData);
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
@@ -355,6 +399,7 @@ namespace GedimForPy
   GedimForPy::InterfaceConfiguration GeDiM4Py_Interface::InterfaceConfig;
   GedimForPy::InterfaceData GeDiM4Py_Interface::InterfaceData;
   GedimForPy::Domain2D GeDiM4Py_Interface::Domain;
+  GedimForPy::ImportMesh2D GeDiM4Py_Interface::DomainImported;
   GedimForPy::Domain2DMesh GeDiM4Py_Interface::Mesh;
   GedimForPy::DiscreteSpace GeDiM4Py_Interface::Space;
   GedimForPy::DiscreteProblemData GeDiM4Py_Interface::ProblemData;
@@ -381,6 +426,48 @@ namespace GedimForPy
     domain.EdgesBoundaryCondition = ConvertToArray<unsigned int>(PyDict_GetItemString(square, "EdgesBoundaryCondition"));
     domain.DiscretizationType = static_cast<Domain2D::DiscretizationTypes>(PyLong_AsLong(PyDict_GetItemString(square, "DiscretizationType")));
     domain.MeshCellsMaximumArea = PyFloat_AsDouble(PyDict_GetItemString(square, "MeshCellsMaximumArea"));
+
+    return domain;
+  }
+  // ***************************************************************************
+  Domain2D GeDiM4Py_Interface::ConvertDomainRectangle(GedimForPy::InterfaceDataDAO& gedimData,
+                                                      PyObject* rectangle)
+  {
+    Domain2D domain;
+
+    const double rectangleBase = PyFloat_AsDouble(PyDict_GetItemString(rectangle, "RectangleBase"));
+    const double rectangleHeight = PyFloat_AsDouble(PyDict_GetItemString(rectangle, "RectangleHeight"));
+
+    domain.Vertices = gedimData.GeometryUtilities().CreateRectangle(Eigen::Vector3d(0.0, 0.0, 0.0),
+                                                                    rectangleBase,
+                                                                    rectangleHeight);
+    domain.VerticesBoundaryCondition = ConvertToArray<unsigned int>(PyDict_GetItemString(rectangle, "VerticesBoundaryCondition"));
+    domain.EdgesBoundaryCondition = ConvertToArray<unsigned int>(PyDict_GetItemString(rectangle, "EdgesBoundaryCondition"));
+    domain.DiscretizationType = static_cast<Domain2D::DiscretizationTypes>(PyLong_AsLong(PyDict_GetItemString(rectangle, "DiscretizationType")));
+    domain.MeshCellsMaximumArea = PyFloat_AsDouble(PyDict_GetItemString(rectangle, "MeshCellsMaximumArea"));
+
+    return domain;
+  }
+  // ***************************************************************************
+  ImportMesh2D GeDiM4Py_Interface::ConvertDomainImport(InterfaceDataDAO& gedimData)
+  {
+    ImportMesh2D domain;
+
+    std::vector<std::string> inputFolders;
+    Gedim::FileReader csvFileReader("./ImportMesh.csv");
+
+    if (!csvFileReader.Open())
+      throw runtime_error("File ImportMesh.csv not found in folder ./");
+
+    csvFileReader.GetAllLines(inputFolders);
+    csvFileReader.Close();
+
+    unsigned int numInputFolders = inputFolders.size() - 1;
+    if (numInputFolders != 1)
+      throw runtime_error("File ImportMesh.csv wrong");
+
+    domain.InputFolder = inputFolders[1];
+    domain.Separator = ';';
 
     return domain;
   }
