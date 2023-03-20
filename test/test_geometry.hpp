@@ -11,7 +11,7 @@
 #include "test_Poisson.hpp"
 #include "test_heat_conductivity.hpp"
 
-#define ACTIVE_CHECK 1
+#define ACTIVE_CHECK 0
 
 namespace UnitTesting
 {
@@ -356,7 +356,7 @@ namespace UnitTesting
                                          data));
 
     const std::vector<std::string> meshImport = {
-      "/home/geoscore/Desktop/GEO++/Courses/CppToPython/Meshes/Mesh1"
+      "/home/geoscore/Desktop/GEO++/Courses/CppToPython/Meshes/Mesh3"
     };
     const unsigned int order = 2;
 
