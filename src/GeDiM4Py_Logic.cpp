@@ -73,6 +73,7 @@ namespace GedimForPy
     Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
     Eigen::MatrixXd cell0Ds;
+    vector<Eigen::VectorXi> originalCell2Ds;
     vector<Eigen::VectorXi> cell2Ds;
 
     {
@@ -123,6 +124,7 @@ namespace GedimForPy
         throw runtime_error("File cell2Ds empty");
 
       cell2Ds.resize(numCell2Ds, Eigen::VectorXi::Zero(3));
+      originalCell2Ds.resize(numCell2Ds, Eigen::VectorXi::Zero(3));
 
       char temp;
       unsigned int id;
@@ -133,13 +135,23 @@ namespace GedimForPy
         converter >> id;
         if (domain.Separator != ' ')
           converter >> temp;
-        converter >> cell2Ds[t](0);
+        converter >> originalCell2Ds[t](0);
         if (domain.Separator != ' ')
           converter >> temp;
-        converter >> cell2Ds[t](1);
+        converter >> originalCell2Ds[t](1);
         if (domain.Separator != ' ')
           converter >> temp;
-        converter >> cell2Ds[t](2);
+        converter >> originalCell2Ds[t](2);
+
+        Eigen::Matrix3d points;
+        points.col(0)<< cell0Ds.col(originalCell2Ds.at(t)(0));
+        points.col(1)<< cell0Ds.col(originalCell2Ds.at(t)(1));
+        points.col(2)<< cell0Ds.col(originalCell2Ds.at(t)(2));
+
+        std::vector<unsigned int> convexPoints = gedimData.GeometryUtilities().ConvexHull(points);
+        cell2Ds.at(t)(0) = originalCell2Ds.at(t)(convexPoints.at(0));
+        cell2Ds.at(t)(1) = originalCell2Ds.at(t)(convexPoints.at(1));
+        cell2Ds.at(t)(2) = originalCell2Ds.at(t)(convexPoints.at(2));
       }
     }
 
@@ -182,15 +194,25 @@ namespace GedimForPy
 
         if (marker != 0)
         {
-          const unsigned int correctedIndex = (vertexIndex + 1) % 3;
-          const unsigned int cell1DIndex = meshDAO.Cell2DEdge(cell2DIndex, correctedIndex);
+          const unsigned int correctedOriginIndex = originalCell2Ds.at(cell2DIndex)[(vertexIndex + 1) % 3];
+          const unsigned int correctedEndIndex = originalCell2Ds.at(cell2DIndex)[(vertexIndex + 2) % 3];
+          const unsigned int cell1DIndex = meshDAO.Cell1DExists(correctedOriginIndex,
+                                                                correctedEndIndex) ?
+                                             meshDAO.Cell1DByExtremes(correctedOriginIndex, correctedEndIndex) :
+                                             meshDAO.Cell1DByExtremes(correctedEndIndex, correctedOriginIndex);
 
-          meshDAO.Cell0DSetMarker(meshDAO.Cell1DOrigin(cell1DIndex), marker);
-          meshDAO.Cell0DSetMarker(meshDAO.Cell1DEnd(cell1DIndex), marker);
+          meshDAO.Cell0DSetMarker(correctedOriginIndex, marker);
+          meshDAO.Cell0DSetMarker(correctedEndIndex, marker);
           meshDAO.Cell1DSetMarker(cell1DIndex, marker);
         }
       }
     }
+
+    Gedim::MeshUtilities::CheckMesh2DConfiguration check;
+    check.Cell1D_CheckNeighbours = false;
+    gedimData.MeshUtilities().CheckMesh2D(check,
+                                          gedimData.GeometryUtilities(),
+                                          meshDAO);
 
     Gedim::MapTriangle mapTriangle;
     mesh.Cell2DsMap.resize(meshDAO.Cell2DTotalNumber());

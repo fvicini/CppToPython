@@ -356,7 +356,7 @@ namespace UnitTesting
                                          data));
 
     const std::vector<std::string> meshImport = {
-      "/home/geoscore/Desktop/GEO++/Courses/CppToPython/Meshes/Mesh3"
+      "/home/geoscore/Desktop/GEO++/Courses/CppToPython/Meshes/Mesh2"
     };
     const unsigned int order = 2;
 
