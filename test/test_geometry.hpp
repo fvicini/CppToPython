@@ -9,6 +9,7 @@
 #include "MeshMatricesDAO.hpp"
 #include "VTKUtilities.hpp"
 #include "test_Poisson.hpp"
+#include "test_heat_conductivity.hpp"
 
 #define ACTIVE_CHECK 1
 
@@ -390,8 +391,8 @@ namespace UnitTesting
       discreteSpace.Type = GedimForPy::DiscreteSpace::Types::FEM;
       discreteSpace.Order = order;
       discreteSpace.BoundaryConditionsType = { GedimForPy::DiscreteSpace::BoundaryConditionTypes::None,
-                                               GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong,
-                                               GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong,
+                                               GedimForPy::DiscreteSpace::BoundaryConditionTypes::Weak,
+                                               GedimForPy::DiscreteSpace::BoundaryConditionTypes::Weak,
                                                GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong };
 
       GedimForPy::DiscreteProblemData problemData = GedimForPy::GeDiM4Py_Logic::Discretize(meshDAO,
@@ -399,8 +400,8 @@ namespace UnitTesting
                                                                                            discreteSpace);
 
 #if ACTIVE_CHECK == 1
-      ASSERT_EQ(632, problemData.NumberDOFs);
-      ASSERT_EQ(102, problemData.NumberStrongs);
+      ASSERT_EQ(711, problemData.NumberDOFs);
+      ASSERT_EQ(23, problemData.NumberStrongs);
       ASSERT_EQ(197, problemData.Cell0Ds_DOF.size());
       ASSERT_EQ(537, problemData.Cell1Ds_DOF.size());
 #endif
@@ -462,37 +463,21 @@ namespace UnitTesting
       }
 
       std::list<Eigen::Triplet<double>> stiffnessTriplets, stiffnessStrongTriplets;
-      GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(Poisson::DiffusionTerm,
+      GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(HeatConductivity::DiffusionTerm,
                                                           meshDAO,
                                                           mesh.Cell2DsMap,
                                                           problemData,
                                                           stiffnessTriplets,
                                                           stiffnessStrongTriplets);
-      std::list<Eigen::Triplet<double>> advectionTriplets, advectionStrongTriplets;
-      GedimForPy::GeDiM4Py_Logic::AssembleAdvectionMatrix(Poisson::AdvectionTerm,
-                                                          meshDAO,
-                                                          mesh.Cell2DsMap,
-                                                          problemData,
-                                                          advectionTriplets,
-                                                          advectionStrongTriplets);
-      std::list<Eigen::Triplet<double>> reactionTriplets, reactionStrongTriplets;
-      GedimForPy::GeDiM4Py_Logic::AssembleReactionMatrix(Poisson::ReactionTerm,
-                                                         meshDAO,
-                                                         mesh.Cell2DsMap,
-                                                         problemData,
-                                                         reactionTriplets,
-                                                         reactionStrongTriplets);
 
-      const Eigen::VectorXd forcingTerm = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(Poisson::ForcingTerm,
-                                                                                          meshDAO,
-                                                                                          mesh.Cell2DsMap,
-                                                                                          problemData);
-
-      const Eigen::VectorXd solutionStrong = GedimForPy::GeDiM4Py_Logic::AssembleStrongSolution(Poisson::ExactSolution,
-                                                                                                1,
-                                                                                                meshDAO,
-                                                                                                mesh.Cell2DsMap,
-                                                                                                problemData);
+      const Eigen::VectorXd weakTerm_Down = GedimForPy::GeDiM4Py_Logic::AssembleWeakTerm(HeatConductivity::WeakTerm_Down,
+                                                                                         1,
+                                                                                         meshDAO,
+                                                                                         mesh.MeshGeometricData.Cell2DsVertices,
+                                                                                         mesh.MeshGeometricData.Cell2DsEdgeLengths,
+                                                                                         mesh.MeshGeometricData.Cell2DsEdgeTangents,
+                                                                                         mesh.Cell2DsMap,
+                                                                                         problemData);
 
       Eigen::SparseMatrix<double> stiffness(problemData.NumberDOFs,
                                             problemData.NumberDOFs);
@@ -501,67 +486,10 @@ namespace UnitTesting
       stiffness.makeCompressed();
       stiffnessTriplets.clear();
 
-      Eigen::SparseMatrix<double> advection(problemData.NumberDOFs,
-                                            problemData.NumberDOFs);
-      advection.setFromTriplets(advectionTriplets.begin(),
-                                advectionTriplets.end());
-      advection.makeCompressed();
-      advectionTriplets.clear();
-
-      Eigen::SparseMatrix<double> reaction(problemData.NumberDOFs,
-                                           problemData.NumberDOFs);
-      reaction.setFromTriplets(reactionTriplets.begin(),
-                               reactionTriplets.end());
-      reaction.makeCompressed();
-      reactionTriplets.clear();
-
-      Eigen::SparseMatrix<double> stiffnessStrong(problemData.NumberDOFs,
-                                                  problemData.NumberStrongs);
-      stiffnessStrong.setFromTriplets(stiffnessStrongTriplets.begin(),
-                                      stiffnessStrongTriplets.end());
-      stiffnessStrong.makeCompressed();
-      stiffnessStrongTriplets.clear();
-
-      Eigen::SparseMatrix<double> advectionStrong(problemData.NumberDOFs,
-                                                  problemData.NumberStrongs);
-      advectionStrong.setFromTriplets(advectionStrongTriplets.begin(),
-                                      advectionStrongTriplets.end());
-      advectionStrong.makeCompressed();
-      advectionStrongTriplets.clear();
-
-      Eigen::SparseMatrix<double> reactionStrong(problemData.NumberDOFs,
-                                                 problemData.NumberStrongs);
-      reactionStrong.setFromTriplets(reactionStrongTriplets.begin(),
-                                     reactionStrongTriplets.end());
-      reactionStrong.makeCompressed();
-      reactionStrongTriplets.clear();
-
       Eigen::SparseLU<Eigen::SparseMatrix<double>> linearSolver;
-      linearSolver.compute(stiffness + advection + reaction);
+      linearSolver.compute(stiffness);
 
-      const Eigen::VectorXd solution = linearSolver.solve(forcingTerm -
-                                                          (stiffnessStrong +
-                                                           advectionStrong +
-                                                           reactionStrong) * solutionStrong);
-
-      const Eigen::VectorXd cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(Poisson::ExactSolution,
-                                                                                        solution,
-                                                                                        solutionStrong,
-                                                                                        meshDAO,
-                                                                                        mesh.Cell2DsMap,
-                                                                                        problemData);
-      const Eigen::VectorXd cell2DsErrorH1 = GedimForPy::GeDiM4Py_Logic::ComputeErrorH1(Poisson::ExactDerivativeSolution,
-                                                                                        solution,
-                                                                                        solutionStrong,
-                                                                                        meshDAO,
-                                                                                        mesh.Cell2DsMap,
-                                                                                        problemData);
-
-#if ACTIVE_CHECK == 0
-      std::cerr.precision(16);
-      std::cerr<< std::scientific<< "dofs"<< ","<< "h"<< ","<< "errorL2"<< ","<< "errorH1"<< std::endl;
-      std::cerr<< std::scientific<< problemData.NumberDOFs<< ","<< problemData.H<< ","<< sqrt(cell2DsErrorL2.sum())<< ","<< sqrt(cell2DsErrorH1.sum())<< std::endl;
-#endif
+      const Eigen::VectorXd solution = linearSolver.solve(weakTerm_Down);
 
       // export
       {
@@ -570,8 +498,8 @@ namespace UnitTesting
                                                        0.0);
           const Eigen::MatrixXd coordinates = meshDAO.Cell0DsCoordinates();
 
-          const double* cell0Ds_exact_solution = Poisson::ExactSolution(coordinates.cols(),
-                                                                        coordinates.data());
+          const double* cell0Ds_diffusion = HeatConductivity::DiffusionTerm(coordinates.cols(),
+                                                                                 coordinates.data());
 
           for (unsigned int p = 0; p < meshDAO.Cell0DTotalNumber(); p++)
           {
@@ -583,7 +511,7 @@ namespace UnitTesting
                 cell0Ds_numeric_solution[p] = solution[dof.Global_Index];
                 break;
               case GedimForPy::DiscreteProblemData::DOF::Types::Strong:
-                cell0Ds_numeric_solution[p] = solutionStrong[dof.Global_Index];
+                cell0Ds_numeric_solution[p] = 0.0;
                 break;
               default:
                 throw std::runtime_error("DOF Type " +
@@ -597,34 +525,22 @@ namespace UnitTesting
                                meshDAO.Cell2DsVertices(),
                                {
                                  {
-                                   "cell0Ds_exact_solution",
+                                   "cell0Ds_diffusion",
                                    Gedim::VTPProperty::Formats::Points,
                                    static_cast<unsigned int>(coordinates.cols()),
-                                   cell0Ds_exact_solution
+                                   cell0Ds_diffusion
                                  },
                                  {
                                    "cell0Ds_numeric_solution",
                                    Gedim::VTPProperty::Formats::Points,
                                    static_cast<unsigned int>(cell0Ds_numeric_solution.size()),
                                    cell0Ds_numeric_solution.data()
-                                 },
-                                 {
-                                   "cell2Ds_errorL2",
-                                   Gedim::VTPProperty::Formats::Cells,
-                                   static_cast<unsigned int>(cell2DsErrorL2.size()),
-                                   cell2DsErrorL2.data()
-                                 },
-                                 {
-                                   "cell2Ds_errorH1",
-                                   Gedim::VTPProperty::Formats::Cells,
-                                   static_cast<unsigned int>(cell2DsErrorH1.size()),
-                                   cell2DsErrorH1.data()
                                  }
                                });
           exporter.Export(exportFolder +
                           "/Solution.vtu");
 
-          delete[] cell0Ds_exact_solution;
+          delete[] cell0Ds_diffusion;
         }
       }
     }
