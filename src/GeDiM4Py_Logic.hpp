@@ -155,7 +155,8 @@ namespace GedimForPy
                                              InterfaceDataDAO& gedimData);
 
       static Domain2DMesh ImportDomainMesh2D(const ImportMesh2D& domain,
-                                             InterfaceDataDAO& gedimData);
+                                             InterfaceDataDAO& gedimData,
+                                             const bool& checkMesh = false);
 
       static DiscreteProblemData Discretize(const Gedim::IMeshDAO& mesh,
                                             const Gedim::MeshUtilities::MeshGeometricData2D& meshGeometricData,

@@ -67,7 +67,8 @@ namespace GedimForPy
   }
   // ***************************************************************************
   Domain2DMesh GeDiM4Py_Logic::ImportDomainMesh2D(const ImportMesh2D& domain,
-                                                  InterfaceDataDAO& gedimData)
+                                                  InterfaceDataDAO& gedimData,
+                                                  const bool& checkMesh)
   {
     Domain2DMesh mesh;
     Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
@@ -208,11 +209,14 @@ namespace GedimForPy
       }
     }
 
-    Gedim::MeshUtilities::CheckMesh2DConfiguration check;
-    check.Cell1D_CheckNeighbours = false;
-    gedimData.MeshUtilities().CheckMesh2D(check,
-                                          gedimData.GeometryUtilities(),
-                                          meshDAO);
+    if (checkMesh)
+    {
+      Gedim::MeshUtilities::CheckMesh2DConfiguration check;
+      check.Cell1D_CheckNeighbours = false;
+      gedimData.MeshUtilities().CheckMesh2D(check,
+                                            gedimData.GeometryUtilities(),
+                                            meshDAO);
+    }
 
     Gedim::MapTriangle mapTriangle;
     mesh.Cell2DsMap.resize(meshDAO.Cell2DTotalNumber());
