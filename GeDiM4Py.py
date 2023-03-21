@@ -47,7 +47,8 @@ def make_nd_array(c_pointer, size, dtype=np.double, order='F', own_data=True):
         return arr
 
 def ImportLibrary(path):
-	return ct.cdll.LoadLibrary(path)
+	return ct.PyDLL(path)
+	#return ct.cdll.LoadLibrary(path)
 
 def Initialize(config, lib):
 	lib.GedimForPy_Initialize.argtypes = [ct.py_object]
@@ -248,11 +249,9 @@ def PlotMesh(mesh):
 		os.makedirs(subfolder_path)
 	file_name = 'Mesh.png'
 	file_path = os.path.join(subfolder_path, file_name)
-	print(file_path)
 	plt.savefig(file_path)
 	
 	plt.show()
-
 	plt.close()
 
 def PlotDofs(mesh, dofs, strongs):
@@ -268,7 +267,16 @@ def PlotDofs(mesh, dofs, strongs):
 	ax1.scatter(x, y, c=z)
 	ax1.grid(True)
 
+	current_directory_path = os.getcwd()
+	subfolder_path = os.path.join(current_directory_path, 'Images')
+	if not os.path.exists(subfolder_path):
+		os.makedirs(subfolder_path)
+	file_name = 'Dofs.png'
+	file_path = os.path.join(subfolder_path, file_name)
+	plt.savefig(file_path)
+	
 	plt.show()
+	plt.close()
 
 def PlotSolution(mesh, dofs, strongs, solutionDofs, solutionStrongs):
 	x = np.concatenate((dofs[0,:], strongs[0,:]), axis=0)
@@ -287,4 +295,13 @@ def PlotSolution(mesh, dofs, strongs, solutionDofs, solutionStrongs):
 	ax2 = fig.add_subplot(1, 2, 2, projection='3d')
 	ax2.plot_trisurf(x, y, z, triangles=triang.triangles, cmap=plt.cm.Spectral)
 
+	current_directory_path = os.getcwd()
+	subfolder_path = os.path.join(current_directory_path, 'Images')
+	if not os.path.exists(subfolder_path):
+		os.makedirs(subfolder_path)
+	file_name = 'Solution.png'
+	file_path = os.path.join(subfolder_path, file_name)
+	plt.savefig(file_path)
+	
 	plt.show()
+	plt.close()
