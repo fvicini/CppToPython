@@ -10,7 +10,7 @@ def make_np_sparse(nRows, nCols, c_nNonZeros, c_pointerTriplets):
 	nNonZeros = c_nNonZeros.value
 	triplets = make_nd_matrix(c_pointerTriplets, (3, nNonZeros))
 	
-	return scipy.sparse.csr_matrix((triplets[2,:], (triplets[0,:], triplets[1,:])), shape=(nRows, nCols))
+	return scipy.sparse.csc_array((triplets[2,:], (triplets[0,:], triplets[1,:])), shape=(nRows, nCols))
 
 def make_nd_matrix(c_pointer, shape, dtype=np.double, order='F', own_data=True):
     arr_size = np.prod(shape[:]) * np.dtype(dtype).itemsize 
