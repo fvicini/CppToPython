@@ -423,7 +423,8 @@ namespace GedimForPy
                                            cell2DQuadraturePoints.data());
       const Eigen::MatrixXd cellMatrixA = equation.ComputeStiffnessMatrix(numLocals,
                                                                           basisFunctionDerivativeValues2D,
-                                                                          Eigen::Map<const Eigen::VectorXd>(diffusioTermValues,
+                                                                          Eigen::Map<const Eigen::MatrixXd>(diffusioTermValues,
+                                                                                                            3,
                                                                                                             cell2DQuadraturePoints.cols()),
                                                                           cell2DQuadratureWeights);
 
@@ -468,60 +469,68 @@ namespace GedimForPy
   void GeDiM4Py_Logic::AssembleAdvectionMatrix(B b,
                                                const Gedim::IMeshDAO& mesh,
                                                const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
-                                               const DiscreteProblemData& problemData,
+                                               const DiscreteProblemData& trial_Functions,
+                                               const DiscreteProblemData& test_Functions,
                                                std::list<Eigen::Triplet<double>>& advectionTriplets,
                                                std::list<Eigen::Triplet<double>>& advectionStrongTriplets)
   {
-    FEM_RefElement_Langrange_PCC_Triangle_2D femValues;
+    FEM_RefElement_Langrange_PCC_Triangle_2D trial_femValues, test_femValues;
     Gedim::MapTriangle mapTriangle;
-    const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& localSpace = problemData.LocalSpace;
+    const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& trial_localSpace = trial_Functions.LocalSpace;
+    const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& test_localSpace = test_Functions.LocalSpace;
     PDE_Equation equation;
 
-    const Eigen::MatrixXd referenceBasisFunctions = femValues.Reference_BasisFunctions(localSpace,
-                                                                                       localSpace.ReferenceElement.InternalQuadrature.Points);
-    const std::vector<Eigen::MatrixXd> referenceBasisFunctionDerivatives = femValues.Reference_BasisFunctionDerivatives(localSpace,
-                                                                                                                        localSpace.ReferenceElement.InternalQuadrature.Points);
-    const unsigned int numLocals = problemData.LocalSpace.NumberBasisFunctions;
+    const Eigen::MatrixXd& internal_quadraturePoints = trial_localSpace.ReferenceElement.InternalQuadrature.Points;
+    const Eigen::VectorXd& internal_quadratureWeights = trial_localSpace.ReferenceElement.InternalQuadrature.Weights;
+
+    const Eigen::MatrixXd test_referenceBasisFunctions = test_femValues.Reference_BasisFunctions(test_localSpace,
+                                                                                                 internal_quadraturePoints);
+    const std::vector<Eigen::MatrixXd> trial_referenceBasisFunctionDerivatives = trial_femValues.Reference_BasisFunctionDerivatives(trial_localSpace,
+                                                                                                                                    internal_quadraturePoints);
+    const unsigned int trial_numLocals = trial_Functions.LocalSpace.NumberBasisFunctions;
+    const unsigned int test_numLocals = test_Functions.LocalSpace.NumberBasisFunctions;
 
     for (unsigned int cell2DIndex = 0; cell2DIndex < mesh.Cell2DTotalNumber(); cell2DIndex++)
     {
       const Gedim::MapTriangle::MapTriangleData& cell2DMapData = cell2DsMap.at(cell2DIndex);
 
       const Eigen::MatrixXd cell2DQuadraturePoints = mapTriangle.F(cell2DMapData,
-                                                                   localSpace.ReferenceElement.InternalQuadrature.Points);
-      const Eigen::VectorXd cell2DQuadratureWeights = localSpace.ReferenceElement.InternalQuadrature.Weights *
+                                                                   internal_quadraturePoints);
+      const Eigen::VectorXd cell2DQuadratureWeights = internal_quadratureWeights *
                                                       abs(cell2DMapData.DetB);
 
-      const Eigen::MatrixXd basisFunctionValues2D = femValues.BasisFunctions(localSpace,
-                                                                             cell2DMapData,
-                                                                             referenceBasisFunctions);
+      const Eigen::MatrixXd test_basisFunctionValues2D = test_femValues.BasisFunctions(test_localSpace,
+                                                                                       cell2DMapData,
+                                                                                       test_referenceBasisFunctions);
 
-      const std::vector<Eigen::MatrixXd> basisFunctionDerivativeValues2D = femValues.BasisFunctionDerivatives(localSpace,
-                                                                                                              cell2DMapData,
-                                                                                                              referenceBasisFunctionDerivatives);
+      const std::vector<Eigen::MatrixXd> trial_basisFunctionDerivativeValues2D = trial_femValues.BasisFunctionDerivatives(trial_localSpace,
+                                                                                                                          cell2DMapData,
+                                                                                                                          trial_referenceBasisFunctionDerivatives);
 
       const double* advectionTermValues = b(cell2DQuadraturePoints.cols(),
                                             cell2DQuadraturePoints.data());
-      const Eigen::MatrixXd cellMatrixB = equation.ComputeCellAdvectionMatrix(numLocals,
+      const Eigen::MatrixXd cellMatrixB = equation.ComputeCellAdvectionMatrix(trial_numLocals,
+                                                                              test_numLocals,
                                                                               Eigen::Map<const Eigen::MatrixXd>(advectionTermValues,
                                                                                                                 2,
                                                                                                                 cell2DQuadraturePoints.cols()),
-                                                                              basisFunctionValues2D,
-                                                                              basisFunctionDerivativeValues2D,
+                                                                              test_basisFunctionValues2D,
+                                                                              trial_basisFunctionDerivativeValues2D,
                                                                               cell2DQuadratureWeights);
 
-      const std::vector<DiscreteProblemData::DOF*>& cell2D_DOF = problemData.Cell2Ds_DOF[cell2DIndex];
+      const std::vector<DiscreteProblemData::DOF*>& trial_cell2D_DOF = trial_Functions.Cell2Ds_DOF[cell2DIndex];
+      const std::vector<DiscreteProblemData::DOF*>& test_cell2D_DOF = test_Functions.Cell2Ds_DOF[cell2DIndex];
 
-      for (unsigned int i = 0; i < numLocals; i++)
+      for (unsigned int i = 0; i < test_numLocals; i++)
       {
-        const DiscreteProblemData::DOF& dofI = *cell2D_DOF[i];
+        const DiscreteProblemData::DOF& dofI = *test_cell2D_DOF[i];
 
         if (dofI.Type != DiscreteProblemData::DOF::Types::DOF)
           continue;
 
-        for (unsigned int j = 0; j < numLocals; j++)
+        for (unsigned int j = 0; j < trial_numLocals; j++)
         {
-          const DiscreteProblemData::DOF& dofJ = *cell2D_DOF[j];
+          const DiscreteProblemData::DOF& dofJ = *trial_cell2D_DOF[j];
 
           switch (dofJ.Type)
           {
@@ -805,6 +814,253 @@ namespace GedimForPy
     }
 
     return weakTerm;
+  }
+  // ***************************************************************************
+  void GeDiM4Py_Logic::Stokes_AssembleStiffnessMatrix(A a,
+                                                      const Gedim::IMeshDAO& mesh,
+                                                      const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                      const DiscreteProblemData& speed_DiscreteSpace,
+                                                      std::list<Eigen::Triplet<double> >& stiffnessTriplets,
+                                                      std::list<Eigen::Triplet<double> >& stiffnessStrongTriplets)
+  {
+    FEM_RefElement_Langrange_PCC_Triangle_2D speed_femValues;
+    Gedim::MapTriangle mapTriangle;
+    const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& speed_localSpace = speed_DiscreteSpace.LocalSpace;
+    PDE_Equation equation;
+
+    const Eigen::MatrixXd& internal_quadraturePoints = speed_localSpace.ReferenceElement.InternalQuadrature.Points;
+    const Eigen::VectorXd& internal_quadratureWeights = speed_localSpace.ReferenceElement.InternalQuadrature.Weights;
+
+    const std::vector<Eigen::MatrixXd> speed_referenceBasisFunctionDerivatives = speed_femValues.Reference_BasisFunctionDerivatives(speed_localSpace,
+                                                                                                                                    internal_quadraturePoints);
+    const unsigned int speed_numLocals = speed_DiscreteSpace.LocalSpace.NumberBasisFunctions;
+
+    for (unsigned int cell2DIndex = 0; cell2DIndex < mesh.Cell2DTotalNumber(); cell2DIndex++)
+    {
+      const Gedim::MapTriangle::MapTriangleData& cell2DMapData = cell2DsMap.at(cell2DIndex);
+
+      const Eigen::MatrixXd cell2DQuadraturePoints = mapTriangle.F(cell2DMapData,
+                                                                   internal_quadraturePoints);
+      const Eigen::VectorXd cell2DQuadratureWeights = internal_quadratureWeights *
+                                                      abs(cell2DMapData.DetB);
+
+      const std::vector<Eigen::MatrixXd> speed_basisFunctionDerivativeValues2D = speed_femValues.BasisFunctionDerivatives(speed_localSpace,
+                                                                                                                          cell2DMapData,
+                                                                                                                          speed_referenceBasisFunctionDerivatives);
+
+      const double* viscosityTermValues = a(cell2DQuadraturePoints.cols(),
+                                            cell2DQuadraturePoints.data());
+      const Eigen::MatrixXd cellMatrixA = equation.ComputeStokes_StiffnessMatrix(speed_numLocals,
+                                                                                 speed_basisFunctionDerivativeValues2D,
+                                                                                 Eigen::Map<const Eigen::VectorXd>(viscosityTermValues,
+                                                                                                                   cell2DQuadraturePoints.cols()),
+                                                                                 cell2DQuadratureWeights);
+
+      const std::vector<DiscreteProblemData::DOF*>& speed_cell2D_DOF = speed_DiscreteSpace.Cell2Ds_DOF[cell2DIndex];
+
+      for (unsigned int i = 0; i < speed_numLocals; i++)
+      {
+        const DiscreteProblemData::DOF& dofI = *speed_cell2D_DOF[i];
+
+        if (dofI.Type != DiscreteProblemData::DOF::Types::DOF)
+          continue;
+
+        for (unsigned int j = 0; j < speed_numLocals; j++)
+        {
+          const DiscreteProblemData::DOF& dofJ = *speed_cell2D_DOF[j];
+
+          switch (dofJ.Type)
+          {
+            case DiscreteProblemData::DOF::Types::DOF:
+              stiffnessTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
+                                                                 dofJ.Global_Index,
+                                                                 cellMatrixA(i, j)));
+
+              stiffnessTriplets.push_back(Eigen::Triplet<double>(speed_DiscreteSpace.NumberDOFs + dofI.Global_Index,
+                                                                 speed_DiscreteSpace.NumberDOFs + dofJ.Global_Index,
+                                                                 cellMatrixA(speed_numLocals + i,
+                                                                             speed_numLocals + j)));
+              break;
+            case DiscreteProblemData::DOF::Types::Strong:
+              stiffnessStrongTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
+                                                                       dofJ.Global_Index,
+                                                                       cellMatrixA(i, j)));
+
+              stiffnessStrongTriplets.push_back(Eigen::Triplet<double>(speed_DiscreteSpace.NumberDOFs + dofI.Global_Index,
+                                                                       speed_DiscreteSpace.NumberDOFs + dofJ.Global_Index,
+                                                                       cellMatrixA(speed_numLocals + i,
+                                                                                   speed_numLocals + j)));
+              break;
+            default:
+              throw std::runtime_error("DOF Type " +
+                                       std::to_string((unsigned int)dofJ.Type) +
+                                       " not supported");
+          }
+
+          if (dofJ.Type != DiscreteProblemData::DOF::Types::DOF)
+            continue;
+        }
+      }
+    }
+  }
+  // ***************************************************************************
+  void GeDiM4Py_Logic::Stokes_AssembleAdvectionMatrix(const Gedim::IMeshDAO& mesh,
+                                                      const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                      const DiscreteProblemData& pressure_DiscreteSpace,
+                                                      const DiscreteProblemData& speed_DiscreteSpace,
+                                                      std::list<Eigen::Triplet<double> >& advectionTriplets,
+                                                      std::list<Eigen::Triplet<double> >& advectionStrongTriplets)
+  {
+    FEM_RefElement_Langrange_PCC_Triangle_2D pressure_femValues;
+    FEM_RefElement_Langrange_PCC_Triangle_2D speed_femValues;
+    Gedim::MapTriangle mapTriangle;
+    const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& pressure_localSpace = pressure_DiscreteSpace.LocalSpace;
+    const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& speed_localSpace = speed_DiscreteSpace.LocalSpace;
+    PDE_Equation equation;
+
+    const Eigen::MatrixXd& internal_quadraturePoints = speed_localSpace.ReferenceElement.InternalQuadrature.Points;
+    const Eigen::VectorXd& internal_quadratureWeights = speed_localSpace.ReferenceElement.InternalQuadrature.Weights;
+
+    const Eigen::MatrixXd pressure_referenceBasisFunctions = pressure_femValues.Reference_BasisFunctions(pressure_localSpace,
+                                                                                                         internal_quadraturePoints);
+    const std::vector<Eigen::MatrixXd> speed_referenceBasisFunctionDerivatives = speed_femValues.Reference_BasisFunctionDerivatives(speed_localSpace,
+                                                                                                                                    internal_quadraturePoints);
+    const unsigned int pressure_numLocals = pressure_DiscreteSpace.LocalSpace.NumberBasisFunctions;
+    const unsigned int speed_numLocals = speed_DiscreteSpace.LocalSpace.NumberBasisFunctions;
+
+    for (unsigned int cell2DIndex = 0; cell2DIndex < mesh.Cell2DTotalNumber(); cell2DIndex++)
+    {
+      const Gedim::MapTriangle::MapTriangleData& cell2DMapData = cell2DsMap.at(cell2DIndex);
+
+      const Eigen::MatrixXd cell2DQuadraturePoints = mapTriangle.F(cell2DMapData,
+                                                                   internal_quadraturePoints);
+      const Eigen::VectorXd cell2DQuadratureWeights = internal_quadratureWeights *
+                                                      abs(cell2DMapData.DetB);
+
+      const Eigen::MatrixXd pressure_basisFunctionValues2D = pressure_femValues.BasisFunctions(pressure_localSpace,
+                                                                                               cell2DMapData,
+                                                                                               pressure_referenceBasisFunctions);
+
+      const std::vector<Eigen::MatrixXd> speed_basisFunctionDerivativeValues2D = speed_femValues.BasisFunctionDerivatives(speed_localSpace,
+                                                                                                                          cell2DMapData,
+                                                                                                                          speed_referenceBasisFunctionDerivatives);
+
+      const Eigen::MatrixXd cellMatrixB = equation.ComputeStokes_AdvectionMatrix(speed_numLocals,
+                                                                                 pressure_numLocals,
+                                                                                 pressure_basisFunctionValues2D,
+                                                                                 speed_basisFunctionDerivativeValues2D,
+                                                                                 cell2DQuadratureWeights);
+
+      const std::vector<DiscreteProblemData::DOF*>& pressure_cell2D_DOF = pressure_DiscreteSpace.Cell2Ds_DOF[cell2DIndex];
+      const std::vector<DiscreteProblemData::DOF*>& speed_cell2D_DOF = speed_DiscreteSpace.Cell2Ds_DOF[cell2DIndex];
+
+      for (unsigned int i = 0; i < pressure_numLocals; i++)
+      {
+        const DiscreteProblemData::DOF& dofI = *pressure_cell2D_DOF[i];
+
+        if (dofI.Type != DiscreteProblemData::DOF::Types::DOF)
+          continue;
+
+        for (unsigned int j = 0; j < speed_numLocals; j++)
+        {
+          const DiscreteProblemData::DOF& dofJ = *speed_cell2D_DOF[j];
+
+          switch (dofJ.Type)
+          {
+            case DiscreteProblemData::DOF::Types::DOF:
+              advectionTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
+                                                                 dofJ.Global_Index,
+                                                                 cellMatrixB(i, j)));
+              advectionTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
+                                                                 speed_DiscreteSpace.NumberDOFs + dofJ.Global_Index,
+                                                                 cellMatrixB(i,
+                                                                             speed_numLocals + j)));
+              break;
+            case DiscreteProblemData::DOF::Types::Strong:
+              advectionStrongTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
+                                                                       dofJ.Global_Index,
+                                                                       cellMatrixB(i, j)));
+
+              advectionStrongTriplets.push_back(Eigen::Triplet<double>(dofI.Global_Index,
+                                                                       speed_DiscreteSpace.NumberDOFs + dofJ.Global_Index,
+                                                                       cellMatrixB(i,
+                                                                                   speed_numLocals + j)));
+              break;
+            default:
+              throw std::runtime_error("DOF Type " +
+                                       std::to_string((unsigned int)dofJ.Type) +
+                                       " not supported");
+          }
+
+          if (dofJ.Type != DiscreteProblemData::DOF::Types::DOF)
+            continue;
+        }
+      }
+    }
+  }
+  // ***************************************************************************
+  Eigen::VectorXd GeDiM4Py_Logic::Stokes_AssembleForcingTerm(std::vector<F> f,
+                                                             const Gedim::IMeshDAO& mesh,
+                                                             const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                             const DiscreteProblemData& speed_DiscreteSpace)
+  {
+    Eigen::VectorXd forcingTerm = Eigen::VectorXd::Zero(2 * speed_DiscreteSpace.NumberDOFs);
+
+    FEM_RefElement_Langrange_PCC_Triangle_2D speed_femValues;
+    Gedim::MapTriangle mapTriangle;
+    const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& speed_localSpace = speed_DiscreteSpace.LocalSpace;
+    PDE_Equation equation;
+
+    const Eigen::MatrixXd& internal_quadraturePoints = speed_localSpace.ReferenceElement.InternalQuadrature.Points;
+    const Eigen::VectorXd& internal_quadratureWeights = speed_localSpace.ReferenceElement.InternalQuadrature.Weights;
+
+    const Eigen::MatrixXd speed_referenceBasisFunctions = speed_femValues.Reference_BasisFunctions(speed_localSpace,
+                                                                                                   internal_quadraturePoints);
+    const unsigned int speed_numLocals = speed_DiscreteSpace.LocalSpace.NumberBasisFunctions;
+
+    for (unsigned int cell2DIndex = 0; cell2DIndex < mesh.Cell2DTotalNumber(); cell2DIndex++)
+    {
+      const Gedim::MapTriangle::MapTriangleData& cell2DMapData = cell2DsMap.at(cell2DIndex);
+
+      const Eigen::MatrixXd cell2DQuadraturePoints = mapTriangle.F(cell2DMapData,
+                                                                   internal_quadraturePoints);
+      const Eigen::VectorXd cell2DQuadratureWeights = internal_quadratureWeights *
+                                                      abs(cell2DMapData.DetB);
+
+      const Eigen::MatrixXd speed_basisFunctionValues2D = speed_femValues.BasisFunctions(speed_localSpace,
+                                                                                         cell2DMapData,
+                                                                                         speed_referenceBasisFunctions);
+
+      const double* forcingTerm_0_Values = f[0](cell2DQuadraturePoints.cols(),
+                                                cell2DQuadraturePoints.data());
+      const double* forcingTerm_1_Values = f[1](cell2DQuadraturePoints.cols(),
+                                                cell2DQuadraturePoints.data());
+      const Eigen::VectorXd cellForcingTerm = equation.ComputeStokes_ForcingTerm(speed_numLocals,
+                                                                                 { Eigen::Map<const Eigen::VectorXd>(forcingTerm_0_Values,
+                                                                                   cell2DQuadraturePoints.cols()),
+                                                                                   Eigen::Map<const Eigen::VectorXd>(forcingTerm_1_Values,
+                                                                                   cell2DQuadraturePoints.cols()),
+                                                                                 },
+                                                                                 speed_basisFunctionValues2D,
+                                                                                 cell2DQuadratureWeights);
+
+      const std::vector<DiscreteProblemData::DOF*>& speed_cell2D_DOF = speed_DiscreteSpace.Cell2Ds_DOF[cell2DIndex];
+
+      for (unsigned int i = 0; i < speed_numLocals; i++)
+      {
+        const DiscreteProblemData::DOF& dofI = *speed_cell2D_DOF[i];
+
+        if (dofI.Type != DiscreteProblemData::DOF::Types::DOF)
+          continue;
+
+        forcingTerm[dofI.Global_Index] +=
+            cellForcingTerm[i];
+        forcingTerm[speed_DiscreteSpace.NumberDOFs + dofI.Global_Index] +=
+            cellForcingTerm[speed_numLocals + i];
+      }
+    }
+
+    return forcingTerm;
   }
   // ***************************************************************************
   Eigen::VectorXd GeDiM4Py_Logic::ComputeErrorL2(Exact u,

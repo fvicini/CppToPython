@@ -162,6 +162,7 @@ void GedimForPy_AssembleAdvectionMatrix(GedimForPy::GeDiM4Py_Logic::B b,
                                                       meshDAO,
                                                       mesh.Cell2DsMap,
                                                       problemData,
+                                                      problemData,
                                                       advection,
                                                       advectionStrong);
 

@@ -163,7 +163,8 @@ namespace GedimForPy
     }
   }
   // ***************************************************************************
-  std::vector<MatrixXd> FEM_RefElement_Langrange_PCC_Triangle_2D::Reference_BasisFunctionDerivatives(const LocalSpace& localSpace, const Eigen::MatrixXd& points) const
+  std::vector<MatrixXd> FEM_RefElement_Langrange_PCC_Triangle_2D::Reference_BasisFunctionDerivatives(const LocalSpace& localSpace,
+                                                                                                     const Eigen::MatrixXd& points) const
   {
     switch (localSpace.Order)
     {

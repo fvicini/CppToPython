@@ -57,8 +57,8 @@ namespace GedimForPy
 
   struct ImportMesh2D final
   {
-     std::string InputFolder = "";
-     char Separator = ';';
+      std::string InputFolder = "";
+      char Separator = ';';
   };
 
   struct Domain2DMesh final
@@ -171,7 +171,8 @@ namespace GedimForPy
       static void AssembleAdvectionMatrix(B b,
                                           const Gedim::IMeshDAO& mesh,
                                           const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
-                                          const DiscreteProblemData& problemData,
+                                          const DiscreteProblemData& trial_Functions,
+                                          const DiscreteProblemData& test_Functions,
                                           std::list<Eigen::Triplet<double>>& advectionTriplets,
                                           std::list<Eigen::Triplet<double>>& advectionStrongTriplets);
       static void AssembleReactionMatrix(C c,
@@ -200,6 +201,24 @@ namespace GedimForPy
                                               const std::vector<Eigen::MatrixXd>& cell2DsEdgeTangents,
                                               const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                               const DiscreteProblemData& problemData);
+
+      static void Stokes_AssembleStiffnessMatrix(A a,
+                                                 const Gedim::IMeshDAO& mesh,
+                                                 const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                 const DiscreteProblemData& speed_DiscreteSpace,
+                                                 std::list<Eigen::Triplet<double> >& stiffnessTriplets,
+                                                 std::list<Eigen::Triplet<double> >& stiffnessStrongTriplets);
+      static void Stokes_AssembleAdvectionMatrix(const Gedim::IMeshDAO& mesh,
+                                                 const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                 const DiscreteProblemData& pressure_DiscreteSpace,
+                                                 const DiscreteProblemData& speed_DiscreteSpace,
+                                                 std::list<Eigen::Triplet<double> >& advectionTriplets,
+                                                 std::list<Eigen::Triplet<double> >& advectionStrongTriplets);
+      static Eigen::VectorXd Stokes_AssembleForcingTerm(std::vector<F> f,
+                                                        const Gedim::IMeshDAO& mesh,
+                                                        const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                        const DiscreteProblemData& speed_DiscreteSpace);
+
 
       static Eigen::VectorXd ComputeErrorL2(Exact u,
                                             const Eigen::VectorXd& numeric,

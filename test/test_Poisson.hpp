@@ -15,10 +15,12 @@ namespace UnitTesting
       // ***************************************************************************
       static double* DiffusionTerm(const int numPoints, const double* points)
       {
-        double* values = new double[numPoints];
+        double* values = new double[3 * numPoints];
 
-        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-        vecValues.setConstant(A());
+        Eigen::Map<Eigen::MatrixXd> matValues(values, 3, numPoints);
+        matValues.row(0).setConstant(A());
+        matValues.row(1).setZero();
+        matValues.row(2).setConstant(A());
 
         return values;
       }
