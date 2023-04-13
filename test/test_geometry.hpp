@@ -5,6 +5,7 @@
 #include <gmock/gmock.h>
 #include <gmock/gmock-matchers.h>
 
+#include "FileTextReader.hpp"
 #include "GeDiM4Py_Logic.hpp"
 #include "MeshMatricesDAO.hpp"
 #include "VTKUtilities.hpp"
@@ -570,28 +571,62 @@ namespace UnitTesting
 
     for (unsigned int m = 0; m < meshSize.size(); m++)
     {
-      GedimForPy::Domain2D domain;
-      domain.Vertices = gedimData.GeometryUtilities().CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
-                                                                   1.0);
-      domain.VerticesBoundaryCondition = { 1, 1, 1, 1 };
-      domain.EdgesBoundaryCondition = { 2, 3, 4, 5 };
-      domain.DiscretizationType = GedimForPy::Domain2D::DiscretizationTypes::Triangular;
-      domain.MeshCellsMaximumArea = meshSize[m];
+      GedimForPy::Domain2DMesh mesh;
 
-      GedimForPy::Domain2DMesh mesh = GedimForPy::GeDiM4Py_Logic::CreateDomainMesh2D(domain,
-                                                                                     gedimData);
+      if (true)
+      {
+        // create with triangle
+        GedimForPy::Domain2D domain;
+        domain.Vertices = gedimData.GeometryUtilities().CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
+                                                                     1.0);
+        domain.VerticesBoundaryCondition = { 1, 1, 1, 1 };
+        domain.EdgesBoundaryCondition = { 2, 3, 4, 5 };
+        domain.DiscretizationType = GedimForPy::Domain2D::DiscretizationTypes::Triangular;
+        domain.MeshCellsMaximumArea = meshSize[m];
+
+        mesh = GedimForPy::GeDiM4Py_Logic::CreateDomainMesh2D(domain,
+                                                              gedimData);
+
+        // export
+        {
+          {
+            Gedim::VTKUtilities exporter;
+            exporter.AddPolygon(domain.Vertices);
+            exporter.Export(exportFolder +
+                            "/Domain.vtu");
+          }
+        }
+      }
+      else
+      {
+        // import mesh
+        GedimForPy::ImportMesh2D domain;
+        domain.InputFolder = "/home/geoscore/Downloads/PY";
+        domain.Separator = ';';
+
+        mesh = GedimForPy::GeDiM4Py_Logic::ImportDomainMesh2D(domain,
+                                                              gedimData);
+
+
+        Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+        gedimData.MeshUtilities().ComputeCell1DCell2DNeighbours(meshDAO);
+
+        for (unsigned int e = 0; e < meshDAO.Cell1DTotalNumber(); e++)
+        {
+          if (meshDAO.Cell1DHasNeighbourCell2D(e, 0) &&
+              meshDAO.Cell1DHasNeighbourCell2D(e, 0))
+            continue;
+
+          meshDAO.Cell1DSetMarker(e, 1);
+          meshDAO.Cell0DSetMarker(meshDAO.Cell1DOrigin(e), 1);
+          meshDAO.Cell0DSetMarker(meshDAO.Cell1DEnd(e), 1);
+        }
+      }
 
       Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
       // export
       {
-        {
-          Gedim::VTKUtilities exporter;
-          exporter.AddPolygon(domain.Vertices);
-          exporter.Export(exportFolder +
-                          "/Domain.vtu");
-        }
-
         {
           Gedim::VTKUtilities exporter;
           gedimData.MeshUtilities().ExportMeshToVTU(meshDAO,
@@ -682,30 +717,15 @@ namespace UnitTesting
         }
       }
 
-      std::list<Eigen::Triplet<double>> stiffnessTriplets, stiffnessStrongTriplets;
-      GedimForPy::GeDiM4Py_Logic::Stokes_AssembleStiffnessMatrix(Stokes::ViscosityTerm,
-                                                                 meshDAO,
-                                                                 mesh.Cell2DsMap,
-                                                                 speed_problemData,
-                                                                 stiffnessTriplets,
-                                                                 stiffnessStrongTriplets);
-      std::list<Eigen::Triplet<double>> advectionTriplets, advectionStrongTriplets;
-      GedimForPy::GeDiM4Py_Logic::Stokes_AssembleAdvectionMatrix(meshDAO,
-                                                                 mesh.Cell2DsMap,
-                                                                 pressure_problemData,
-                                                                 speed_problemData,
-                                                                 advectionTriplets,
-                                                                 advectionStrongTriplets);
-
       std::list<Eigen::Triplet<double>> stiffness_dx_Triplets, stiffnessStrong_dx_Triplets;
-      GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(Stokes::ViscosityTerm_1,
+      GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(Stokes::ViscosityTerm,
                                                           meshDAO,
                                                           mesh.Cell2DsMap,
                                                           speed_problemData,
                                                           stiffness_dx_Triplets,
                                                           stiffnessStrong_dx_Triplets);
       std::list<Eigen::Triplet<double>> stiffness_dy_Triplets, stiffnessStrong_dy_Triplets;
-      GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(Stokes::ViscosityTerm_2,
+      GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(Stokes::ViscosityTerm,
                                                           meshDAO,
                                                           mesh.Cell2DsMap,
                                                           speed_problemData,
@@ -742,27 +762,6 @@ namespace UnitTesting
                                                                                                          meshDAO,
                                                                                                          mesh.Cell2DsMap,
                                                                                                          pressure_problemData);
-
-
-      std::list<Eigen::Triplet<double>> saddlePointTriplets;
-      for (const Eigen::Triplet<double>& triplet : stiffnessTriplets)
-      {
-        saddlePointTriplets.push_back(Eigen::Triplet<double>(triplet.row(),
-                                                             triplet.col(),
-                                                             triplet.value()));
-      }
-      stiffnessTriplets.clear();
-
-      for (const Eigen::Triplet<double>& triplet : advectionTriplets)
-      {
-        saddlePointTriplets.push_back(Eigen::Triplet<double>(triplet.col(),
-                                                             2 * speed_problemData.NumberDOFs + triplet.row(),
-                                                             -triplet.value()));
-        saddlePointTriplets.push_back(Eigen::Triplet<double>(2 * speed_problemData.NumberDOFs + triplet.row(),
-                                                             triplet.col(),
-                                                             -triplet.value()));
-      }
-      advectionTriplets.clear();
 
       std::list<Eigen::Triplet<double>> saddlePoint_Triplets;
       for (const Eigen::Triplet<double>& triplet : stiffness_dx_Triplets)
@@ -804,18 +803,9 @@ namespace UnitTesting
                                                      pressure_problemData.NumberDOFs,
                                                      2 * speed_problemData.NumberDOFs +
                                                      pressure_problemData.NumberDOFs);
-      saddlePoint_matrix.setFromTriplets(saddlePointTriplets.begin(),
-                                         saddlePointTriplets.end());
+      saddlePoint_matrix.setFromTriplets(saddlePoint_Triplets.begin(),
+                                         saddlePoint_Triplets.end());
       saddlePoint_matrix.makeCompressed();
-      saddlePointTriplets.clear();
-
-      Eigen::SparseMatrix<double> saddlePoint__matrix(2 * speed_problemData.NumberDOFs +
-                                                      pressure_problemData.NumberDOFs,
-                                                      2 * speed_problemData.NumberDOFs +
-                                                      pressure_problemData.NumberDOFs);
-      saddlePoint__matrix.setFromTriplets(saddlePoint_Triplets.begin(),
-                                          saddlePoint_Triplets.end());
-      saddlePoint__matrix.makeCompressed();
       saddlePoint_Triplets.clear();
 
       Eigen::VectorXd saddlePoint_forcingTerm = Eigen::VectorXd::Zero(2 * speed_problemData.NumberDOFs +
@@ -823,24 +813,31 @@ namespace UnitTesting
       saddlePoint_forcingTerm.segment(0, speed_problemData.NumberDOFs) = forcingTerm_1;
       saddlePoint_forcingTerm.segment(speed_problemData.NumberDOFs, speed_problemData.NumberDOFs) = forcingTerm_2;
 
-      {
-        using namespace Gedim;
-        std::cerr.precision(2);
-        std::cerr<< std::scientific<< "error "<< (saddlePoint_matrix - saddlePoint__matrix).norm()<< std::endl;
-      }
-
       Eigen::SparseLU<Eigen::SparseMatrix<double>> linearSolver;
-      linearSolver.compute(saddlePoint__matrix);
+      linearSolver.compute(saddlePoint_matrix);
 
       const Eigen::VectorXd solution = linearSolver.solve(saddlePoint_forcingTerm);
 
       const Eigen::VectorXd pressure_cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(Stokes::ExactPressureSolution,
-                                                                                                 solution,
-                                                                                                 Eigen::VectorXd::Zero(pressure_problemData.NumberStrongs),
+                                                                                                 solution.segment(2 * speed_problemData.NumberDOFs, pressure_problemData.NumberDOFs),
+                                                                                                 pressure_solutionStrong,
                                                                                                  meshDAO,
                                                                                                  mesh.Cell2DsMap,
                                                                                                  pressure_problemData);
 
+      const Eigen::VectorXd pressure_cell2DsErrorH1 = GedimForPy::GeDiM4Py_Logic::ComputeErrorH1(Poisson::ExactDerivativeSolution,
+                                                                                                 solution.segment(2 * speed_problemData.NumberDOFs, pressure_problemData.NumberDOFs),
+                                                                                                 pressure_solutionStrong,
+                                                                                                 meshDAO,
+                                                                                                 mesh.Cell2DsMap,
+                                                                                                 pressure_problemData);
+
+
+#if ACTIVE_CHECK == 0
+      std::cerr.precision(16);
+      std::cerr<< std::scientific<< "dofs"<< ","<< "h"<< ","<< "errorL2"<< ","<< "errorH1"<< std::endl;
+      std::cerr<< std::scientific<< pressure_problemData.NumberDOFs<< ","<< pressure_problemData.H<< ","<< sqrt(pressure_cell2DsErrorL2.sum())<< ","<< sqrt(pressure_cell2DsErrorH1.sum())<< std::endl;
+#endif
 
       // export
       {

@@ -14,10 +14,12 @@ namespace UnitTesting
       // ***************************************************************************
       static double* ViscosityTerm(const int numPoints, const double* points)
       {
-        double* values = new double[numPoints];
+        double* values = new double[3 * numPoints];
 
-        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-        vecValues.setConstant(v());
+        Eigen::Map<Eigen::MatrixXd> matValues(values, 3, numPoints);
+        matValues.row(0).setConstant(v());
+        matValues.row(1).setZero();
+        matValues.row(2).setConstant(v());
 
         return values;
       }

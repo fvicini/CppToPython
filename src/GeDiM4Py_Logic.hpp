@@ -202,20 +202,6 @@ namespace GedimForPy
                                               const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                               const DiscreteProblemData& problemData);
 
-      static void Stokes_AssembleStiffnessMatrix(A a,
-                                                 const Gedim::IMeshDAO& mesh,
-                                                 const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
-                                                 const DiscreteProblemData& speed_DiscreteSpace,
-                                                 std::list<Eigen::Triplet<double> >& stiffnessTriplets,
-                                                 std::list<Eigen::Triplet<double> >& stiffnessStrongTriplets);
-      static void Stokes_AssembleAdvectionMatrix(const Gedim::IMeshDAO& mesh,
-                                                 const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
-                                                 const DiscreteProblemData& pressure_DiscreteSpace,
-                                                 const DiscreteProblemData& speed_DiscreteSpace,
-                                                 std::list<Eigen::Triplet<double> >& advectionTriplets,
-                                                 std::list<Eigen::Triplet<double> >& advectionStrongTriplets);
-
-
       static Eigen::VectorXd ComputeErrorL2(Exact u,
                                             const Eigen::VectorXd& numeric,
                                             const Eigen::VectorXd& strong,
