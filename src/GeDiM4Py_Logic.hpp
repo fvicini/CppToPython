@@ -214,10 +214,6 @@ namespace GedimForPy
                                                  const DiscreteProblemData& speed_DiscreteSpace,
                                                  std::list<Eigen::Triplet<double> >& advectionTriplets,
                                                  std::list<Eigen::Triplet<double> >& advectionStrongTriplets);
-      static Eigen::VectorXd Stokes_AssembleForcingTerm(std::vector<F> f,
-                                                        const Gedim::IMeshDAO& mesh,
-                                                        const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
-                                                        const DiscreteProblemData& speed_DiscreteSpace);
 
 
       static Eigen::VectorXd ComputeErrorL2(Exact u,

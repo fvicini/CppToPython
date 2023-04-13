@@ -67,25 +67,19 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
-      static double* ForcingTerm(const int numPoints, const double* points)
-      {
-        double* values = new double[numPoints];
-
-        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
-        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-        vecValues = v() * 32.0 * (matPoints.row(1).array() * (1.0 - matPoints.row(1).array()) +
-                                  matPoints.row(0).array() * (1.0 - matPoints.row(0).array()));
-        return values;
-      }
-      // ***************************************************************************
       static double* ForcingTerm_1(const int numPoints, const double* points)
       {
         double* values = new double[numPoints];
 
         Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-        vecValues = v() * 32.0 * (matPoints.row(1).array() * (1.0 - matPoints.row(1).array()) +
-                                  matPoints.row(0).array() * (1.0 - matPoints.row(0).array()));
+        vecValues = - v() *
+                    (+ 78.9568 * cos(4.0 * M_PI * matPoints.row(0).array()) - 39.4784) *
+                    sin(2.0 * M_PI * matPoints.row(1).array()) *
+                    cos(2.0 * M_PI * matPoints.row(1).array()) +
+                    (+ 2.0 * M_PI *
+                     cos(2.0 * M_PI * matPoints.row(0).array()) *
+                     cos(2.0 * M_PI * matPoints.row(1).array()));
         return values;
       }
       // ***************************************************************************
@@ -95,8 +89,13 @@ namespace UnitTesting
 
         Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-        vecValues = v() * 32.0 * (matPoints.row(1).array() * (1.0 - matPoints.row(1).array()) +
-                                  matPoints.row(0).array() * (1.0 - matPoints.row(0).array()));
+        vecValues = - v() *
+                    (- 78.9568 * cos(4.0 * M_PI * matPoints.row(1).array()) + 39.4784) *
+                    sin(2.0 * M_PI * matPoints.row(0).array()) *
+                    cos(2.0 * M_PI * matPoints.row(0).array()) +
+                    (- 2.0 * M_PI *
+                     sin(2.0 * M_PI * matPoints.row(0).array()) *
+                     sin(2.0 * M_PI * matPoints.row(1).array()));
         return values;
       }
       // ***************************************************************************
@@ -142,9 +141,9 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
-      static double* ExactDerivativeSolution(const int direction,
-                                             const int numPoints,
-                                             const double* points)
+      static double* ExactPressureDerivativeSolution(const int direction,
+                                                     const int numPoints,
+                                                     const double* points)
       {
         double* values = new double[numPoints];
 
@@ -152,9 +151,13 @@ namespace UnitTesting
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
 
         if(direction == 0)
-          vecValues.setZero();
+          vecValues = +2.0 * M_PI *
+                      cos(2.0 * M_PI * matPoints.row(0).array()) *
+                      cos(2.0 * M_PI * matPoints.row(1).array());
         else if (direction == 1)
-          vecValues.setZero();
+          vecValues = -2.0 * M_PI *
+                      sin(2.0 * M_PI * matPoints.row(0).array()) *
+                      sin(2.0 * M_PI * matPoints.row(1).array());
         else if (direction == 2)
           vecValues.setZero();
         else

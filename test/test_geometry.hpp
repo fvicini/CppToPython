@@ -720,10 +720,6 @@ namespace UnitTesting
                                                           advection_dy_Triplets,
                                                           advectionStrong_dy_Triplets);
 
-      const Eigen::VectorXd forcingTerm = GedimForPy::GeDiM4Py_Logic::Stokes_AssembleForcingTerm({ Stokes::ForcingTerm, Stokes::ForcingTerm },
-                                                                                                 meshDAO,
-                                                                                                 mesh.Cell2DsMap,
-                                                                                                 speed_problemData);
       const Eigen::VectorXd forcingTerm_1 = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(Stokes::ForcingTerm_1,
                                                                                             meshDAO,
                                                                                             mesh.Cell2DsMap,
@@ -810,24 +806,19 @@ namespace UnitTesting
 
       Eigen::VectorXd saddlePoint_forcingTerm = Eigen::VectorXd::Zero(2 * speed_problemData.NumberDOFs +
                                                                       pressure_problemData.NumberDOFs);
-      saddlePoint_forcingTerm.segment(0, 2 * speed_problemData.NumberDOFs) = forcingTerm;
-
-      Eigen::VectorXd saddlePoint__forcingTerm = Eigen::VectorXd::Zero(2 * speed_problemData.NumberDOFs +
-                                                                       pressure_problemData.NumberDOFs);
-      saddlePoint__forcingTerm.segment(0, speed_problemData.NumberDOFs) = forcingTerm_1;
-      saddlePoint__forcingTerm.segment(speed_problemData.NumberDOFs, speed_problemData.NumberDOFs) = forcingTerm_2;
+      saddlePoint_forcingTerm.segment(0, speed_problemData.NumberDOFs) = forcingTerm_1;
+      saddlePoint_forcingTerm.segment(speed_problemData.NumberDOFs, speed_problemData.NumberDOFs) = forcingTerm_2;
 
       {
         using namespace Gedim;
         std::cerr.precision(2);
         std::cerr<< std::scientific<< "error "<< (saddlePoint_matrix - saddlePoint__matrix).norm()<< std::endl;
-        std::cerr<< std::scientific<< "error "<< (saddlePoint_forcingTerm - saddlePoint__forcingTerm).norm()<< std::endl;
       }
 
       Eigen::SparseLU<Eigen::SparseMatrix<double>> linearSolver;
       linearSolver.compute(saddlePoint__matrix);
 
-      const Eigen::VectorXd solution = linearSolver.solve(saddlePoint__forcingTerm);
+      const Eigen::VectorXd solution = linearSolver.solve(saddlePoint_forcingTerm);
 
       const Eigen::VectorXd pressure_cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(Stokes::ExactPressureSolution,
                                                                                                  solution,

@@ -38,10 +38,6 @@ namespace GedimForPy
                                                            const Eigen::MatrixXd& pressure_basisFunctionValues,
                                                            const std::vector<Eigen::MatrixXd>& speed_basisFunctionDerivativeValues,
                                                            const Eigen::VectorXd& quadratureWeights);
-      static Eigen::VectorXd ComputeStokes_ForcingTerm(const unsigned int& speed_singleComponent_numDofs,
-                                                       const std::vector<Eigen::VectorXd>& forcingTermValues,
-                                                       const Eigen::MatrixXd& speed_basisFunctionValues,
-                                                       const Eigen::VectorXd& quadratureWeights);
   };
 }
 

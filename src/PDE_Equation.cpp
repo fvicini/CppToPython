@@ -133,27 +133,4 @@ namespace GedimForPy
     return cellMatrixB;
   }
   // ***************************************************************************
-  VectorXd PDE_Equation::ComputeStokes_ForcingTerm(const unsigned int& speed_singleComponent_numDofs,
-                                                   const std::vector<Eigen::VectorXd>& forcingTermValues,
-                                                   const Eigen::MatrixXd& speed_basisFunctionValues,
-                                                   const Eigen::VectorXd& quadratureWeights)
-  {
-    Eigen::VectorXd cellForcingTerm = VectorXd::Zero(2 * speed_singleComponent_numDofs);
-
-    for (unsigned int i = 0; i < speed_singleComponent_numDofs; i++)
-    {
-      cellForcingTerm(i) +=
-          speed_basisFunctionValues.col(i).transpose() *
-          quadratureWeights.asDiagonal() *
-          forcingTermValues[0];
-
-      cellForcingTerm(speed_singleComponent_numDofs + i) +=
-          speed_basisFunctionValues.col(i).transpose() *
-          quadratureWeights.asDiagonal() *
-          forcingTermValues[1];
-    }
-
-    return cellForcingTerm;
-  }
-  // ***************************************************************************
 }
