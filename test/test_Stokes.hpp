@@ -82,6 +82,7 @@ namespace UnitTesting
                     (+ 2.0 * M_PI *
                      cos(2.0 * M_PI * matPoints.row(0).array()) *
                      cos(2.0 * M_PI * matPoints.row(1).array()));
+
         return values;
       }
       // ***************************************************************************
@@ -99,6 +100,7 @@ namespace UnitTesting
                     (- 2.0 * M_PI *
                      sin(2.0 * M_PI * matPoints.row(0).array()) *
                      sin(2.0 * M_PI * matPoints.row(1).array()));
+
         return values;
       }
       // ***************************************************************************

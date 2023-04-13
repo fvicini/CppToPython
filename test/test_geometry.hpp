@@ -574,7 +574,7 @@ namespace UnitTesting
       domain.Vertices = gedimData.GeometryUtilities().CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
                                                                    1.0);
       domain.VerticesBoundaryCondition = { 1, 1, 1, 1 };
-      domain.EdgesBoundaryCondition = { 1, 1, 1, 1 };
+      domain.EdgesBoundaryCondition = { 2, 3, 4, 5 };
       domain.DiscretizationType = GedimForPy::Domain2D::DiscretizationTypes::Triangular;
       domain.MeshCellsMaximumArea = meshSize[m];
 
@@ -604,11 +604,19 @@ namespace UnitTesting
       speed_DiscreteSpace.Type = GedimForPy::DiscreteSpace::Types::FEM;
       speed_DiscreteSpace.Order = 2;
       speed_DiscreteSpace.BoundaryConditionsType = { GedimForPy::DiscreteSpace::BoundaryConditionTypes::None,
+                                                     GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong,
+                                                     GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong,
+                                                     GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong,
+                                                     GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong,
                                                      GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong };
       GedimForPy::DiscreteSpace pressure_DiscreteSpace;
       pressure_DiscreteSpace.Type = GedimForPy::DiscreteSpace::Types::FEM;
       pressure_DiscreteSpace.Order = 1;
       pressure_DiscreteSpace.BoundaryConditionsType = { GedimForPy::DiscreteSpace::BoundaryConditionTypes::None,
+                                                        GedimForPy::DiscreteSpace::BoundaryConditionTypes::None,
+                                                        GedimForPy::DiscreteSpace::BoundaryConditionTypes::None,
+                                                        GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong,
+                                                        GedimForPy::DiscreteSpace::BoundaryConditionTypes::None,
                                                         GedimForPy::DiscreteSpace::BoundaryConditionTypes::None };
 
       GedimForPy::DiscreteProblemData speed_problemData = GedimForPy::GeDiM4Py_Logic::Discretize(meshDAO,
@@ -749,10 +757,10 @@ namespace UnitTesting
       {
         saddlePointTriplets.push_back(Eigen::Triplet<double>(triplet.col(),
                                                              2 * speed_problemData.NumberDOFs + triplet.row(),
-                                                             triplet.value()));
+                                                             -triplet.value()));
         saddlePointTriplets.push_back(Eigen::Triplet<double>(2 * speed_problemData.NumberDOFs + triplet.row(),
                                                              triplet.col(),
-                                                             triplet.value()));
+                                                             -triplet.value()));
       }
       advectionTriplets.clear();
 
@@ -775,20 +783,20 @@ namespace UnitTesting
       {
         saddlePoint_Triplets.push_back(Eigen::Triplet<double>(triplet.col(),
                                                               2 * speed_problemData.NumberDOFs + triplet.row(),
-                                                              triplet.value()));
+                                                              - triplet.value()));
         saddlePoint_Triplets.push_back(Eigen::Triplet<double>(2 * speed_problemData.NumberDOFs + triplet.row(),
                                                               triplet.col(),
-                                                              triplet.value()));
+                                                              - triplet.value()));
       }
       advection_dx_Triplets.clear();
       for (const Eigen::Triplet<double>& triplet : advection_dy_Triplets)
       {
         saddlePoint_Triplets.push_back(Eigen::Triplet<double>(speed_problemData.NumberDOFs + triplet.col(),
                                                               2 * speed_problemData.NumberDOFs + triplet.row(),
-                                                              triplet.value()));
+                                                              - triplet.value()));
         saddlePoint_Triplets.push_back(Eigen::Triplet<double>(2 * speed_problemData.NumberDOFs + triplet.row(),
                                                               speed_problemData.NumberDOFs + triplet.col(),
-                                                              triplet.value()));
+                                                              - triplet.value()));
       }
       advection_dy_Triplets.clear();
 
@@ -870,7 +878,7 @@ namespace UnitTesting
                 break;
               default:
                 throw std::runtime_error("DOF Type " +
-                                         std::to_string((unsigned int)pressure_dof.Type) +
+                                         std::to_string((unsigned int)speed_dof.Type) +
                                          " not supported");
             }
 
