@@ -566,7 +566,7 @@ namespace UnitTesting
     ASSERT_NO_THROW(interface.Initialize(interfaceConfig,
                                          data));
 
-    const std::vector<double> meshSize = { 0.1 };
+    const std::vector<double> meshSize = { 0.01 };
 
     for (unsigned int m = 0; m < meshSize.size(); m++)
     {
@@ -609,7 +609,7 @@ namespace UnitTesting
       pressure_DiscreteSpace.Type = GedimForPy::DiscreteSpace::Types::FEM;
       pressure_DiscreteSpace.Order = 1;
       pressure_DiscreteSpace.BoundaryConditionsType = { GedimForPy::DiscreteSpace::BoundaryConditionTypes::None,
-                                                        GedimForPy::DiscreteSpace::BoundaryConditionTypes::Strong };
+                                                        GedimForPy::DiscreteSpace::BoundaryConditionTypes::None };
 
       GedimForPy::DiscreteProblemData speed_problemData = GedimForPy::GeDiM4Py_Logic::Discretize(meshDAO,
                                                                                                  mesh.MeshGeometricData,
@@ -729,6 +729,12 @@ namespace UnitTesting
                                                                                             mesh.Cell2DsMap,
                                                                                             speed_problemData);
 
+      const Eigen::VectorXd pressure_solutionStrong = GedimForPy::GeDiM4Py_Logic::AssembleStrongSolution(Stokes::ExactPressureSolution,
+                                                                                                         1,
+                                                                                                         meshDAO,
+                                                                                                         mesh.Cell2DsMap,
+                                                                                                         pressure_problemData);
+
 
       std::list<Eigen::Triplet<double>> saddlePointTriplets;
       for (const Eigen::Triplet<double>& triplet : stiffnessTriplets)
@@ -833,26 +839,52 @@ namespace UnitTesting
         {
           std::vector<double> pressure_cell0Ds_numeric_solution(meshDAO.Cell0DTotalNumber(),
                                                                 0.0);
+          std::vector<double> speed_1_cell0Ds_numeric_solution(meshDAO.Cell0DTotalNumber(),
+                                                               0.0);
+          std::vector<double> speed_2_cell0Ds_numeric_solution(meshDAO.Cell0DTotalNumber(),
+                                                               0.0);
+
           const Eigen::MatrixXd coordinates = meshDAO.Cell0DsCoordinates();
 
           const double* pressure_cell0Ds_exact_solution = Stokes::ExactPressureSolution(coordinates.cols(),
                                                                                         coordinates.data());
+          const double* speed_1_cell0Ds_exact_solution = Stokes::ExactSpeedSolution_1(coordinates.cols(),
+                                                                                      coordinates.data());
+          const double* speed_2_cell0Ds_exact_solution = Stokes::ExactSpeedSolution_2(coordinates.cols(),
+                                                                                      coordinates.data());
 
           for (unsigned int p = 0; p < meshDAO.Cell0DTotalNumber(); p++)
           {
-            const GedimForPy::DiscreteProblemData::DOF& dof = pressure_problemData.Cell0Ds_DOF[p];
+            const GedimForPy::DiscreteProblemData::DOF& speed_dof = speed_problemData.Cell0Ds_DOF[p];
+            const GedimForPy::DiscreteProblemData::DOF& pressure_dof = pressure_problemData.Cell0Ds_DOF[p];
 
-            switch (dof.Type)
+            switch (speed_dof.Type)
             {
               case GedimForPy::DiscreteProblemData::DOF::Types::DOF:
-                pressure_cell0Ds_numeric_solution[p] = solution[2 * speed_problemData.NumberDOFs + dof.Global_Index];
+                speed_1_cell0Ds_numeric_solution[p] = solution[speed_dof.Global_Index];
+                speed_2_cell0Ds_numeric_solution[p] = solution[speed_problemData.NumberDOFs + speed_dof.Global_Index];
                 break;
               case GedimForPy::DiscreteProblemData::DOF::Types::Strong:
-                pressure_cell0Ds_numeric_solution[p] = 0.0;
+                speed_1_cell0Ds_numeric_solution[p] = 0.0;
+                speed_2_cell0Ds_numeric_solution[p] = 0.0;
                 break;
               default:
                 throw std::runtime_error("DOF Type " +
-                                         std::to_string((unsigned int)dof.Type) +
+                                         std::to_string((unsigned int)pressure_dof.Type) +
+                                         " not supported");
+            }
+
+            switch (pressure_dof.Type)
+            {
+              case GedimForPy::DiscreteProblemData::DOF::Types::DOF:
+                pressure_cell0Ds_numeric_solution[p] = solution[2 * speed_problemData.NumberDOFs + pressure_dof.Global_Index];
+                break;
+              case GedimForPy::DiscreteProblemData::DOF::Types::Strong:
+                pressure_cell0Ds_numeric_solution[p] = pressure_solutionStrong[pressure_dof.Global_Index];
+                break;
+              default:
+                throw std::runtime_error("DOF Type " +
+                                         std::to_string((unsigned int)pressure_dof.Type) +
                                          " not supported");
             }
           }
@@ -878,10 +910,34 @@ namespace UnitTesting
                                    Gedim::VTPProperty::Formats::Cells,
                                    static_cast<unsigned int>(pressure_cell2DsErrorL2.size()),
                                    pressure_cell2DsErrorL2.data()
+                                 },
+                                 {
+                                   "speed_1_cell0Ds_exact_solution",
+                                   Gedim::VTPProperty::Formats::Points,
+                                   static_cast<unsigned int>(coordinates.cols()),
+                                   speed_1_cell0Ds_exact_solution
+                                 },
+                                 {
+                                   "speed_1_cell0Ds_numeric_solution",
+                                   Gedim::VTPProperty::Formats::Points,
+                                   static_cast<unsigned int>(speed_1_cell0Ds_numeric_solution.size()),
+                                   speed_1_cell0Ds_numeric_solution.data()
+                                 },
+                                 {
+                                   "speed_2_cell0Ds_exact_solution",
+                                   Gedim::VTPProperty::Formats::Points,
+                                   static_cast<unsigned int>(coordinates.cols()),
+                                   speed_2_cell0Ds_exact_solution
+                                 },
+                                 {
+                                   "speed_2_cell0Ds_numeric_solution",
+                                   Gedim::VTPProperty::Formats::Points,
+                                   static_cast<unsigned int>(speed_2_cell0Ds_numeric_solution.size()),
+                                   speed_2_cell0Ds_numeric_solution.data()
                                  }
                                });
           exporter.Export(exportFolder +
-                          "/pressure_solution.vtu");
+                          "/solution.vtu");
 
           delete[] pressure_cell0Ds_exact_solution;
         }

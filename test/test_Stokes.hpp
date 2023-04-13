@@ -2,6 +2,7 @@
 #define __TEST_STOKES_H
 
 #include "Eigen/Eigen"
+#include <iostream>
 
 namespace UnitTesting
 {
@@ -99,35 +100,6 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
-      static double* ExactSpeedSolution(const int direction,
-                                        const int numPoints,
-                                        const double* points)
-      {
-        double* values = new double[numPoints];
-
-        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
-        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-
-        if(direction == 0)
-          vecValues = +0.5 *
-                      sin(2.0 * M_PI * matPoints.row(0).array()) *
-                      sin(2.0 * M_PI * matPoints.row(0).array()) *
-                      sin(2.0 * M_PI * matPoints.row(1).array()) *
-                      cos(2.0 * M_PI * matPoints.row(1).array());
-        else if (direction == 1)
-          vecValues = +0.5 *
-                      sin(2.0 * M_PI * matPoints.row(1).array()) *
-                      sin(2.0 * M_PI * matPoints.row(1).array()) *
-                      sin(2.0 * M_PI * matPoints.row(0).array()) *
-                      cos(2.0 * M_PI * matPoints.row(0).array());
-        else if (direction == 2)
-          vecValues.setZero();
-        else
-          throw std::runtime_error("Error on direction");
-
-        return values;
-      }
-      // ***************************************************************************
       static double* ExactPressureSolution(const int numPoints,
                                            const double* points)
       {
@@ -138,6 +110,39 @@ namespace UnitTesting
 
         vecValues = sin(2.0 * M_PI * matPoints.row(0).array()) *
                     cos(2.0 * M_PI * matPoints.row(1).array());
+        return values;
+      }
+      // ***************************************************************************
+      static double* ExactSpeedSolution_1(const int numPoints,
+                                          const double* points)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+
+        vecValues = +0.5 *
+                    sin(2.0 * M_PI * matPoints.row(0).array()) *
+                    sin(2.0 * M_PI * matPoints.row(0).array()) *
+                    sin(2.0 * M_PI * matPoints.row(1).array()) *
+                    cos(2.0 * M_PI * matPoints.row(1).array());
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* ExactSpeedSolution_2(const int numPoints,
+                                          const double* points)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+
+        vecValues = -0.5 *
+                    sin(2.0 * M_PI * matPoints.row(1).array()) *
+                    sin(2.0 * M_PI * matPoints.row(1).array()) *
+                    sin(2.0 * M_PI * matPoints.row(0).array()) *
+                    cos(2.0 * M_PI * matPoints.row(0).array());
         return values;
       }
       // ***************************************************************************
