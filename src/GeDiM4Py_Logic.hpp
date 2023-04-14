@@ -168,6 +168,12 @@ namespace GedimForPy
                                           const DiscreteProblemData& problemData,
                                           std::list<Eigen::Triplet<double> >& stiffnessTriplets,
                                           std::list<Eigen::Triplet<double> >& stiffnessStrongTriplets);
+      static void AssembleAnisotropicStiffnessMatrix(A a,
+                                                     const Gedim::IMeshDAO& mesh,
+                                                     const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                     const DiscreteProblemData& problemData,
+                                                     std::list<Eigen::Triplet<double> >& stiffnessTriplets,
+                                                     std::list<Eigen::Triplet<double> >& stiffnessStrongTriplets);
       static void AssembleAdvectionMatrix(B b,
                                           const Gedim::IMeshDAO& mesh,
                                           const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
