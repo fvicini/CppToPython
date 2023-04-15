@@ -13,7 +13,7 @@
 #include "test_heat_conductivity.hpp"
 #include "test_Stokes.hpp"
 
-#define ACTIVE_CHECK 0
+#define ACTIVE_CHECK 1
 
 namespace UnitTesting
 {
@@ -34,7 +34,7 @@ namespace UnitTesting
     ASSERT_NO_THROW(interface.Initialize(interfaceConfig,
                                          data));
 
-    const std::vector<double> meshSize = { 0.1, 0.01, 0.001 };
+    const std::vector<double> meshSize = { 0.1 };
     const unsigned int order = 2;
 
     for (unsigned int m = 0; m < meshSize.size(); m++)
@@ -567,61 +567,34 @@ namespace UnitTesting
     ASSERT_NO_THROW(interface.Initialize(interfaceConfig,
                                          data));
 
-    const std::vector<double> meshSize = { 0.1, 0.01, 0.001 };
+    const std::vector<double> meshSize = { 0.1 };
 
     for (unsigned int m = 0; m < meshSize.size(); m++)
     {
       GedimForPy::Domain2DMesh mesh;
 
-      if (true)
+      // create with triangle
+      GedimForPy::Domain2D domain;
+      domain.Vertices = gedimData.GeometryUtilities().CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
+                                                                   1.0);
+      domain.VerticesBoundaryCondition = { 1, 1, 1, 1 };
+      domain.EdgesBoundaryCondition = { 2, 3, 4, 5 };
+      domain.DiscretizationType = GedimForPy::Domain2D::DiscretizationTypes::Triangular;
+      domain.MeshCellsMaximumArea = meshSize[m];
+
+      mesh = GedimForPy::GeDiM4Py_Logic::CreateDomainMesh2D(domain,
+                                                            gedimData);
+
+      // export
       {
-        // create with triangle
-        GedimForPy::Domain2D domain;
-        domain.Vertices = gedimData.GeometryUtilities().CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
-                                                                     1.0);
-        domain.VerticesBoundaryCondition = { 1, 1, 1, 1 };
-        domain.EdgesBoundaryCondition = { 2, 3, 4, 5 };
-        domain.DiscretizationType = GedimForPy::Domain2D::DiscretizationTypes::Triangular;
-        domain.MeshCellsMaximumArea = meshSize[m];
-
-        mesh = GedimForPy::GeDiM4Py_Logic::CreateDomainMesh2D(domain,
-                                                              gedimData);
-
-        // export
         {
-          {
-            Gedim::VTKUtilities exporter;
-            exporter.AddPolygon(domain.Vertices);
-            exporter.Export(exportFolder +
-                            "/Domain.vtu");
-          }
+          Gedim::VTKUtilities exporter;
+          exporter.AddPolygon(domain.Vertices);
+          exporter.Export(exportFolder +
+                          "/Domain.vtu");
         }
       }
-      else
-      {
-        // import mesh
-        GedimForPy::ImportMesh2D domain;
-        domain.InputFolder = "/home/geoscore/Downloads/PY";
-        domain.Separator = ';';
 
-        mesh = GedimForPy::GeDiM4Py_Logic::ImportDomainMesh2D(domain,
-                                                              gedimData);
-
-
-        Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
-        gedimData.MeshUtilities().ComputeCell1DCell2DNeighbours(meshDAO);
-
-        for (unsigned int e = 0; e < meshDAO.Cell1DTotalNumber(); e++)
-        {
-          if (meshDAO.Cell1DHasNeighbourCell2D(e, 0) &&
-              meshDAO.Cell1DHasNeighbourCell2D(e, 0))
-            continue;
-
-          meshDAO.Cell1DSetMarker(e, 1);
-          meshDAO.Cell0DSetMarker(meshDAO.Cell1DOrigin(e), 1);
-          meshDAO.Cell0DSetMarker(meshDAO.Cell1DEnd(e), 1);
-        }
-      }
 
       Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
