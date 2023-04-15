@@ -424,9 +424,9 @@ namespace GedimForPy
 
       Eigen::MatrixXd diffusionTerm = Eigen::MatrixXd::Zero(3, cell2DQuadraturePoints.cols());
       diffusionTerm.row(0)<< Eigen::Map<const Eigen::VectorXd>(diffusioTermValues,
-                                                               cell2DQuadraturePoints.cols());
+                                                               cell2DQuadraturePoints.cols()).transpose();
       diffusionTerm.row(2)<< Eigen::Map<const Eigen::VectorXd>(diffusioTermValues,
-                                                               cell2DQuadraturePoints.cols());
+                                                               cell2DQuadraturePoints.cols()).transpose();
       const Eigen::MatrixXd cellMatrixA = equation.ComputeStiffnessMatrix(numLocals,
                                                                           basisFunctionDerivativeValues2D,
                                                                           diffusionTerm,
