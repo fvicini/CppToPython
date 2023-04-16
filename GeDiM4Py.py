@@ -222,34 +222,35 @@ def LUSolver(A, f, lib):
 
 	return make_nd_array(pointerSolution, A.shape[0])
 
-def ComputeErrorL2(u, solution, solutionStrong, problemData, lib):
+def ComputeErrorL2(u, solution, solutionStrong, lib, problemData = None):
 	ExactFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
-	lib.GedimForPy_ComputeErrorL2.argtypes = [ct.c_int, ExactFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
-	lib.GedimForPy_ComputeErrorL2.restype =  ct.c_double
+	
+	if problemData is None:
+		lib.GedimForPy_ComputeErrorL2_LastSpace.argtypes = [ExactFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+		lib.GedimForPy_ComputeErrorL2_LastSpace.restype =  ct.c_double
 
-	return lib.GedimForPy_ComputeErrorL2(problemData['SpaceIndex'], ExactFN(u), solution, solutionStrong)
+		return lib.GedimForPy_ComputeErrorL2_LastSpace(ExactFN(u), solution, solutionStrong)
+	else:
+		lib.GedimForPy_ComputeErrorL2.argtypes = [ct.c_int, ExactFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+		lib.GedimForPy_ComputeErrorL2.restype =  ct.c_double
 
-def ComputeErrorL2(u, solution, solutionStrong, lib):
-	ExactFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
-	lib.GedimForPy_ComputeErrorL2_LastSpace.argtypes = [ExactFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
-	lib.GedimForPy_ComputeErrorL2_LastSpace.restype =  ct.c_double
+		return lib.GedimForPy_ComputeErrorL2(problemData['SpaceIndex'], ExactFN(u), solution, solutionStrong)
 
-	return lib.GedimForPy_ComputeErrorL2_LastSpace(ExactFN(u), solution, solutionStrong)
-
-def ComputeErrorH1(uDer, solution, solutionStrong, problemData, lib):
+def ComputeErrorH1(uDer, solution, solutionStrong, lib, problemData = None):
 	ExactDerivativeFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
-	lib.GedimForPy_ComputeErrorH1.argtypes = [ct.c_int, ExactDerivativeFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
-	lib.GedimForPy_ComputeErrorH1.restype =  ct.c_double
+	
+	if problemData is None:
+		ExactDerivativeFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
+		lib.GedimForPy_ComputeErrorH1_LastSpace.argtypes = [ExactDerivativeFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+		lib.GedimForPy_ComputeErrorH1_LastSpace.restype =  ct.c_double
 
-	return lib.GedimForPy_ComputeErrorH1(problemData['SpaceIndex'], ExactDerivativeFN(uDer), solution, solutionStrong)
+		return lib.GedimForPy_ComputeErrorH1_LastSpace(ExactDerivativeFN(uDer), solution, solutionStrong)
+	else:
+		lib.GedimForPy_ComputeErrorH1.argtypes = [ct.c_int, ExactDerivativeFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+		lib.GedimForPy_ComputeErrorH1.restype =  ct.c_double
 
-def ComputeErrorH1(uDer, solution, solutionStrong, lib):
-	ExactDerivativeFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
-	lib.GedimForPy_ComputeErrorH1_LastSpace.argtypes = [ExactDerivativeFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
-	lib.GedimForPy_ComputeErrorH1_LastSpace.restype =  ct.c_double
-
-	return lib.GedimForPy_ComputeErrorH1_LastSpace(ExactDerivativeFN(uDer), solution, solutionStrong)
-
+		return lib.GedimForPy_ComputeErrorH1(problemData['SpaceIndex'], ExactDerivativeFN(uDer), solution, solutionStrong)
+	
 def PythonSolver(A, f, lib):
 	return scipy.sparse.linalg.spsolve(A, f)
 

@@ -13,7 +13,7 @@
 #include "test_heat_conductivity.hpp"
 #include "test_Stokes.hpp"
 
-#define ACTIVE_CHECK 0
+#define ACTIVE_CHECK 1
 
 namespace UnitTesting
 {
@@ -785,10 +785,6 @@ namespace UnitTesting
                                                                       pressure_problemData.NumberDOFs);
       saddlePoint_forcingTerm.segment(0, speed_problemData.NumberDOFs) = forcingTerm_1;
       saddlePoint_forcingTerm.segment(speed_problemData.NumberDOFs, speed_problemData.NumberDOFs) = forcingTerm_2;
-
-      std::cerr.precision(16);
-      std::cerr<< scientific<< saddlePoint_matrix<< std::endl;
-      std::cerr<< scientific<< saddlePoint_forcingTerm[0]<< std::endl;
 
       Eigen::SparseLU<Eigen::SparseMatrix<double>> linearSolver;
       linearSolver.compute(saddlePoint_matrix);

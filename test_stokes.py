@@ -9,23 +9,23 @@ def Stokes_v(numPoints, points):
 	return values.ctypes.data
 
 def Stokes_advection_1(numPoints, points):
-	values = np.zeros((2, numPoints))
+	values = np.zeros((2, numPoints), order='F')
 	values[0,:] = 1.0
 	return values.ctypes.data
 
 def Stokes_advection_2(numPoints, points):
-	values = np.zeros((2, numPoints))
+	values = np.zeros((2, numPoints), order='F')
 	values[1,:] = 1.0
 	return values.ctypes.data
 
 def Stokes_f_1(numPoints, points):
 	matPoints = gedim.make_nd_matrix(points, (3, numPoints), np.double)
-	values = - Stokes_V() * (+8.0 * np.pi * np.pi * np.cos(8.0 * np.pi * matPoints[0,:]) - 4.0 * np.pi * np.pi) * np.sin(2.0 * np.pi * matPoints[1,:]) * np.cos(2.0 * np.pi * matPoints[1,:]) + (+2.0 * np.pi * np.cos(2.0 * np.pi * matPoints[0,:]) * np.cos(2.0 * np.pi * matPoints[1,:]))
+	values = - Stokes_V() * (+8.0 * np.pi * np.pi * np.cos(4.0 * np.pi * matPoints[0,:]) - 4.0 * np.pi * np.pi) * np.sin(2.0 * np.pi * matPoints[1,:]) * np.cos(2.0 * np.pi * matPoints[1,:]) + (+2.0 * np.pi * np.cos(2.0 * np.pi * matPoints[0,:]) * np.cos(2.0 * np.pi * matPoints[1,:]))
 	return values.ctypes.data
 
 def Stokes_f_2(numPoints, points):
 	matPoints = gedim.make_nd_matrix(points, (3, numPoints), np.double)
-	values = - Stokes_V() * (-8.0 * np.pi * np.pi * np.cos(8.0 * np.pi * matPoints[1,:]) + 4.0 * np.pi * np.pi) * np.sin(2.0 * np.pi * matPoints[0,:]) * np.cos(2.0 * np.pi * matPoints[0,:]) + (-2.0 * np.pi * np.sin(2.0 * np.pi * matPoints[0,:]) * np.sin(2.0 * np.pi * matPoints[1,:]))
+	values = - Stokes_V() * (-8.0 * np.pi * np.pi * np.cos(4.0 * np.pi * matPoints[1,:]) + 4.0 * np.pi * np.pi) * np.sin(2.0 * np.pi * matPoints[0,:]) * np.cos(2.0 * np.pi * matPoints[0,:]) + (-2.0 * np.pi * np.sin(2.0 * np.pi * matPoints[0,:]) * np.sin(2.0 * np.pi * matPoints[1,:]))
 	return values.ctypes.data
 
 def Stokes_pressure_exactSolution(numPoints, points):
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 	config = { 'GeometricTolerance': 1.0e-8 }
 	gedim.Initialize(config, lib)
 	
-	meshSizes = [0.25]
+	meshSizes = [0.1]
 
 	for meshSize in meshSizes:
 		domain = { 'SquareEdge': 1.0, 'VerticesBoundaryCondition': [1,1,1,1], 'EdgesBoundaryCondition': [2,3,4,5], 'DiscretizationType': 1, 'MeshCellsMaximumArea': meshSize }
@@ -69,11 +69,6 @@ if __name__ == '__main__':
 		speed_n_dofs = speed_problemData['NumberDOFs']
 		speed_n_strongs = speed_problemData['NumberStrongs']
 
-		print("pressure_n_dofs", pressure_n_dofs)
-		print("pressure_n_strongs", pressure_n_strongs)
-		print("speed_n_dofs", speed_n_dofs)
-		print("speed_n_strongs", speed_n_strongs)
-
 		[stiffness_1, stiffnessStrong_1] = gedim.AssembleStiffnessMatrix_Shift(speed_problemData['SpaceIndex'], speed_problemData['SpaceIndex'], Stokes_v, 2 * speed_n_dofs + pressure_n_dofs, 2 * speed_n_dofs + pressure_n_dofs, 2 * speed_n_strongs + pressure_n_strongs, 0, 0, 0, lib)
 		[stiffness_2, stiffnessStrong_2] = gedim.AssembleStiffnessMatrix_Shift(speed_problemData['SpaceIndex'], speed_problemData['SpaceIndex'], Stokes_v, 2 * speed_n_dofs + pressure_n_dofs, 2 * speed_n_dofs + pressure_n_dofs, 2 * speed_n_strongs + pressure_n_strongs, speed_n_dofs, speed_n_dofs, speed_n_strongs, lib)
 
@@ -86,19 +81,15 @@ if __name__ == '__main__':
 
 		pressure_solutionStrong = gedim.AssembleStrongSolution(Stokes_pressure_exactSolution, 1, pressure_problemData, lib)
 		
-		matrix = stiffness_1 + stiffness_2 #\
-			     #- advection_1 - advection_2 \
-				 #- np.transpose(advection_1) - np.transpose(advection_2)
-		print(matrix)
-		print(forcingTerm[0])
-
 		solution = gedim.LUSolver(stiffness_1 + stiffness_2 \
 			     - advection_1 - advection_2 \
 				 - np.transpose(advection_1) - np.transpose(advection_2), forcingTerm, lib)
 
-		pressure_errorL2 = gedim.ComputeErrorL2(Stokes_pressure_exactSolution, solution[2 * speed_n_dofs:], pressure_solutionStrong, lib)
+		pressure_errorL2 = gedim.ComputeErrorL2(Stokes_pressure_exactSolution, solution[2 * speed_n_dofs:], pressure_solutionStrong, lib, pressure_problemData)
 
 		print("dofs", "h", "pressure_errorL2")
 		print(2 * speed_n_dofs + pressure_n_dofs, '{:.16e}'.format(pressure_problemData['H']), '{:.16e}'.format(pressure_errorL2))
 
 		gedim.PlotSolution(mesh, pressure_dofs, pressure_strongs, solution[2 * speed_n_dofs:], pressure_solutionStrong)
+		gedim.PlotSolution(mesh, speed_dofs, speed_strongs, solution[0:speed_n_dofs], np.zeros(speed_n_strongs))
+		gedim.PlotSolution(mesh, speed_dofs, speed_strongs, solution[speed_n_dofs:2 * speed_n_dofs], np.zeros(speed_n_strongs))
