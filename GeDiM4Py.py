@@ -6,11 +6,14 @@ import matplotlib.pyplot as plt
 import matplotlib.tri
 import os
 
-def make_np_sparse(nRows, nCols, c_nNonZeros, c_pointerTriplets):
+def make_np_sparse(nRows, nCols, c_nNonZeros, c_pointerTriplets):	
+	return make_np_sparse_shift(nRows, nCols, 0, 0, c_nNonZeros, c_pointerTriplets)
+
+def make_np_sparse_shift(nRows, nCols, shiftRows, shiftCols, c_nNonZeros, c_pointerTriplets):
 	nNonZeros = c_nNonZeros.value
 	triplets = make_nd_matrix(c_pointerTriplets, (3, nNonZeros))
 	
-	return scipy.sparse.csc_array((triplets[2,:], (triplets[0,:], triplets[1,:])), shape=(nRows, nCols))
+	return scipy.sparse.csc_array((triplets[2,:], (triplets[0,:] + shiftRows, triplets[1,:] + shiftCols)), shape=(nRows, nCols))
 
 def make_nd_matrix(c_pointer, shape, dtype=np.double, order='F', own_data=True):
     arr_size = np.prod(shape[:]) * np.dtype(dtype).itemsize 
@@ -99,6 +102,9 @@ def Discretize(discreteSpace, lib):
 	return [problemData, dofs, strongs]
 	
 def AssembleStiffnessMatrix(a, problemData, lib):
+	return AssembleStiffnessMatrix_Shift(a, problemData['NumberDOFs'], problemData['NumberStrongs'], 0, 0, lib)
+
+def AssembleStiffnessMatrix_Shift(a, sizeStiffness, sizeStifnessStrongs, rowShift, colShift, lib):
 	DiffusionFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 		
 	lib.GedimForPy_AssembleStiffnessMatrix.argtypes = [DiffusionFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
@@ -110,11 +116,8 @@ def AssembleStiffnessMatrix(a, problemData, lib):
 	numStiffnessStrongTriplets = ct.c_int(0)
 	lib.GedimForPy_AssembleStiffnessMatrix(DiffusionFN(a), ct.byref(numStiffnessTriplets), ct.byref(pointerStiffness), ct.byref(numStiffnessStrongTriplets), ct.byref(pointerStiffnessStrong))
 	
-	numDofs = problemData['NumberDOFs']
-	numStrongs = problemData['NumberStrongs']
-
-	stiffness = make_np_sparse(numDofs, numDofs, numStiffnessTriplets, pointerStiffness)
-	stiffnessStrong = make_np_sparse(numDofs, numStrongs, numStiffnessStrongTriplets, pointerStiffnessStrong)
+	stiffness = make_np_sparse_shift(sizeStiffness, sizeStiffness, rowShift, colShift, numStiffnessTriplets, pointerStiffness)
+	stiffnessStrong = make_np_sparse_shift(sizeStiffness, sizeStifnessStrongs, rowShift, colShift, numStiffnessStrongTriplets, pointerStiffnessStrong)
 
 	return [stiffness, stiffnessStrong]
 
@@ -169,6 +172,7 @@ def AssembleForcingTerm(f, problemData, lib):
 	lib.GedimForPy_AssembleForcingTerm(ForcingTermFN(f), ct.byref(size), ct.byref(pointerF))
 	size = size.value
 	return make_nd_array(pointerF, size)
+
 
 def AssembleStrongSolution(g, marker, problemData, lib):
 	StrongFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))

@@ -67,7 +67,7 @@ if __name__ == '__main__':
 	config = { 'GeometricTolerance': 1.0e-8 }
 	gedim.Initialize(config, lib)
 	
-	meshSizes = [0.1 ]
+	meshSizes = [0.1, 0.01]
 	order = 2
 
 	for meshSize in meshSizes:
