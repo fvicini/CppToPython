@@ -25,34 +25,43 @@ PyObject* GedimForPy_Discretize(PyObject* discreteSpace,
                                 double** dofsCoordinate,
                                 double** strongsCoordinate);
 extern "C"
-void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::A a,
+void GedimForPy_AssembleStiffnessMatrix(const int trialSpaceIndex,
+                                        const int testSpaceIndex,
+                                        GedimForPy::GeDiM4Py_Logic::A a,
                                         int* numStiffnessTriplets,
                                         double** stiffnessTriplets,
                                         int* numStiffnessStrongTriplets,
                                         double** stiffnessStrongTriplets);
 extern "C"
-void GedimForPy_AssembleAdvectionMatrix(GedimForPy::GeDiM4Py_Logic::B b,
+void GedimForPy_AssembleAdvectionMatrix(const int trialSpaceIndex,
+                                        const int testSpaceIndex,
+                                        GedimForPy::GeDiM4Py_Logic::B b,
                                         int* numAdvectionTriplets,
                                         double** advectionTriplets,
                                         int* numAdvectionStrongTriplets,
                                         double** advectionStrongTriplets);
 extern "C"
-void GedimForPy_AssembleReactionMatrix(GedimForPy::GeDiM4Py_Logic::C c,
+void GedimForPy_AssembleReactionMatrix(const int trialSpaceIndex,
+                                       const int testSpaceIndex,
+                                       GedimForPy::GeDiM4Py_Logic::C c,
                                        int* numReactionTriplets,
                                        double** reactionTriplets,
                                        int* numReactionStrongTriplets,
                                        double** reactionStrongTriplets);
 extern "C"
-void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,
+void GedimForPy_AssembleForcingTerm(const int testSpaceIndex,
+                                    GedimForPy::GeDiM4Py_Logic::F f,
                                     int* size,
                                     double** forcingTerm);
 extern "C"
-void GedimForPy_AssembleStrongSolution(GedimForPy::GeDiM4Py_Logic::Strong g,
+void GedimForPy_AssembleStrongSolution(const int trialSpaceIndex,
+                                       GedimForPy::GeDiM4Py_Logic::Strong g,
                                        int marker,
                                        int* size,
                                        double** solutionStrong);
 extern "C"
-void GedimForPy_AssembleWeakTerm(GedimForPy::GeDiM4Py_Logic::Weak g,
+void GedimForPy_AssembleWeakTerm(const int testSpaceIndex,
+                                 GedimForPy::GeDiM4Py_Logic::Weak g,
                                  int marker,
                                  int* size,
                                  double** weakTerm);
@@ -68,14 +77,25 @@ void GedimForPy_LUSolver(const int nRows,
                          const double* pointerTriplets,
                          const double* pointerF,
                          double** solution);
+
 extern "C"
-double GedimForPy_ComputeErrorL2(GedimForPy::GeDiM4Py_Logic::Exact u,
+double GedimForPy_ComputeErrorL2(const int trialSpaceIndex,
+                                 GedimForPy::GeDiM4Py_Logic::Exact u,
                                  const double* pointerNumericSolution,
                                  const double* pointerStrongSolution);
 extern "C"
-double GedimForPy_ComputeErrorH1(GedimForPy::GeDiM4Py_Logic::ExactDerivative uDer,
+double GedimForPy_ComputeErrorL2_LastSpace(GedimForPy::GeDiM4Py_Logic::Exact u,
+                                           const double* pointerNumericSolution,
+                                           const double* pointerStrongSolution);
+extern "C"
+double GedimForPy_ComputeErrorH1(const int trialSpaceIndex,
+                                 GedimForPy::GeDiM4Py_Logic::ExactDerivative uDer,
                                  const double* pointerNumericSolution,
                                  const double* pointerStrongSolution);
+extern "C"
+double GedimForPy_ComputeErrorH1_LastSpace(GedimForPy::GeDiM4Py_Logic::ExactDerivative uDer,
+                                           const double* pointerNumericSolution,
+                                           const double* pointerStrongSolution);
 // ***************************************************************************
 
 namespace GedimForPy
@@ -88,8 +108,8 @@ namespace GedimForPy
       static GedimForPy::Domain2D Domain;
       static GedimForPy::ImportMesh2D DomainImported;
       static GedimForPy::Domain2DMesh Mesh;
-      static GedimForPy::DiscreteSpace Space;
-      static GedimForPy::DiscreteProblemData ProblemData;
+      static std::vector<GedimForPy::DiscreteSpace> Spaces;
+      static std::vector<GedimForPy::DiscreteProblemData> ProblemsData;
 
     private:
       template<typename T>
@@ -105,7 +125,8 @@ namespace GedimForPy
       static PyObject* ConvertMesh(const Gedim::IMeshDAO& mesh,
                                    double*& coordinates);
       static DiscreteSpace ConvertDiscreteSpace(PyObject* discreteSpace);
-      static PyObject* ConvertProblemData(GedimForPy::DiscreteProblemData& problemData,
+      static PyObject* ConvertProblemData(const unsigned int& spaceIndex,
+                                          GedimForPy::DiscreteProblemData& problemData,
                                           double*& dofsCoordinate,
                                           double*& strongsCoordinate);
 

@@ -95,22 +95,25 @@ PyObject* GedimForPy_Discretize(PyObject* discreteSpace,
   GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
   GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
   GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
-  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
-  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
-  space = GedimForPy::GeDiM4Py_Interface::ConvertDiscreteSpace(discreteSpace);
-  problemData = GedimForPy::GeDiM4Py_Logic::Discretize(meshDAO,
-                                                       mesh.MeshGeometricData,
-                                                       space);
+  spaces.push_back(GedimForPy::GeDiM4Py_Interface::ConvertDiscreteSpace(discreteSpace));
+  problemsData.push_back(GedimForPy::GeDiM4Py_Logic::Discretize(meshDAO,
+                                                                mesh.MeshGeometricData,
+                                                                spaces.back()));
 
-  return GedimForPy::GeDiM4Py_Interface::ConvertProblemData(problemData,
+  return GedimForPy::GeDiM4Py_Interface::ConvertProblemData(problemsData.size() - 1,
+                                                            problemsData.back(),
                                                             *dofsCoordinate,
                                                             *strongsCoordinate);
 }
 // ***************************************************************************
-void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::A a,
+void GedimForPy_AssembleStiffnessMatrix(const int trialSpaceIndex,
+                                        const int testSpaceIndex,
+                                        GedimForPy::GeDiM4Py_Logic::A a,
                                         int* numStiffnessTriplets,
                                         double** stiffnessTriplets,
                                         int* numStiffnessStrongTriplets,
@@ -120,16 +123,18 @@ void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::A a,
   GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
   GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
   GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
-  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
-  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  std::cout<< "INSIDE "<< trialSpaceIndex<< std::endl;
 
   std::list<Eigen::Triplet<double>> stiffness, stiffnessStrong;
   GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(a,
                                                       meshDAO,
                                                       mesh.Cell2DsMap,
-                                                      problemData,
+                                                      problemsData[trialSpaceIndex],
                                                       stiffness,
                                                       stiffnessStrong);
 
@@ -142,7 +147,9 @@ void GedimForPy_AssembleStiffnessMatrix(GedimForPy::GeDiM4Py_Logic::A a,
                                                   *stiffnessStrongTriplets);
 }
 // ***************************************************************************
-void GedimForPy_AssembleAdvectionMatrix(GedimForPy::GeDiM4Py_Logic::B b,
+void GedimForPy_AssembleAdvectionMatrix(const int trialSpaceIndex,
+                                        const int testSpaceIndex,
+                                        GedimForPy::GeDiM4Py_Logic::B b,
                                         int* numAdvectionTriplets,
                                         double** advectionTriplets,
                                         int* numAdvectionStrongTriplets,
@@ -152,8 +159,8 @@ void GedimForPy_AssembleAdvectionMatrix(GedimForPy::GeDiM4Py_Logic::B b,
   GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
   GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
   GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
-  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
-  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
@@ -161,8 +168,8 @@ void GedimForPy_AssembleAdvectionMatrix(GedimForPy::GeDiM4Py_Logic::B b,
   GedimForPy::GeDiM4Py_Logic::AssembleAdvectionMatrix(b,
                                                       meshDAO,
                                                       mesh.Cell2DsMap,
-                                                      problemData,
-                                                      problemData,
+                                                      problemsData[trialSpaceIndex],
+                                                      problemsData[testSpaceIndex],
                                                       advection,
                                                       advectionStrong);
 
@@ -175,7 +182,9 @@ void GedimForPy_AssembleAdvectionMatrix(GedimForPy::GeDiM4Py_Logic::B b,
                                                   *advectionStrongTriplets);
 }
 // ***************************************************************************
-void GedimForPy_AssembleReactionMatrix(GedimForPy::GeDiM4Py_Logic::C c,
+void GedimForPy_AssembleReactionMatrix(const int trialSpaceIndex,
+                                       const int testSpaceIndex,
+                                       GedimForPy::GeDiM4Py_Logic::C c,
                                        int* numReactionTriplets,
                                        double** reactionTriplets,
                                        int* numReactionStrongTriplets,
@@ -185,8 +194,8 @@ void GedimForPy_AssembleReactionMatrix(GedimForPy::GeDiM4Py_Logic::C c,
   GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
   GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
   GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
-  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
-  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
@@ -194,7 +203,7 @@ void GedimForPy_AssembleReactionMatrix(GedimForPy::GeDiM4Py_Logic::C c,
   GedimForPy::GeDiM4Py_Logic::AssembleReactionMatrix(c,
                                                      meshDAO,
                                                      mesh.Cell2DsMap,
-                                                     problemData,
+                                                     problemsData[trialSpaceIndex],
                                                      reaction,
                                                      reactionStrong);
 
@@ -207,7 +216,8 @@ void GedimForPy_AssembleReactionMatrix(GedimForPy::GeDiM4Py_Logic::C c,
                                                   *reactionStrongTriplets);
 }
 // ***************************************************************************
-void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,
+void GedimForPy_AssembleForcingTerm(const int testSpaceIndex,
+                                    GedimForPy::GeDiM4Py_Logic::F f,
                                     int* size,
                                     double** forcingTerm)
 {
@@ -215,20 +225,21 @@ void GedimForPy_AssembleForcingTerm(GedimForPy::GeDiM4Py_Logic::F f,
   GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
   GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
   GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
-  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
-  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
   GedimForPy::GeDiM4Py_Interface::ConvertArray(GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(f,
                                                                                                meshDAO,
                                                                                                mesh.Cell2DsMap,
-                                                                                               problemData),
+                                                                                               problemsData[testSpaceIndex]),
                                                *size,
                                                *forcingTerm);
 }
 // ***************************************************************************
-void GedimForPy_AssembleStrongSolution(GedimForPy::GeDiM4Py_Logic::Strong g,
+void GedimForPy_AssembleStrongSolution(const int trialSpaceIndex,
+                                       GedimForPy::GeDiM4Py_Logic::Strong g,
                                        int marker,
                                        int* size,
                                        double** solutionStrong)
@@ -237,8 +248,8 @@ void GedimForPy_AssembleStrongSolution(GedimForPy::GeDiM4Py_Logic::Strong g,
   GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
   GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
   GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
-  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
-  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
@@ -246,12 +257,13 @@ void GedimForPy_AssembleStrongSolution(GedimForPy::GeDiM4Py_Logic::Strong g,
                                                                                                   marker,
                                                                                                   meshDAO,
                                                                                                   mesh.Cell2DsMap,
-                                                                                                  problemData),
+                                                                                                  problemsData[trialSpaceIndex]),
                                                *size,
                                                *solutionStrong);
 }
 // ***************************************************************************
-void GedimForPy_AssembleWeakTerm(GedimForPy::GeDiM4Py_Logic::Weak g,
+void GedimForPy_AssembleWeakTerm(const int testSpaceIndex,
+                                 GedimForPy::GeDiM4Py_Logic::Weak g,
                                  int marker,
                                  int* size,
                                  double** weakTerm)
@@ -260,8 +272,8 @@ void GedimForPy_AssembleWeakTerm(GedimForPy::GeDiM4Py_Logic::Weak g,
   GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
   GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
   GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
-  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
-  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
@@ -272,7 +284,7 @@ void GedimForPy_AssembleWeakTerm(GedimForPy::GeDiM4Py_Logic::Weak g,
                                                                                             mesh.MeshGeometricData.Cell2DsEdgeLengths,
                                                                                             mesh.MeshGeometricData.Cell2DsEdgeTangents,
                                                                                             mesh.Cell2DsMap,
-                                                                                            problemData),
+                                                                                            problemsData[testSpaceIndex]),
                                                *size,
                                                *weakTerm);
 }
@@ -321,7 +333,8 @@ void GedimForPy_LUSolver(const int nRows,
                                                *solution);
 }
 // ***************************************************************************
-double GedimForPy_ComputeErrorL2(GedimForPy::GeDiM4Py_Logic::Exact u,
+double GedimForPy_ComputeErrorL2(const int trialSpaceIndex,
+                                 GedimForPy::GeDiM4Py_Logic::Exact u,
                                  const double* pointerNumericSolution,
                                  const double* pointerStrongSolution)
 {
@@ -329,23 +342,34 @@ double GedimForPy_ComputeErrorL2(GedimForPy::GeDiM4Py_Logic::Exact u,
   GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
   GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
   GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
-  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
-  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
   const Eigen::VectorXd cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(u,
                                                                                     Eigen::Map<const Eigen::VectorXd>(pointerNumericSolution,
-                                                                                                                      problemData.NumberDOFs),
+                                                                                                                      problemsData[trialSpaceIndex].NumberDOFs),
                                                                                     Eigen::Map<const Eigen::VectorXd>(pointerStrongSolution,
-                                                                                                                      problemData.NumberStrongs),
+                                                                                                                      problemsData[trialSpaceIndex].NumberStrongs),
                                                                                     meshDAO,
                                                                                     mesh.Cell2DsMap,
-                                                                                    problemData);
+                                                                                    problemsData[trialSpaceIndex]);
   return sqrt(cell2DsErrorL2.sum());
 }
 // ***************************************************************************
-double GedimForPy_ComputeErrorH1(GedimForPy::GeDiM4Py_Logic::ExactDerivative uDer,
+double GedimForPy_ComputeErrorL2_LastSpace(GedimForPy::GeDiM4Py_Logic::Exact u,
+                                           const double* pointerNumericSolution,
+                                           const double* pointerStrongSolution)
+{
+  return GedimForPy_ComputeErrorL2(GedimForPy::GeDiM4Py_Interface::ProblemsData.size() - 1,
+                                   u,
+                                   pointerNumericSolution,
+                                   pointerStrongSolution);
+}
+// ***************************************************************************
+double GedimForPy_ComputeErrorH1(const int trialSpaceIndex,
+                                 GedimForPy::GeDiM4Py_Logic::ExactDerivative uDer,
                                  const double* pointerNumericSolution,
                                  const double* pointerStrongSolution)
 {
@@ -353,20 +377,30 @@ double GedimForPy_ComputeErrorH1(GedimForPy::GeDiM4Py_Logic::ExactDerivative uDe
   GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
   GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
   GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
-  GedimForPy::DiscreteSpace& space = GedimForPy::GeDiM4Py_Interface::Space;
-  GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
   const Eigen::VectorXd cell2DsErrorH1 = GedimForPy::GeDiM4Py_Logic::ComputeErrorH1(uDer,
                                                                                     Eigen::Map<const Eigen::VectorXd>(pointerNumericSolution,
-                                                                                                                      problemData.NumberDOFs),
+                                                                                                                      problemsData[trialSpaceIndex].NumberDOFs),
                                                                                     Eigen::Map<const Eigen::VectorXd>(pointerStrongSolution,
-                                                                                                                      problemData.NumberStrongs),
+                                                                                                                      problemsData[trialSpaceIndex].NumberStrongs),
                                                                                     meshDAO,
                                                                                     mesh.Cell2DsMap,
-                                                                                    problemData);
+                                                                                    problemsData[trialSpaceIndex]);
   return sqrt(cell2DsErrorH1.sum());
+}
+// ***************************************************************************
+double GedimForPy_ComputeErrorH1_LastSpace(GedimForPy::GeDiM4Py_Logic::ExactDerivative uDer,
+                                           const double* pointerNumericSolution,
+                                           const double* pointerStrongSolution)
+{
+  return GedimForPy_ComputeErrorH1(GedimForPy::GeDiM4Py_Interface::ProblemsData.size() - 1,
+                                   uDer,
+                                   pointerNumericSolution,
+                                   pointerStrongSolution);
 }
 // ***************************************************************************
 namespace GedimForPy
@@ -402,8 +436,8 @@ namespace GedimForPy
   GedimForPy::Domain2D GeDiM4Py_Interface::Domain;
   GedimForPy::ImportMesh2D GeDiM4Py_Interface::DomainImported;
   GedimForPy::Domain2DMesh GeDiM4Py_Interface::Mesh;
-  GedimForPy::DiscreteSpace GeDiM4Py_Interface::Space;
-  GedimForPy::DiscreteProblemData GeDiM4Py_Interface::ProblemData;
+  std::vector<GedimForPy::DiscreteSpace> GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData> GeDiM4Py_Interface::ProblemsData;
   // ***************************************************************************
   InterfaceConfiguration GeDiM4Py_Interface::ConvertConfiguration(PyObject* config)
   {
@@ -503,12 +537,14 @@ namespace GedimForPy
     return space;
   }
   // ***************************************************************************
-  PyObject* GeDiM4Py_Interface::ConvertProblemData(DiscreteProblemData& problemData,
+  PyObject* GeDiM4Py_Interface::ConvertProblemData(const unsigned int& spaceIndex,
+                                                   DiscreteProblemData& problemData,
                                                    double*& dofsCoordinate,
                                                    double*& strongsCoordinate)
   {
     PyObject* problem = PyDict_New();
 
+    PyDict_SetItemString(problem, "SpaceIndex", Py_BuildValue("i", spaceIndex));
     PyDict_SetItemString(problem, "NumberDOFs", Py_BuildValue("i", problemData.NumberDOFs));
     PyDict_SetItemString(problem, "NumberStrongs", Py_BuildValue("i", problemData.NumberStrongs));
     PyDict_SetItemString(problem, "H", Py_BuildValue("d", problemData.H));

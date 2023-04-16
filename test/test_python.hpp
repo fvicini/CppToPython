@@ -130,13 +130,13 @@ namespace UnitTesting
     delete[] strongsCoordinate;
 
     ASSERT_EQ(space_expected.Order,
-              GedimForPy::GeDiM4Py_Interface::Space.Order);
+              GedimForPy::GeDiM4Py_Interface::Spaces.back().Order);
     ASSERT_EQ(space_expected.Type,
-              GedimForPy::GeDiM4Py_Interface::Space.Type);
+              GedimForPy::GeDiM4Py_Interface::Spaces.back().Type);
     ASSERT_EQ(space_expected.BoundaryConditionsType,
-              GedimForPy::GeDiM4Py_Interface::Space.BoundaryConditionsType);
+              GedimForPy::GeDiM4Py_Interface::Spaces.back().BoundaryConditionsType);
 
-    GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemData;
+    GedimForPy::DiscreteProblemData& problemData = GedimForPy::GeDiM4Py_Interface::ProblemsData.back();
     ASSERT_EQ(25, problemData.NumberDOFs);
     ASSERT_EQ(16, problemData.NumberStrongs);
     ASSERT_EQ(13, problemData.Cell0Ds_DOF.size());
