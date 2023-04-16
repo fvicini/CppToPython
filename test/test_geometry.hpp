@@ -13,7 +13,7 @@
 #include "test_heat_conductivity.hpp"
 #include "test_Stokes.hpp"
 
-#define ACTIVE_CHECK 1
+#define ACTIVE_CHECK 0
 
 namespace UnitTesting
 {
@@ -567,7 +567,7 @@ namespace UnitTesting
     ASSERT_NO_THROW(interface.Initialize(interfaceConfig,
                                          data));
 
-    const std::vector<double> meshSize = { 0.1 };
+    const std::vector<double> meshSize = { 0.25 };
 
     for (unsigned int m = 0; m < meshSize.size(); m++)
     {
@@ -691,19 +691,19 @@ namespace UnitTesting
       }
 
       std::list<Eigen::Triplet<double>> stiffness_dx_Triplets, stiffnessStrong_dx_Triplets;
-      GedimForPy::GeDiM4Py_Logic::AssembleAnisotropicStiffnessMatrix(Stokes::ViscosityTerm,
-                                                                     meshDAO,
-                                                                     mesh.Cell2DsMap,
-                                                                     speed_problemData,
-                                                                     stiffness_dx_Triplets,
-                                                                     stiffnessStrong_dx_Triplets);
+      GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(Stokes::ViscosityTerm,
+                                                          meshDAO,
+                                                          mesh.Cell2DsMap,
+                                                          speed_problemData,
+                                                          stiffness_dx_Triplets,
+                                                          stiffnessStrong_dx_Triplets);
       std::list<Eigen::Triplet<double>> stiffness_dy_Triplets, stiffnessStrong_dy_Triplets;
-      GedimForPy::GeDiM4Py_Logic::AssembleAnisotropicStiffnessMatrix(Stokes::ViscosityTerm,
-                                                                     meshDAO,
-                                                                     mesh.Cell2DsMap,
-                                                                     speed_problemData,
-                                                                     stiffness_dy_Triplets,
-                                                                     stiffnessStrong_dy_Triplets);
+      GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(Stokes::ViscosityTerm,
+                                                          meshDAO,
+                                                          mesh.Cell2DsMap,
+                                                          speed_problemData,
+                                                          stiffness_dy_Triplets,
+                                                          stiffnessStrong_dy_Triplets);
       std::list<Eigen::Triplet<double>> advection_dx_Triplets, advectionStrong_dx_Triplets;
       GedimForPy::GeDiM4Py_Logic::AssembleAdvectionMatrix(Stokes::AdvectionTerm_1,
                                                           meshDAO,
@@ -785,6 +785,10 @@ namespace UnitTesting
                                                                       pressure_problemData.NumberDOFs);
       saddlePoint_forcingTerm.segment(0, speed_problemData.NumberDOFs) = forcingTerm_1;
       saddlePoint_forcingTerm.segment(speed_problemData.NumberDOFs, speed_problemData.NumberDOFs) = forcingTerm_2;
+
+      std::cerr.precision(16);
+      std::cerr<< scientific<< saddlePoint_matrix<< std::endl;
+      std::cerr<< scientific<< saddlePoint_forcingTerm[0]<< std::endl;
 
       Eigen::SparseLU<Eigen::SparseMatrix<double>> linearSolver;
       linearSolver.compute(saddlePoint_matrix);

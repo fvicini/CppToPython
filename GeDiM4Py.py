@@ -102,9 +102,9 @@ def Discretize(discreteSpace, lib):
 	return [problemData, dofs, strongs]
 	
 def AssembleStiffnessMatrix(a, problemData, lib):
-	return AssembleStiffnessMatrix_Shift(problemData['SpaceIndex'], problemData['SpaceIndex'], a, problemData['NumberDOFs'], problemData['NumberStrongs'], 0, 0, lib)
+	return AssembleStiffnessMatrix_Shift(problemData['SpaceIndex'], problemData['SpaceIndex'], a, problemData['NumberDOFs'], problemData['NumberDOFs'], problemData['NumberStrongs'], 0, 0, 0, lib)
 
-def AssembleStiffnessMatrix_Shift(trialIndex, testIndex, a, sizeStiffness, sizeStifnessStrongs, rowShift, colShift, lib):
+def AssembleStiffnessMatrix_Shift(trialIndex, testIndex, a, rows, cols, colsStrongs, rowShift, colShift, colStrongShift, lib):
 	DiffusionFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 		
 	lib.GedimForPy_AssembleStiffnessMatrix.argtypes = [ct.c_int, ct.c_int, DiffusionFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
@@ -116,12 +116,15 @@ def AssembleStiffnessMatrix_Shift(trialIndex, testIndex, a, sizeStiffness, sizeS
 	numStiffnessStrongTriplets = ct.c_int(0)
 	lib.GedimForPy_AssembleStiffnessMatrix(trialIndex, testIndex, DiffusionFN(a), ct.byref(numStiffnessTriplets), ct.byref(pointerStiffness), ct.byref(numStiffnessStrongTriplets), ct.byref(pointerStiffnessStrong))
 	
-	stiffness = make_np_sparse_shift(sizeStiffness, sizeStiffness, rowShift, colShift, numStiffnessTriplets, pointerStiffness)
-	stiffnessStrong = make_np_sparse_shift(sizeStiffness, sizeStifnessStrongs, rowShift, colShift, numStiffnessStrongTriplets, pointerStiffnessStrong)
+	stiffness = make_np_sparse_shift(rows, cols, rowShift, colShift, numStiffnessTriplets, pointerStiffness)
+	stiffnessStrong = make_np_sparse_shift(rows, colsStrongs, rowShift, colStrongShift, numStiffnessStrongTriplets, pointerStiffnessStrong)
 
 	return [stiffness, stiffnessStrong]
 
 def AssembleAdvectionMatrix(b, problemData, lib):
+	return AssembleAdvectionMatrix_Shift(problemData['SpaceIndex'], problemData['SpaceIndex'], b, problemData['NumberDOFs'], problemData['NumberDOFs'], problemData['NumberStrongs'], 0, 0, 0, lib)
+
+def AssembleAdvectionMatrix_Shift(trialIndex, testIndex, b, rows, cols, colsStrongs, rowShift, colShift, colStrongShift, lib):
 	AdvectionFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 		
 	lib.GedimForPy_AssembleAdvectionMatrix.argtypes = [ct.c_int, ct.c_int, AdvectionFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
@@ -131,13 +134,10 @@ def AssembleAdvectionMatrix(b, problemData, lib):
 	numAdvectionTriplets = ct.c_int(0)
 	pointerAdvectionStrong = ct.POINTER(ct.c_double)()
 	numAdvectionStrongTriplets = ct.c_int(0)
-	lib.GedimForPy_AssembleAdvectionMatrix(problemData['SpaceIndex'], problemData['SpaceIndex'], AdvectionFN(b), ct.byref(numAdvectionTriplets), ct.byref(pointerAdvection), ct.byref(numAdvectionStrongTriplets), ct.byref(pointerAdvectionStrong))
+	lib.GedimForPy_AssembleAdvectionMatrix(trialIndex, testIndex, AdvectionFN(b), ct.byref(numAdvectionTriplets), ct.byref(pointerAdvection), ct.byref(numAdvectionStrongTriplets), ct.byref(pointerAdvectionStrong))
 	
-	numDofs = problemData['NumberDOFs']
-	numStrongs = problemData['NumberStrongs']
-
-	advection = make_np_sparse(numDofs, numDofs, numAdvectionTriplets, pointerAdvection)
-	advectionStrong = make_np_sparse(numDofs, numStrongs, numAdvectionStrongTriplets, pointerAdvectionStrong)
+	advection = make_np_sparse_shift(rows, cols, rowShift, colShift, numAdvectionTriplets, pointerAdvection)
+	advectionStrong = make_np_sparse_shift(rows, colsStrongs, rowShift, colStrongShift, numAdvectionStrongTriplets, pointerAdvectionStrong)
 
 	return [advection, advectionStrong]
 

@@ -50,7 +50,7 @@ if __name__ == '__main__':
 	config = { 'GeometricTolerance': 1.0e-8 }
 	gedim.Initialize(config, lib)
 	
-	meshSizes = [0.1]
+	meshSizes = [0.25]
 
 	for meshSize in meshSizes:
 		domain = { 'SquareEdge': 1.0, 'VerticesBoundaryCondition': [1,1,1,1], 'EdgesBoundaryCondition': [2,3,4,5], 'DiscretizationType': 1, 'MeshCellsMaximumArea': meshSize }
@@ -65,13 +65,20 @@ if __name__ == '__main__':
 		[speed_problemData, speed_dofs, speed_strongs] = gedim.Discretize(speed_discreteSpace, lib)
 
 		pressure_n_dofs = pressure_problemData['NumberDOFs']
+		pressure_n_strongs = pressure_problemData['NumberStrongs']
 		speed_n_dofs = speed_problemData['NumberDOFs']
+		speed_n_strongs = speed_problemData['NumberStrongs']
 
-		[stiffness_1, stiffnessStrong_1] = gedim.AssembleStiffnessMatrix_Shift(Stokes_v, 2 * speed_n_dofs + pressure_n_dofs, 2 * speed_n_dofs + pressure_n_dofs, 0, 0, lib)
-		[stiffness_2, stiffnessStrong_2] = gedim.AssembleStiffnessMatrix_Shift(Stokes_v, 2 * speed_n_dofs + pressure_n_dofs, 2 * speed_n_dofs + pressure_n_dofs, speed_n_dofs, speed_n_dofs, lib)
+		print("pressure_n_dofs", pressure_n_dofs)
+		print("pressure_n_strongs", pressure_n_strongs)
+		print("speed_n_dofs", speed_n_dofs)
+		print("speed_n_strongs", speed_n_strongs)
 
-		[advection_1, advectionStrong_1] = gedim.AssembleAdvectionMatrix(Stokes_advection_1, speed_problemData, lib)
-		[advection_2, advectionStrong_2] = gedim.AssembleAdvectionMatrix(Stokes_advection_2, speed_problemData, lib)
+		[stiffness_1, stiffnessStrong_1] = gedim.AssembleStiffnessMatrix_Shift(speed_problemData['SpaceIndex'], speed_problemData['SpaceIndex'], Stokes_v, 2 * speed_n_dofs + pressure_n_dofs, 2 * speed_n_dofs + pressure_n_dofs, 2 * speed_n_strongs + pressure_n_strongs, 0, 0, 0, lib)
+		[stiffness_2, stiffnessStrong_2] = gedim.AssembleStiffnessMatrix_Shift(speed_problemData['SpaceIndex'], speed_problemData['SpaceIndex'], Stokes_v, 2 * speed_n_dofs + pressure_n_dofs, 2 * speed_n_dofs + pressure_n_dofs, 2 * speed_n_strongs + pressure_n_strongs, speed_n_dofs, speed_n_dofs, speed_n_strongs, lib)
+
+		[advection_1, advectionStrong_1] = gedim.AssembleAdvectionMatrix_Shift(speed_problemData['SpaceIndex'], pressure_problemData['SpaceIndex'], Stokes_advection_1, 2 * speed_n_dofs + pressure_n_dofs, 2 * speed_n_dofs + pressure_n_dofs, 2 * speed_n_strongs + pressure_n_strongs, 2 * speed_n_dofs, 0, 0, lib)
+		[advection_2, advectionStrong_2] = gedim.AssembleAdvectionMatrix_Shift(speed_problemData['SpaceIndex'], pressure_problemData['SpaceIndex'], Stokes_advection_2, 2 * speed_n_dofs + pressure_n_dofs, 2 * speed_n_dofs + pressure_n_dofs, 2 * speed_n_strongs + pressure_n_strongs, 2 * speed_n_dofs, speed_n_dofs, speed_n_strongs, lib)
 
 		forcingTerm_1 = gedim.AssembleForcingTerm(Stokes_f_1, speed_problemData, lib)
 		forcingTerm_2 = gedim.AssembleForcingTerm(Stokes_f_2, speed_problemData, lib)
@@ -79,7 +86,15 @@ if __name__ == '__main__':
 
 		pressure_solutionStrong = gedim.AssembleStrongSolution(Stokes_pressure_exactSolution, 1, pressure_problemData, lib)
 		
-		solution = gedim.LUSolver(stiffness_1 + stiffness_2, forcingTerm, lib)
+		matrix = stiffness_1 + stiffness_2 #\
+			     #- advection_1 - advection_2 \
+				 #- np.transpose(advection_1) - np.transpose(advection_2)
+		print(matrix)
+		print(forcingTerm[0])
+
+		solution = gedim.LUSolver(stiffness_1 + stiffness_2 \
+			     - advection_1 - advection_2 \
+				 - np.transpose(advection_1) - np.transpose(advection_2), forcingTerm, lib)
 
 		pressure_errorL2 = gedim.ComputeErrorL2(Stokes_pressure_exactSolution, solution[2 * speed_n_dofs:], pressure_solutionStrong, lib)
 

@@ -128,8 +128,6 @@ void GedimForPy_AssembleStiffnessMatrix(const int trialSpaceIndex,
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
-  std::cout<< "INSIDE "<< trialSpaceIndex<< std::endl;
-
   std::list<Eigen::Triplet<double>> stiffness, stiffnessStrong;
   GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(a,
                                                       meshDAO,
