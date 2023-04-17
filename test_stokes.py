@@ -20,12 +20,12 @@ def Stokes_advection_2(numPoints, points):
 
 def Stokes_f_1(numPoints, points):
 	matPoints = gedim.make_nd_matrix(points, (3, numPoints), np.double)
-	values = - Stokes_V() * (+8.0 * np.pi * np.pi * np.cos(4.0 * np.pi * matPoints[0,:]) - 4.0 * np.pi * np.pi) * np.sin(2.0 * np.pi * matPoints[1,:]) * np.cos(2.0 * np.pi * matPoints[1,:]) + (+2.0 * np.pi * np.cos(2.0 * np.pi * matPoints[0,:]) * np.cos(2.0 * np.pi * matPoints[1,:]))
+	values = - (+8.0 * np.pi * np.pi * np.cos(4.0 * np.pi * matPoints[0,:]) - 4.0 * np.pi * np.pi) * np.sin(2.0 * np.pi * matPoints[1,:]) * np.cos(2.0 * np.pi * matPoints[1,:]) + (+2.0 * np.pi * np.cos(2.0 * np.pi * matPoints[0,:]) * np.cos(2.0 * np.pi * matPoints[1,:]))
 	return values.ctypes.data
 
 def Stokes_f_2(numPoints, points):
 	matPoints = gedim.make_nd_matrix(points, (3, numPoints), np.double)
-	values = - Stokes_V() * (-8.0 * np.pi * np.pi * np.cos(4.0 * np.pi * matPoints[1,:]) + 4.0 * np.pi * np.pi) * np.sin(2.0 * np.pi * matPoints[0,:]) * np.cos(2.0 * np.pi * matPoints[0,:]) + (-2.0 * np.pi * np.sin(2.0 * np.pi * matPoints[0,:]) * np.sin(2.0 * np.pi * matPoints[1,:]))
+	values = - (-8.0 * np.pi * np.pi * np.cos(4.0 * np.pi * matPoints[1,:]) + 4.0 * np.pi * np.pi) * np.sin(2.0 * np.pi * matPoints[0,:]) * np.cos(2.0 * np.pi * matPoints[0,:]) + (-2.0 * np.pi * np.sin(2.0 * np.pi * matPoints[0,:]) * np.sin(2.0 * np.pi * matPoints[1,:]))
 	return values.ctypes.data
 
 def Stokes_pressure_exactSolution(numPoints, points):
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 	config = { 'GeometricTolerance': 1.0e-8 }
 	gedim.Initialize(config, lib)
 	
-	meshSizes = [0.1]
+	meshSizes = [0.001]
 
 	for meshSize in meshSizes:
 		domain = { 'SquareEdge': 1.0, 'VerticesBoundaryCondition': [1,1,1,1], 'EdgesBoundaryCondition': [2,3,4,5], 'DiscretizationType': 1, 'MeshCellsMaximumArea': meshSize }
