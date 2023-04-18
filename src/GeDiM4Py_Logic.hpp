@@ -57,8 +57,8 @@ namespace GedimForPy
 
   struct ImportMesh2D final
   {
-     std::string InputFolder = "";
-     char Separator = ';';
+      std::string InputFolder = "";
+      char Separator = ';';
   };
 
   struct Domain2DMesh final
@@ -168,10 +168,17 @@ namespace GedimForPy
                                           const DiscreteProblemData& problemData,
                                           std::list<Eigen::Triplet<double> >& stiffnessTriplets,
                                           std::list<Eigen::Triplet<double> >& stiffnessStrongTriplets);
+      static void AssembleAnisotropicStiffnessMatrix(A a,
+                                                     const Gedim::IMeshDAO& mesh,
+                                                     const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                     const DiscreteProblemData& problemData,
+                                                     std::list<Eigen::Triplet<double> >& stiffnessTriplets,
+                                                     std::list<Eigen::Triplet<double> >& stiffnessStrongTriplets);
       static void AssembleAdvectionMatrix(B b,
                                           const Gedim::IMeshDAO& mesh,
                                           const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
-                                          const DiscreteProblemData& problemData,
+                                          const DiscreteProblemData& trial_Functions,
+                                          const DiscreteProblemData& test_Functions,
                                           std::list<Eigen::Triplet<double>>& advectionTriplets,
                                           std::list<Eigen::Triplet<double>>& advectionStrongTriplets);
       static void AssembleReactionMatrix(C c,

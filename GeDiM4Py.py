@@ -6,11 +6,14 @@ import matplotlib.pyplot as plt
 import matplotlib.tri
 import os
 
-def make_np_sparse(nRows, nCols, c_nNonZeros, c_pointerTriplets):
+def make_np_sparse(nRows, nCols, c_nNonZeros, c_pointerTriplets):	
+	return make_np_sparse_shift(nRows, nCols, 0, 0, c_nNonZeros, c_pointerTriplets)
+
+def make_np_sparse_shift(nRows, nCols, shiftRows, shiftCols, c_nNonZeros, c_pointerTriplets):
 	nNonZeros = c_nNonZeros.value
 	triplets = make_nd_matrix(c_pointerTriplets, (3, nNonZeros))
 	
-	return scipy.sparse.csc_array((triplets[2,:], (triplets[0,:], triplets[1,:])), shape=(nRows, nCols))
+	return scipy.sparse.csc_array((triplets[2,:], (triplets[0,:] + shiftRows, triplets[1,:] + shiftCols)), shape=(nRows, nCols))
 
 def make_nd_matrix(c_pointer, shape, dtype=np.double, order='F', own_data=True):
     arr_size = np.prod(shape[:]) * np.dtype(dtype).itemsize 
@@ -99,56 +102,56 @@ def Discretize(discreteSpace, lib):
 	return [problemData, dofs, strongs]
 	
 def AssembleStiffnessMatrix(a, problemData, lib):
+	return AssembleStiffnessMatrix_Shift(problemData['SpaceIndex'], problemData['SpaceIndex'], a, problemData['NumberDOFs'], problemData['NumberDOFs'], problemData['NumberStrongs'], 0, 0, 0, lib)
+
+def AssembleStiffnessMatrix_Shift(trialIndex, testIndex, a, rows, cols, colsStrongs, rowShift, colShift, colStrongShift, lib):
 	DiffusionFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 		
-	lib.GedimForPy_AssembleStiffnessMatrix.argtypes = [DiffusionFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleStiffnessMatrix.argtypes = [ct.c_int, ct.c_int, DiffusionFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_AssembleStiffnessMatrix.restype =  None
 	
 	pointerStiffness = ct.POINTER(ct.c_double)()
 	numStiffnessTriplets = ct.c_int(0)
 	pointerStiffnessStrong = ct.POINTER(ct.c_double)()
 	numStiffnessStrongTriplets = ct.c_int(0)
-	lib.GedimForPy_AssembleStiffnessMatrix(DiffusionFN(a), ct.byref(numStiffnessTriplets), ct.byref(pointerStiffness), ct.byref(numStiffnessStrongTriplets), ct.byref(pointerStiffnessStrong))
+	lib.GedimForPy_AssembleStiffnessMatrix(trialIndex, testIndex, DiffusionFN(a), ct.byref(numStiffnessTriplets), ct.byref(pointerStiffness), ct.byref(numStiffnessStrongTriplets), ct.byref(pointerStiffnessStrong))
 	
-	numDofs = problemData['NumberDOFs']
-	numStrongs = problemData['NumberStrongs']
-
-	stiffness = make_np_sparse(numDofs, numDofs, numStiffnessTriplets, pointerStiffness)
-	stiffnessStrong = make_np_sparse(numDofs, numStrongs, numStiffnessStrongTriplets, pointerStiffnessStrong)
+	stiffness = make_np_sparse_shift(rows, cols, rowShift, colShift, numStiffnessTriplets, pointerStiffness)
+	stiffnessStrong = make_np_sparse_shift(rows, colsStrongs, rowShift, colStrongShift, numStiffnessStrongTriplets, pointerStiffnessStrong)
 
 	return [stiffness, stiffnessStrong]
 
 def AssembleAdvectionMatrix(b, problemData, lib):
+	return AssembleAdvectionMatrix_Shift(problemData['SpaceIndex'], problemData['SpaceIndex'], b, problemData['NumberDOFs'], problemData['NumberDOFs'], problemData['NumberStrongs'], 0, 0, 0, lib)
+
+def AssembleAdvectionMatrix_Shift(trialIndex, testIndex, b, rows, cols, colsStrongs, rowShift, colShift, colStrongShift, lib):
 	AdvectionFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 		
-	lib.GedimForPy_AssembleAdvectionMatrix.argtypes = [AdvectionFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleAdvectionMatrix.argtypes = [ct.c_int, ct.c_int, AdvectionFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_AssembleAdvectionMatrix.restype =  None
 	
 	pointerAdvection = ct.POINTER(ct.c_double)()
 	numAdvectionTriplets = ct.c_int(0)
 	pointerAdvectionStrong = ct.POINTER(ct.c_double)()
 	numAdvectionStrongTriplets = ct.c_int(0)
-	lib.GedimForPy_AssembleAdvectionMatrix(AdvectionFN(b), ct.byref(numAdvectionTriplets), ct.byref(pointerAdvection), ct.byref(numAdvectionStrongTriplets), ct.byref(pointerAdvectionStrong))
+	lib.GedimForPy_AssembleAdvectionMatrix(trialIndex, testIndex, AdvectionFN(b), ct.byref(numAdvectionTriplets), ct.byref(pointerAdvection), ct.byref(numAdvectionStrongTriplets), ct.byref(pointerAdvectionStrong))
 	
-	numDofs = problemData['NumberDOFs']
-	numStrongs = problemData['NumberStrongs']
-
-	advection = make_np_sparse(numDofs, numDofs, numAdvectionTriplets, pointerAdvection)
-	advectionStrong = make_np_sparse(numDofs, numStrongs, numAdvectionStrongTriplets, pointerAdvectionStrong)
+	advection = make_np_sparse_shift(rows, cols, rowShift, colShift, numAdvectionTriplets, pointerAdvection)
+	advectionStrong = make_np_sparse_shift(rows, colsStrongs, rowShift, colStrongShift, numAdvectionStrongTriplets, pointerAdvectionStrong)
 
 	return [advection, advectionStrong]
 
 def AssembleReactionMatrix(c, problemData, lib):
 	ReactionFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 		
-	lib.GedimForPy_AssembleReactionMatrix.argtypes = [ReactionFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleReactionMatrix.argtypes = [ct.c_int, ct.c_int, ReactionFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_AssembleReactionMatrix.restype =  None
 	
 	pointerReaction = ct.POINTER(ct.c_double)()
 	numReactionTriplets = ct.c_int(0)
 	pointerReactionStrong = ct.POINTER(ct.c_double)()
 	numReactionStrongTriplets = ct.c_int(0)
-	lib.GedimForPy_AssembleReactionMatrix(ReactionFN(c), ct.byref(numReactionTriplets), ct.byref(pointerReaction), ct.byref(numReactionStrongTriplets), ct.byref(pointerReactionStrong))
+	lib.GedimForPy_AssembleReactionMatrix(problemData['SpaceIndex'], problemData['SpaceIndex'], ReactionFN(c), ct.byref(numReactionTriplets), ct.byref(pointerReaction), ct.byref(numReactionStrongTriplets), ct.byref(pointerReactionStrong))
 	
 	numDofs = problemData['NumberDOFs']
 	numStrongs = problemData['NumberStrongs']
@@ -161,36 +164,37 @@ def AssembleReactionMatrix(c, problemData, lib):
 def AssembleForcingTerm(f, problemData, lib):
 	ForcingTermFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 		
-	lib.GedimForPy_AssembleForcingTerm.argtypes = [ForcingTermFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleForcingTerm.argtypes = [ct.c_int, ForcingTermFN, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_AssembleForcingTerm.restype =  None
 	
 	pointerF = ct.POINTER(ct.c_double)()
 	size = ct.c_int(0)
-	lib.GedimForPy_AssembleForcingTerm(ForcingTermFN(f), ct.byref(size), ct.byref(pointerF))
+	lib.GedimForPy_AssembleForcingTerm(problemData['SpaceIndex'], ForcingTermFN(f), ct.byref(size), ct.byref(pointerF))
 	size = size.value
 	return make_nd_array(pointerF, size)
+
 
 def AssembleStrongSolution(g, marker, problemData, lib):
 	StrongFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 		
-	lib.GedimForPy_AssembleStrongSolution.argtypes = [StrongFN, ct.c_int, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleStrongSolution.argtypes = [ct.c_int, StrongFN, ct.c_int, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_AssembleStrongSolution.restype =  None
 	
 	pointerStrongSolution = ct.POINTER(ct.c_double)()
 	size = ct.c_int(0)
-	lib.GedimForPy_AssembleStrongSolution(StrongFN(g), marker, ct.byref(size), ct.byref(pointerStrongSolution))
+	lib.GedimForPy_AssembleStrongSolution(problemData['SpaceIndex'], StrongFN(g), marker, ct.byref(size), ct.byref(pointerStrongSolution))
 	size = size.value
 	return make_nd_array(pointerStrongSolution, size)
 
 def AssembleWeakTerm(g, marker, problemData, lib):
 	WeakTermFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 		
-	lib.GedimForPy_AssembleWeakTerm.argtypes = [WeakTermFN, ct.c_int, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleWeakTerm.argtypes = [ct.c_int, WeakTermFN, ct.c_int, ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_AssembleWeakTerm.restype =  None
 	
 	pointerWeak = ct.POINTER(ct.c_double)()
 	size = ct.c_int(0)
-	lib.GedimForPy_AssembleWeakTerm(WeakTermFN(g), marker, ct.byref(size), ct.byref(pointerWeak))
+	lib.GedimForPy_AssembleWeakTerm(problemData['SpaceIndex'], WeakTermFN(g), marker, ct.byref(size), ct.byref(pointerWeak))
 	size = size.value
 	return make_nd_array(pointerWeak, size)
 
@@ -218,20 +222,35 @@ def LUSolver(A, f, lib):
 
 	return make_nd_array(pointerSolution, A.shape[0])
 
-def ComputeErrorL2(u, solution, solutionStrong, lib):
+def ComputeErrorL2(u, solution, solutionStrong, lib, problemData = None):
 	ExactFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
-	lib.GedimForPy_ComputeErrorL2.argtypes = [ExactFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
-	lib.GedimForPy_ComputeErrorL2.restype =  ct.c_double
+	
+	if problemData is None:
+		lib.GedimForPy_ComputeErrorL2_LastSpace.argtypes = [ExactFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+		lib.GedimForPy_ComputeErrorL2_LastSpace.restype =  ct.c_double
 
-	return lib.GedimForPy_ComputeErrorL2(ExactFN(u), solution, solutionStrong)
+		return lib.GedimForPy_ComputeErrorL2_LastSpace(ExactFN(u), solution, solutionStrong)
+	else:
+		lib.GedimForPy_ComputeErrorL2.argtypes = [ct.c_int, ExactFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+		lib.GedimForPy_ComputeErrorL2.restype =  ct.c_double
 
-def ComputeErrorH1(uDer, solution, solutionStrong, lib):
+		return lib.GedimForPy_ComputeErrorL2(problemData['SpaceIndex'], ExactFN(u), solution, solutionStrong)
+
+def ComputeErrorH1(uDer, solution, solutionStrong, lib, problemData = None):
 	ExactDerivativeFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
-	lib.GedimForPy_ComputeErrorH1.argtypes = [ExactDerivativeFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
-	lib.GedimForPy_ComputeErrorH1.restype =  ct.c_double
+	
+	if problemData is None:
+		ExactDerivativeFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
+		lib.GedimForPy_ComputeErrorH1_LastSpace.argtypes = [ExactDerivativeFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+		lib.GedimForPy_ComputeErrorH1_LastSpace.restype =  ct.c_double
 
-	return lib.GedimForPy_ComputeErrorH1(ExactDerivativeFN(uDer), solution, solutionStrong)
+		return lib.GedimForPy_ComputeErrorH1_LastSpace(ExactDerivativeFN(uDer), solution, solutionStrong)
+	else:
+		lib.GedimForPy_ComputeErrorH1.argtypes = [ct.c_int, ExactDerivativeFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+		lib.GedimForPy_ComputeErrorH1.restype =  ct.c_double
 
+		return lib.GedimForPy_ComputeErrorH1(problemData['SpaceIndex'], ExactDerivativeFN(uDer), solution, solutionStrong)
+	
 def PythonSolver(A, f, lib):
 	return scipy.sparse.linalg.spsolve(A, f)
 
@@ -278,13 +297,14 @@ def PlotDofs(mesh, dofs, strongs):
 	plt.show()
 	plt.close()
 
-def PlotSolution(mesh, dofs, strongs, solutionDofs, solutionStrongs):
+def PlotSolution(mesh, dofs, strongs, solutionDofs, solutionStrongs, title = "Solution"):
 	x = np.concatenate((dofs[0,:], strongs[0,:]), axis=0)
 	y = np.concatenate((dofs[1,:], strongs[1,:]), axis=0)
 	z = np.concatenate((solutionDofs, solutionStrongs), axis=0)
 	triang = matplotlib.tri.Triangulation(x, y)
 	
-	fig = plt.figure(figsize=plt.figaspect(0.5))
+	fig = plt.figure(figsize = plt.figaspect(0.5))
+	fig.suptitle(title)
 
 	ax1 = fig.add_subplot(1, 2, 1)
 	ax1.set_aspect('equal')
@@ -299,7 +319,7 @@ def PlotSolution(mesh, dofs, strongs, solutionDofs, solutionStrongs):
 	subfolder_path = os.path.join(current_directory_path, 'Images')
 	if not os.path.exists(subfolder_path):
 		os.makedirs(subfolder_path)
-	file_name = 'Solution.png'
+	file_name = title + '.png'
 	file_path = os.path.join(subfolder_path, file_name)
 	plt.savefig(file_path)
 	

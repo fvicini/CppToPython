@@ -11,12 +11,13 @@ namespace GedimForPy
     public:
       static Eigen::MatrixXd ComputeStiffnessMatrix(const unsigned int& numCellDofs,
                                                     const std::vector<Eigen::MatrixXd>& basisFunctionDerivativeValues,
-                                                    const Eigen::VectorXd& diffusionTermValues,
+                                                    const Eigen::MatrixXd& diffusionTermValues,
                                                     const Eigen::VectorXd& quadratureWeights);
-      static Eigen::MatrixXd ComputeCellAdvectionMatrix(const unsigned int& numCellDofs,
+      static Eigen::MatrixXd ComputeCellAdvectionMatrix(const unsigned int& num_Cell_trialDofs,
+                                                        const unsigned int& num_Cell_testDofs,
                                                         const Eigen::MatrixXd& advectionTermValues,
-                                                        const Eigen::MatrixXd& basisFunctionValues,
-                                                        const std::vector<Eigen::MatrixXd>& basisFunctionDerivativeValues,
+                                                        const Eigen::MatrixXd& test_basisFunctionValues,
+                                                        const std::vector<Eigen::MatrixXd>& trial_basisFunctionDerivativeValues,
                                                         const Eigen::VectorXd& quadratureWeights);
       static Eigen::MatrixXd ComputeCellReactionMatrix(const Eigen::VectorXd& reactionTermValues,
                                                        const Eigen::MatrixXd& basisFunctionValues,
@@ -24,10 +25,19 @@ namespace GedimForPy
       static Eigen::VectorXd ComputeCellForcingTerm(const Eigen::VectorXd& forcingTermValues,
                                                     const Eigen::MatrixXd& basisFunctionValues,
                                                     const Eigen::VectorXd& quadratureWeights);
-
       static Eigen::VectorXd ComputeCellWeakTerm(const Eigen::VectorXd& weakTermValues,
                                                  const Eigen::MatrixXd& basisFunctionValues,
                                                  const Eigen::VectorXd& quadratureWeights);
+
+      static Eigen::MatrixXd ComputeStokes_StiffnessMatrix(const unsigned int& speed_singleComponent_numDofs,
+                                                           const std::vector<Eigen::MatrixXd>& speed_basisFunctionDerivativeValues,
+                                                           const Eigen::VectorXd& viscosityTermValues,
+                                                           const Eigen::VectorXd& quadratureWeights);
+      static Eigen::MatrixXd ComputeStokes_AdvectionMatrix(const unsigned int& speed_singleComponent_numDofs,
+                                                           const unsigned int& pressure_numDofs,
+                                                           const Eigen::MatrixXd& pressure_basisFunctionValues,
+                                                           const std::vector<Eigen::MatrixXd>& speed_basisFunctionDerivativeValues,
+                                                           const Eigen::VectorXd& quadratureWeights);
   };
 }
 

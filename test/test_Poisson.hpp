@@ -17,8 +17,8 @@ namespace UnitTesting
       {
         double* values = new double[numPoints];
 
-        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-        vecValues.setConstant(A());
+        Eigen::Map<Eigen::VectorXd> matValues(values, numPoints);
+        matValues.setConstant(A());
 
         return values;
       }
