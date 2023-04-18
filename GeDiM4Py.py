@@ -297,13 +297,14 @@ def PlotDofs(mesh, dofs, strongs):
 	plt.show()
 	plt.close()
 
-def PlotSolution(mesh, dofs, strongs, solutionDofs, solutionStrongs):
+def PlotSolution(mesh, dofs, strongs, solutionDofs, solutionStrongs, title = "Solution"):
 	x = np.concatenate((dofs[0,:], strongs[0,:]), axis=0)
 	y = np.concatenate((dofs[1,:], strongs[1,:]), axis=0)
 	z = np.concatenate((solutionDofs, solutionStrongs), axis=0)
 	triang = matplotlib.tri.Triangulation(x, y)
 	
-	fig = plt.figure(figsize=plt.figaspect(0.5))
+	fig = plt.figure(figsize = plt.figaspect(0.5))
+	fig.suptitle(title)
 
 	ax1 = fig.add_subplot(1, 2, 1)
 	ax1.set_aspect('equal')
@@ -318,7 +319,7 @@ def PlotSolution(mesh, dofs, strongs, solutionDofs, solutionStrongs):
 	subfolder_path = os.path.join(current_directory_path, 'Images')
 	if not os.path.exists(subfolder_path):
 		os.makedirs(subfolder_path)
-	file_name = 'Solution.png'
+	file_name = title + '.png'
 	file_path = os.path.join(subfolder_path, file_name)
 	plt.savefig(file_path)
 	
