@@ -110,4 +110,5 @@ if __name__ == '__main__':
 		supremizer = gedim.LUSolver(X_1 + X_2, np.transpose(B_1 + B_2) @ p, lib)
 
 		if activatePlot:
-			gedim.PlotSolution(mesh, speed_dofs, speed_strongs, u[0:speed_n_dofs], np.zeros(speed_n_strongs), "Supremizer")
+			gedim.PlotSolution(mesh, speed_dofs, speed_strongs, supremizer[0:speed_n_dofs], np.zeros(speed_n_strongs), "Supremizer X")
+			gedim.PlotSolution(mesh, speed_dofs, speed_strongs, supremizer[speed_n_dofs:], np.zeros(speed_n_strongs), "Supremizer Y")
