@@ -33,6 +33,14 @@ void GedimForPy_AssembleStiffnessMatrix(const int trialSpaceIndex,
                                         int* numStiffnessStrongTriplets,
                                         double** stiffnessStrongTriplets);
 extern "C"
+void GedimForPy_AssembleAnisotropicStiffnessMatrix(const int trialSpaceIndex,
+                                                   const int testSpaceIndex,
+                                                   GedimForPy::GeDiM4Py_Logic::A a,
+                                                   int* numStiffnessTriplets,
+                                                   double** stiffnessTriplets,
+                                                   int* numStiffnessStrongTriplets,
+                                                   double** stiffnessStrongTriplets);
+extern "C"
 void GedimForPy_AssembleAdvectionMatrix(const int trialSpaceIndex,
                                         const int testSpaceIndex,
                                         GedimForPy::GeDiM4Py_Logic::B b,
