@@ -501,6 +501,7 @@ namespace GedimForPy
 
       const double* diffusioTermValues = a(cell2DQuadraturePoints.cols(),
                                            cell2DQuadraturePoints.data());
+
       const Eigen::MatrixXd cellMatrixA = equation.ComputeStiffnessMatrix(numLocals,
                                                                           basisFunctionDerivativeValues2D,
                                                                           Eigen::Map<const Eigen::MatrixXd>(diffusioTermValues,

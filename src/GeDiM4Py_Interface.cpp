@@ -145,6 +145,40 @@ void GedimForPy_AssembleStiffnessMatrix(const int trialSpaceIndex,
                                                   *stiffnessStrongTriplets);
 }
 // ***************************************************************************
+void GedimForPy_AssembleAnisotropicStiffnessMatrix(const int trialSpaceIndex,
+                                                   const int testSpaceIndex,
+                                                   GedimForPy::GeDiM4Py_Logic::A a,
+                                                   int* numStiffnessTriplets,
+                                                   double** stiffnessTriplets,
+                                                   int* numStiffnessStrongTriplets,
+                                                   double** stiffnessStrongTriplets)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  std::list<Eigen::Triplet<double>> stiffness, stiffnessStrong;
+  GedimForPy::GeDiM4Py_Logic::AssembleAnisotropicStiffnessMatrix(a,
+                                                                 meshDAO,
+                                                                 mesh.Cell2DsMap,
+                                                                 problemsData[trialSpaceIndex],
+                                                                 stiffness,
+                                                                 stiffnessStrong);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertTriplets(stiffness,
+                                                  *numStiffnessTriplets,
+                                                  *stiffnessTriplets);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertTriplets(stiffnessStrong,
+                                                  *numStiffnessStrongTriplets,
+                                                  *stiffnessStrongTriplets);
+}
+// ***************************************************************************
 void GedimForPy_AssembleAdvectionMatrix(const int trialSpaceIndex,
                                         const int testSpaceIndex,
                                         GedimForPy::GeDiM4Py_Logic::B b,
