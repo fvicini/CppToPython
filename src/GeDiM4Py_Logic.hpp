@@ -61,6 +61,12 @@ namespace GedimForPy
       char Separator = ';';
   };
 
+  struct ExportData final
+  {
+      std::string ExportFolder;
+      std::string FileName;
+  };
+
   struct Domain2DMesh final
   {
       Gedim::MeshMatrices Mesh;
@@ -225,8 +231,8 @@ namespace GedimForPy
                                  const Eigen::VectorXd& numeric,
                                  const Eigen::VectorXd& strong,
                                  const Gedim::IMeshDAO& mesh,
-                                 const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
-                                 const DiscreteProblemData& problemData);
+                                 const DiscreteProblemData& problemData,
+                                 const ExportData& exportData);
   };
 
 }

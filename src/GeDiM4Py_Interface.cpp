@@ -455,8 +455,11 @@ void GedimForPy_ExportSolution(const int trialSpaceIndex,
                                              Eigen::Map<const Eigen::VectorXd>(pointerStrongSolution,
                                                                                problemsData[trialSpaceIndex].NumberStrongs),
                                              meshDAO,
-                                             mesh.Cell2DsMap,
-                                             problemsData[trialSpaceIndex]);
+                                             problemsData[trialSpaceIndex],
+                                             {
+                                               "Export",
+                                               "Solution_" + std::to_string(trialSpaceIndex)
+                                             });
 }
 // ***************************************************************************
 void GedimForPy_ExportSolution_LastSpace(GedimForPy::GeDiM4Py_Logic::Exact u,

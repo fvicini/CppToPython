@@ -3,6 +3,7 @@
 #include "MeshUtilities.hpp"
 #include "PDE_Equation.hpp"
 #include "FileTextReader.hpp"
+#include "UCDUtilities.hpp"
 
 namespace GedimForPy
 {
@@ -1040,10 +1041,66 @@ namespace GedimForPy
                                       const Eigen::VectorXd& numeric,
                                       const Eigen::VectorXd& strong,
                                       const Gedim::IMeshDAO& mesh,
-                                      const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
-                                      const DiscreteProblemData& problemData)
+                                      const DiscreteProblemData& problemData,
+                                      const ExportData& exportData)
   {
+    Gedim::Output::CreateFolder(exportData.ExportFolder);
 
+    Eigen::VectorXd exactSolutionCell0Ds(mesh.Cell0DTotalNumber());
+
+    for (unsigned int p = 0; p < mesh.Cell0DTotalNumber(); p++)
+    {
+      const Eigen::Vector3d point = mesh.Cell0DCoordinates(p);
+      const double* exactSolutionValues = u(point.cols(),
+                                            point.data());
+
+      exactSolutionCell0Ds[p] = Eigen::Map<const Eigen::VectorXd>(exactSolutionValues,
+                                                                  point.cols())[0];
+
+      delete[] exactSolutionValues;
+    }
+
+    vector<double> cell0DNumericSolution(mesh.Cell0DTotalNumber(), 0.0);
+
+    for (unsigned int p = 0; p < mesh.Cell0DTotalNumber(); p++)
+    {
+      const DiscreteProblemData::DOF& cell0D_DOF =  problemData.Cell0Ds_DOF[p];
+
+      switch (cell0D_DOF.Type)
+      {
+        case DiscreteProblemData::DOF::Types::DOF:
+          cell0DNumericSolution[p] = numeric[cell0D_DOF.Global_Index];
+          break;
+        case DiscreteProblemData::DOF::Types::Strong:
+          cell0DNumericSolution[p] = strong[cell0D_DOF.Global_Index];
+          break;
+        default:
+          throw std::runtime_error("DOF Type " +
+                                   std::to_string((unsigned int)cell0D_DOF.Type) +
+                                   " not supported");
+      }
+    }
+
+    Gedim::UCDUtilities exporter;
+    exporter.ExportPolygons(exportData.ExportFolder + "/" + exportData.FileName + ".inp",
+                            mesh.Cell0DsCoordinates(),
+                            mesh.Cell2DsVertices(),
+                            {
+                              {
+                                "Numeric",
+                                "[]",
+                                static_cast<unsigned int>(cell0DNumericSolution.size()),
+                                1,
+                                cell0DNumericSolution.data()
+                              },
+                              {
+                                "Exact",
+                                "[]",
+                                static_cast<unsigned int>(exactSolutionCell0Ds.size()),
+                                1,
+                                exactSolutionCell0Ds.data()
+                              }
+                            });
   }
   // ***************************************************************************
 }
