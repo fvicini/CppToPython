@@ -1036,4 +1036,14 @@ namespace GedimForPy
     return errorH1;
   }
   // ***************************************************************************
+  void GeDiM4Py_Logic::ExportSolution(Exact u,
+                                      const Eigen::VectorXd& numeric,
+                                      const Eigen::VectorXd& strong,
+                                      const Gedim::IMeshDAO& mesh,
+                                      const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                      const DiscreteProblemData& problemData)
+  {
+
+  }
+  // ***************************************************************************
 }

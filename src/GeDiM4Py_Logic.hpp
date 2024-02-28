@@ -220,6 +220,13 @@ namespace GedimForPy
                                             const Gedim::IMeshDAO& mesh,
                                             const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                             const DiscreteProblemData& problemData);
+
+      static void ExportSolution(Exact u,
+                                 const Eigen::VectorXd& numeric,
+                                 const Eigen::VectorXd& strong,
+                                 const Gedim::IMeshDAO& mesh,
+                                 const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                 const DiscreteProblemData& problemData);
   };
 
 }
