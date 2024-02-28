@@ -25,7 +25,7 @@ namespace GedimForPy
                                   InterfaceData& data)
   {
     data.p_geometryUtilitiesConfig = new Gedim::GeometryUtilitiesConfig();
-    data.p_geometryUtilitiesConfig->Tolerance = config.GeometricTolerance;
+    data.p_geometryUtilitiesConfig->Tolerance1D = config.GeometricTolerance;
     data.p_geometryUtilities = new Gedim::GeometryUtilities(*data.p_geometryUtilitiesConfig);
     data.p_meshUtilities = new Gedim::MeshUtilities();
   }
@@ -197,10 +197,10 @@ namespace GedimForPy
         {
           const unsigned int correctedOriginIndex = originalCell2Ds.at(cell2DIndex)[(vertexIndex + 1) % 3];
           const unsigned int correctedEndIndex = originalCell2Ds.at(cell2DIndex)[(vertexIndex + 2) % 3];
-          const unsigned int cell1DIndex = meshDAO.Cell1DExists(correctedOriginIndex,
-                                                                correctedEndIndex) ?
-                                             meshDAO.Cell1DByExtremes(correctedOriginIndex, correctedEndIndex) :
-                                             meshDAO.Cell1DByExtremes(correctedEndIndex, correctedOriginIndex);
+          unsigned int cell1DIndex = meshDAO.Cell1DByExtremes(correctedOriginIndex,
+                                                              correctedEndIndex);
+          if (cell1DIndex == meshDAO.Cell1DTotalNumber())
+            cell1DIndex = meshDAO.Cell1DByExtremes(correctedEndIndex, correctedOriginIndex);
 
           meshDAO.Cell0DSetMarker(correctedOriginIndex, marker);
           meshDAO.Cell0DSetMarker(correctedEndIndex, marker);
