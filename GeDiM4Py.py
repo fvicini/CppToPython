@@ -270,7 +270,21 @@ def ComputeErrorH1(uDer, solution, solutionStrong, lib, problemData = None):
 		lib.GedimForPy_ComputeErrorH1.restype =  ct.c_double
 
 		return lib.GedimForPy_ComputeErrorH1(problemData['SpaceIndex'], ExactDerivativeFN(uDer), solution, solutionStrong)
+
+def ComputeErrorL2(u, solution, solutionStrong, lib, problemData = None):
+	ExactFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 	
+	if problemData is None:
+		lib.GedimForPy_ExportSolution_LastSpace.argtypes = [ExactFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+		lib.GedimForPy_ExportSolution_LastSpace.restype =  ct.c_double
+
+		return lib.GedimForPy_ExportSolution_LastSpace(ExactFN(u), solution, solutionStrong)
+	else:
+		lib.GedimForPy_ExportSolution.argtypes = [ct.c_int, ExactFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+		lib.GedimForPy_ExportSolution.restype =  ct.c_double
+
+		return lib.GedimForPy_ExportSolution(problemData['SpaceIndex'], ExactFN(u), solution, solutionStrong)
+
 def PythonSolver(A, f, lib):
 	return scipy.sparse.linalg.spsolve(A, f)
 
