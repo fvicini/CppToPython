@@ -449,8 +449,6 @@ void GedimForPy_ExportSolution(const int trialSpaceIndex,
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
-  std::cout<< "HERE arrived"<< std::endl;
-
   GedimForPy::GeDiM4Py_Logic::ExportSolution(u,
                                              Eigen::Map<const Eigen::VectorXd>(pointerNumericSolution,
                                                                                problemsData[trialSpaceIndex].NumberDOFs),

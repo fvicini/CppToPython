@@ -1056,8 +1056,6 @@ namespace GedimForPy
 
       exactSolutionCell0Ds[p] = Eigen::Map<const Eigen::VectorXd>(exactSolutionValues,
                                                                   point.cols())[0];
-
-      delete[] exactSolutionValues;
     }
 
     vector<double> cell0DNumericSolution(mesh.Cell0DTotalNumber(), 0.0);

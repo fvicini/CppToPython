@@ -295,7 +295,7 @@ def PlotMesh(mesh):
 	ax1.set_aspect('equal')
 	ax1.triplot(matplotlib.tri.Triangulation(mesh[0, :], mesh[1, :]), 'ko-', lw=1)
 	ax1.grid(True)
-		
+
 	current_directory_path = os.getcwd()
 	subfolder_path = os.path.join(current_directory_path, 'Images')
 	if not os.path.exists(subfolder_path):
@@ -303,9 +303,8 @@ def PlotMesh(mesh):
 	file_name = 'Mesh.png'
 	file_path = os.path.join(subfolder_path, file_name)
 	plt.savefig(file_path)
-	
 	plt.show()
-	plt.close()
+	plt.close(fig)
 
 def PlotDofs(mesh, dofs, strongs):
 	x = np.concatenate((dofs[0,:], strongs[0,:]))
@@ -329,7 +328,7 @@ def PlotDofs(mesh, dofs, strongs):
 	plt.savefig(file_path)
 	
 	plt.show()
-	plt.close()
+	plt.close(fig)
 
 def PlotSolution(mesh, dofs, strongs, solutionDofs, solutionStrongs, title = "Solution"):
 	x = np.concatenate((dofs[0,:], strongs[0,:]), axis=0)
@@ -358,4 +357,4 @@ def PlotSolution(mesh, dofs, strongs, solutionDofs, solutionStrongs, title = "So
 	plt.savefig(file_path)
 	
 	plt.show()
-	plt.close()
+	plt.close(fig)
