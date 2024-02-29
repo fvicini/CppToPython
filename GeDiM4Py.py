@@ -271,7 +271,7 @@ def ComputeErrorH1(uDer, solution, solutionStrong, lib, problemData = None):
 
 		return lib.GedimForPy_ComputeErrorH1(problemData['SpaceIndex'], ExactDerivativeFN(uDer), solution, solutionStrong)
 
-def ComputeErrorL2(u, solution, solutionStrong, lib, problemData = None):
+def ExportSolution(u, solution, solutionStrong, lib, problemData = None):
 	ExactFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 	
 	if problemData is None:
