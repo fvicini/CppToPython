@@ -270,7 +270,21 @@ def ComputeErrorH1(uDer, solution, solutionStrong, lib, problemData = None):
 		lib.GedimForPy_ComputeErrorH1.restype =  ct.c_double
 
 		return lib.GedimForPy_ComputeErrorH1(problemData['SpaceIndex'], ExactDerivativeFN(uDer), solution, solutionStrong)
+
+def ExportSolution(u, solution, solutionStrong, lib, problemData = None):
+	ExactFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 	
+	if problemData is None:
+		lib.GedimForPy_ExportSolution_LastSpace.argtypes = [ExactFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+		lib.GedimForPy_ExportSolution_LastSpace.restype =  ct.c_double
+
+		lib.GedimForPy_ExportSolution_LastSpace(ExactFN(u), solution, solutionStrong)
+	else:
+		lib.GedimForPy_ExportSolution.argtypes = [ct.c_int, ExactFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+		lib.GedimForPy_ExportSolution.restype =  ct.c_double
+
+		lib.GedimForPy_ExportSolution(problemData['SpaceIndex'], ExactFN(u), solution, solutionStrong)
+
 def PythonSolver(A, f, lib):
 	return scipy.sparse.linalg.spsolve(A, f)
 
@@ -281,7 +295,7 @@ def PlotMesh(mesh):
 	ax1.set_aspect('equal')
 	ax1.triplot(matplotlib.tri.Triangulation(mesh[0, :], mesh[1, :]), 'ko-', lw=1)
 	ax1.grid(True)
-		
+
 	current_directory_path = os.getcwd()
 	subfolder_path = os.path.join(current_directory_path, 'Images')
 	if not os.path.exists(subfolder_path):
@@ -289,9 +303,8 @@ def PlotMesh(mesh):
 	file_name = 'Mesh.png'
 	file_path = os.path.join(subfolder_path, file_name)
 	plt.savefig(file_path)
-	
 	plt.show()
-	plt.close()
+	plt.close(fig)
 
 def PlotDofs(mesh, dofs, strongs):
 	x = np.concatenate((dofs[0,:], strongs[0,:]))
@@ -315,7 +328,7 @@ def PlotDofs(mesh, dofs, strongs):
 	plt.savefig(file_path)
 	
 	plt.show()
-	plt.close()
+	plt.close(fig)
 
 def PlotSolution(mesh, dofs, strongs, solutionDofs, solutionStrongs, title = "Solution"):
 	x = np.concatenate((dofs[0,:], strongs[0,:]), axis=0)
@@ -344,4 +357,4 @@ def PlotSolution(mesh, dofs, strongs, solutionDofs, solutionStrongs, title = "So
 	plt.savefig(file_path)
 	
 	plt.show()
-	plt.close()
+	plt.close(fig)

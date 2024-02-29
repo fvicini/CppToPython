@@ -275,6 +275,16 @@ namespace UnitTesting
 
       // export
       {
+        GedimForPy::GeDiM4Py_Logic::ExportSolution(Poisson::ExactSolution,
+                                                   solution,
+                                                   solutionStrong,
+                                                   meshDAO,
+                                                   problemData,
+                                                   {
+                                                     exportFolder,
+                                                     "Solution"
+                                                   });
+
         {
           std::vector<double> cell0Ds_numeric_solution(meshDAO.Cell0DTotalNumber(),
                                                        0.0);
@@ -496,6 +506,16 @@ namespace UnitTesting
 
       // export
       {
+        GedimForPy::GeDiM4Py_Logic::ExportSolution(Poisson::ExactSolution,
+                                                   solution,
+                                                   Eigen::VectorXd::Zero(problemData.NumberStrongs),
+                                                   meshDAO,
+                                                   problemData,
+                                                   {
+                                                     exportFolder,
+                                                     "Solution"
+                                                   });
+
         {
           std::vector<double> cell0Ds_numeric_solution(meshDAO.Cell0DTotalNumber(),
                                                        0.0);
@@ -859,6 +879,37 @@ namespace UnitTesting
                                          " not supported");
             }
           }
+
+          GedimForPy::GeDiM4Py_Logic::ExportSolution(Stokes::ExactPressureSolution,
+                                                     solution.segment(2 * speed_problemData.NumberDOFs,
+                                                                      pressure_problemData.NumberDOFs),
+                                                     pressure_solutionStrong,
+                                                     meshDAO,
+                                                     pressure_problemData,
+                                                     {
+                                                       exportFolder,
+                                                       "Pressure"
+                                                     });
+          GedimForPy::GeDiM4Py_Logic::ExportSolution(Stokes::ExactSpeedSolution_1,
+                                                     solution.segment(0,
+                                                                      speed_problemData.NumberDOFs),
+                                                     Eigen::VectorXd::Zero(speed_problemData.NumberStrongs),
+                                                     meshDAO,
+                                                     speed_problemData,
+                                                     {
+                                                       exportFolder,
+                                                       "Speed_1"
+                                                     });
+          GedimForPy::GeDiM4Py_Logic::ExportSolution(Stokes::ExactSpeedSolution_2,
+                                                     solution.segment(speed_problemData.NumberDOFs,
+                                                                      speed_problemData.NumberDOFs),
+                                                     Eigen::VectorXd::Zero(speed_problemData.NumberStrongs),
+                                                     meshDAO,
+                                                     speed_problemData,
+                                                     {
+                                                       exportFolder,
+                                                       "Speed_2"
+                                                     });
 
           Gedim::VTKUtilities exporter;
           exporter.AddPolygons(meshDAO.Cell0DsCoordinates(),

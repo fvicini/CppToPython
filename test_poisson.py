@@ -62,7 +62,7 @@ def Poisson_weakTerm_left(numPoints, points):
 
 if __name__ == '__main__':
 
-	lib = gedim.ImportLibrary("./release/GeDiM4Py.so")
+	lib = gedim.ImportLibrary("./debug/GeDiM4Py.so")
 
 	config = { 'GeometricTolerance': 1.0e-8 }
 	gedim.Initialize(config, lib)
@@ -71,6 +71,8 @@ if __name__ == '__main__':
 	order = 2
 
 	for meshSize in meshSizes:
+		print("Order", order, "meshSize", meshSize)
+
 		domain = { 'SquareEdge': 1.0, 'VerticesBoundaryCondition': [1,1,1,1], 'EdgesBoundaryCondition': [1,2,1,3], 'DiscretizationType': 1, 'MeshCellsMaximumArea': meshSize }
 		[meshInfo, mesh] = gedim.CreateDomainSquare(domain, lib)
 
@@ -81,6 +83,7 @@ if __name__ == '__main__':
 
 		discreteSpace = { 'Order': order, 'Type': 1, 'BoundaryConditionsType': [1, 2, 3, 3] }
 		[problemData, dofs, strongs] = gedim.Discretize(discreteSpace, lib)
+		
 
 		gedim.PlotDofs(mesh, dofs, strongs)
 
@@ -102,6 +105,8 @@ if __name__ == '__main__':
 				(stiffnessStrong + advectionStrong + reactionStrong) @ solutionStrong + \
 				weakTerm_right + \
 				weakTerm_left, lib)
+		
+		gedim.ExportSolution(Poisson_exactSolution, solution, solutionStrong, lib)
 
 		errorL2 = gedim.ComputeErrorL2(Poisson_exactSolution, solution, solutionStrong, lib)
 

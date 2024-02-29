@@ -435,6 +435,43 @@ double GedimForPy_ComputeErrorH1_LastSpace(GedimForPy::GeDiM4Py_Logic::ExactDeri
                                    pointerStrongSolution);
 }
 // ***************************************************************************
+void GedimForPy_ExportSolution(const int trialSpaceIndex,
+                               GedimForPy::GeDiM4Py_Logic::Exact u,
+                               const double* pointerNumericSolution,
+                               const double* pointerStrongSolution)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  GedimForPy::GeDiM4Py_Logic::ExportSolution(u,
+                                             Eigen::Map<const Eigen::VectorXd>(pointerNumericSolution,
+                                                                               problemsData[trialSpaceIndex].NumberDOFs),
+                                             Eigen::Map<const Eigen::VectorXd>(pointerStrongSolution,
+                                                                               problemsData[trialSpaceIndex].NumberStrongs),
+                                             meshDAO,
+                                             problemsData[trialSpaceIndex],
+                                             {
+                                               "./Export",
+                                               "Solution_" + std::to_string(trialSpaceIndex)
+                                             });
+}
+// ***************************************************************************
+void GedimForPy_ExportSolution_LastSpace(GedimForPy::GeDiM4Py_Logic::Exact u,
+                                         const double* pointerNumericSolution,
+                                         const double* pointerStrongSolution)
+{
+  GedimForPy_ExportSolution(GedimForPy::GeDiM4Py_Interface::ProblemsData.size() - 1,
+                            u,
+                            pointerNumericSolution,
+                            pointerStrongSolution);
+}
+// ***************************************************************************
 namespace GedimForPy
 {
   // ***************************************************************************
