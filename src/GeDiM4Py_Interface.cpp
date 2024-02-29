@@ -457,7 +457,7 @@ void GedimForPy_ExportSolution(const int trialSpaceIndex,
                                              meshDAO,
                                              problemsData[trialSpaceIndex],
                                              {
-                                               "Export",
+                                               "./Export",
                                                "Solution_" + std::to_string(trialSpaceIndex)
                                              });
 }
