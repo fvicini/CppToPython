@@ -1181,20 +1181,6 @@ namespace UnitTesting
         solution_norm = std::sqrt(cell2DsNormL2.sum());
         residual_norm = std::sqrt(cell2DsduNormL2.sum());
 
-#if ACTIVE_CHECK == 0
-        std::cerr.precision(16);
-        std::cerr<< std::scientific<< "dofs"<< ","
-                 << "h"<< ","<< "errorL2"<< ","
-                 << "errorH1"<< "normL2"<< ","
-                 << "normH1"<< std::endl;
-        std::cerr<< std::scientific<< problemData.NumberDOFs<< ","
-                 << problemData.H<< ","<< sqrt(cell2DsErrorL2.sum())<< ","
-                 << sqrt(cell2DsErrorH1.sum())<< ","
-                 << sqrt(cell2DsNormL2.sum())<< ","
-                 << sqrt(cell2DsNormH1.sum())
-                 << std::endl;
-#endif
-
         // export
         {
           GedimForPy::GeDiM4Py_Logic::ExportSolution(Burger::ExactSolution,
@@ -1270,10 +1256,27 @@ namespace UnitTesting
           }
         }
 
+
+#if ACTIVE_CHECK == 0
+        std::cerr.precision(3);
+        std::cerr<< std::scientific<< "dofs"<< ","
+                 << "h"<< ","<< "errorL2"<< ","
+                 << "errorH1"<< "normL2"<< ","
+                 << "normH1"<< std::endl;
+        std::cerr<< std::scientific<< problemData.NumberDOFs<< ","
+                 << problemData.H<< ","<< sqrt(cell2DsErrorL2.sum())<< ","
+                 << sqrt(cell2DsErrorH1.sum())<< ","
+                 << sqrt(cell2DsNormL2.sum())<< ","
+                 << sqrt(cell2DsNormH1.sum())
+                 << std::endl;
+
         std::cout.precision(3);
         std::cout<< std::scientific<<
                     " Newton it "<< num_iteration<< " / "<< max_iterations<<
                     " residual "<< residual_norm<< " / "<< newton_tol * solution_norm<< std::endl;
+#endif
+
+        num_iteration++;
       }
     }
 
