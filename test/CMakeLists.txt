@@ -3,6 +3,7 @@ list(APPEND test_sources ${CMAKE_CURRENT_SOURCE_DIR}/test_python.hpp)
 list(APPEND test_sources ${CMAKE_CURRENT_SOURCE_DIR}/test_Poisson.hpp)
 list(APPEND test_sources ${CMAKE_CURRENT_SOURCE_DIR}/test_heat_conductivity.hpp)
 list(APPEND test_sources ${CMAKE_CURRENT_SOURCE_DIR}/test_Stokes.hpp)
+list(APPEND test_sources ${CMAKE_CURRENT_SOURCE_DIR}/test_Burger.hpp)
 
 list(APPEND test_include ${CMAKE_CURRENT_SOURCE_DIR})
 

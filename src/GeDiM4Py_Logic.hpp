@@ -143,6 +143,7 @@ namespace GedimForPy
       typedef double* (*B)(const int numPoints, const double* points);
       typedef double* (*C)(const int numPoints, const double* points);
       typedef double* (*F)(const int numPoints, const double* points);
+      typedef double* (*NNL)(const int numPoints, const double* points, const double* u, const double* u_x, const double* u_y);
       typedef double* (*Strong)(const int numPoints, const double* points);
       typedef double* (*Weak)(const int numPoints, const double* points);
       typedef double* (*Exact)(const int numPoints, const double* points);
@@ -174,6 +175,15 @@ namespace GedimForPy
                                           const DiscreteProblemData& problemData,
                                           std::list<Eigen::Triplet<double> >& stiffnessTriplets,
                                           std::list<Eigen::Triplet<double> >& stiffnessStrongTriplets);
+      static void AssembleNonLinearStiffnessMatrix(A a,
+                                                   NNL non_linear_f,
+                                                   const Gedim::IMeshDAO& mesh,
+                                                   const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                   const DiscreteProblemData& problemData,
+                                                   const Eigen::VectorXd& numeric_k,
+                                                   const Eigen::VectorXd& strong_k,
+                                                   std::list<Eigen::Triplet<double> >& stiffnessTriplets,
+                                                   std::list<Eigen::Triplet<double> >& stiffnessStrongTriplets);
       static void AssembleAnisotropicStiffnessMatrix(A a,
                                                      const Gedim::IMeshDAO& mesh,
                                                      const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
@@ -187,12 +197,32 @@ namespace GedimForPy
                                           const DiscreteProblemData& test_Functions,
                                           std::list<Eigen::Triplet<double>>& advectionTriplets,
                                           std::list<Eigen::Triplet<double>>& advectionStrongTriplets);
+      static void AssembleNonLinearAdvectionMatrix(B b,
+                                                   NNL non_linear_f,
+                                                   const Gedim::IMeshDAO& mesh,
+                                                   const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                   const DiscreteProblemData& trial_Functions,
+                                                   const DiscreteProblemData& test_Functions,
+                                                   const Eigen::VectorXd& numeric_k,
+                                                   const Eigen::VectorXd& strong_k,
+                                                   std::list<Eigen::Triplet<double>>& advectionTriplets,
+                                                   std::list<Eigen::Triplet<double>>& advectionStrongTriplets);
       static void AssembleReactionMatrix(C c,
                                          const Gedim::IMeshDAO& mesh,
                                          const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                          const DiscreteProblemData& problemData,
                                          std::list<Eigen::Triplet<double>>& reactionTriplets,
                                          std::list<Eigen::Triplet<double>>& reactionStrongTriplets);
+      static void AssembleNonLinearReactionMatrix(C c,
+                                                  NNL non_linear_f,
+                                                  const Gedim::IMeshDAO& mesh,
+                                                  const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                  const DiscreteProblemData& problemData,
+                                                  const Eigen::VectorXd& numeric_k,
+                                                  const Eigen::VectorXd& strong_k,
+                                                  std::list<Eigen::Triplet<double>>& reactionTriplets,
+                                                  std::list<Eigen::Triplet<double>>& reactionStrongTriplets);
+
 
       static Eigen::VectorXd AssembleForcingTerm(F f,
                                                  const Gedim::IMeshDAO& mesh,
