@@ -974,6 +974,8 @@ namespace UnitTesting
   {
     const std::string exportFolder = "./Export/TestGeometry/Test_SquareBurger";
     Gedim::Output::CreateFolder(exportFolder);
+    const std::string exportSolutionFolder = exportFolder + "/Solution";
+    Gedim::Output::CreateFolder(exportSolutionFolder);
 
     GedimForPy::InterfaceConfiguration interfaceConfig;
     interfaceConfig.GeometricTolerance = 1.0e-8;
@@ -1090,8 +1092,8 @@ namespace UnitTesting
       Eigen::VectorXd u_k = Eigen::VectorXd::Zero(problemData.NumberDOFs);
 
       double residual_norm = 1.0, solution_norm = 1.0;
-      const double newton_tol = 1e-5;
-      const unsigned int max_iterations = 10;
+      const double newton_tol = 1.0e-6;
+      const unsigned int max_iterations = 20;
       int num_iteration = 1;
 
       const Eigen::VectorXd u_strong = Eigen::VectorXd::Zero(problemData.NumberStrongs);
@@ -1221,7 +1223,7 @@ namespace UnitTesting
                                                      meshDAO,
                                                      problemData,
                                                      {
-                                                       exportFolder,
+                                                       exportSolutionFolder,
                                                        "Solution"
                                                      });
 
@@ -1281,7 +1283,7 @@ namespace UnitTesting
                                      cell2DsErrorH1.data()
                                    }
                                  });
-            exporter.Export(exportFolder +
+            exporter.Export(exportSolutionFolder +
                             "/Solution_" + std::to_string(num_iteration) + ".vtu");
 
             delete[] cell0Ds_exact_solution;
