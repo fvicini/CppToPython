@@ -1091,10 +1091,13 @@ namespace UnitTesting
 
       double residual_norm = 1.0, solution_norm = 1.0;
       const double newton_tol = 1e-5;
+      const unsigned int max_iterations = 10;
+      int num_iteration = 1;
 
       const Eigen::VectorXd u_strong = Eigen::VectorXd::Zero(problemData.NumberStrongs);
 
-      while (residual_norm > newton_tol * solution_norm)
+      while (residual_norm > newton_tol * solution_norm &&
+             num_iteration < max_iterations)
       {
         std::list<Eigen::Triplet<double>> J_stiffnessTriplets, J_stiffnessStrongTriplets;
         GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(Burger::DiffusionTerm,
@@ -1157,6 +1160,12 @@ namespace UnitTesting
                                                                                           meshDAO,
                                                                                           mesh.Cell2DsMap,
                                                                                           problemData);
+        const Eigen::VectorXd cell2DsduNormL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(Burger::ZeroSolution,
+                                                                                           du,
+                                                                                           Eigen::VectorXd::Zero(problemData.NumberStrongs),
+                                                                                           meshDAO,
+                                                                                           mesh.Cell2DsMap,
+                                                                                           problemData);
         const Eigen::VectorXd cell2DsNormL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(Burger::ZeroSolution,
                                                                                          u_k,
                                                                                          u_strong,
@@ -1170,6 +1179,7 @@ namespace UnitTesting
                                                                                          mesh.Cell2DsMap,
                                                                                          problemData);
         solution_norm = std::sqrt(cell2DsNormL2.sum());
+        residual_norm = std::sqrt(cell2DsduNormL2.sum());
 
 #if ACTIVE_CHECK == 0
         std::cerr.precision(16);
@@ -1260,12 +1270,15 @@ namespace UnitTesting
           }
         }
 
-        std::cout<< "Newton Iteration "<<
-      }
-      }
-
-                    gedimData.Destroy();
+        std::cout.precision(3);
+        std::cout<< std::scientific<<
+                    " Newton it "<< num_iteration<< " / "<< max_iterations<<
+                    " residual "<< residual_norm<< " / "<< newton_tol * solution_norm<< std::endl;
       }
     }
+
+    gedimData.Destroy();
+  }
+}
 
 #endif // __TEST_GEOMETRY_H
