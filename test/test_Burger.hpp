@@ -43,6 +43,25 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
+      static double* NonLinear_Stiffness(const int numPoints,
+                                         const double* points,
+                                         const double* u,
+                                         const double* u_x,
+                                         const double* u_y)
+      {
+        double* values = new double[2 * numPoints];
+
+        Eigen::Map<Eigen::MatrixXd> matValues(values,
+                                              2,
+                                              numPoints);
+        matValues.row(0)<< Eigen::Map<const Eigen::VectorXd>(u_x,
+                                                             numPoints).transpose();
+        matValues.row(1)<< Eigen::Map<const Eigen::VectorXd>(u_y,
+                                                             numPoints).transpose();
+
+        return values;
+      }
+      // ***************************************************************************
       static double* NonLinear_Reaction(const int numPoints,
                                         const double* points,
                                         const double* u,
@@ -95,6 +114,28 @@ namespace UnitTesting
                             (1.0 - matPoints.row(1).array()) *
                             matPoints.row(0).array() *
                             (1.0 - matPoints.row(0).array()));
+        return values;
+      }
+      // ***************************************************************************
+      static double* ZeroSolution(const int numPoints, const double* points)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+        vecValues.setZero();
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* ZeroDerivativeSolution(const int direction,
+                                            const int numPoints,
+                                            const double* points)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+        vecValues.setZero();
+
         return values;
       }
       // ***************************************************************************

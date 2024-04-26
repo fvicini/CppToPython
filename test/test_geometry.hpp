@@ -1087,168 +1087,185 @@ namespace UnitTesting
         }
       }
 
-      const Eigen::VectorXd numeric_k = Eigen::VectorXd::Zero(problemData.NumberDOFs);
-      const Eigen::VectorXd strong_k = Eigen::VectorXd::Zero(problemData.NumberStrongs);
+      Eigen::VectorXd u_k = Eigen::VectorXd::Zero(problemData.NumberDOFs);
 
-      std::list<Eigen::Triplet<double>> stiffnessTriplets, stiffnessStrongTriplets;
-      GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(Burger::DiffusionTerm,
-                                                          meshDAO,
-                                                          mesh.Cell2DsMap,
-                                                          problemData,
-                                                          stiffnessTriplets,
-                                                          stiffnessStrongTriplets);
-      std::list<Eigen::Triplet<double>> reactionTriplets, reactionStrongTriplets;
-      GedimForPy::GeDiM4Py_Logic::AssembleNonLinearReactionMatrix(Burger::ReactionTerm,
-                                                                  Burger::NonLinear_Reaction,
-                                                                  meshDAO,
-                                                                  mesh.Cell2DsMap,
-                                                                  problemData,
-                                                                  numeric_k,
-                                                                  strong_k,
-                                                                  reactionTriplets,
-                                                                  reactionStrongTriplets);
-      std::list<Eigen::Triplet<double>> advectionTriplets, advectionStrongTriplets;
-      GedimForPy::GeDiM4Py_Logic::AssembleNonLinearAdvectionMatrix(Burger::AdvectionTerm,
-                                                                   Burger::NonLinear_Advection,
-                                                                   meshDAO,
-                                                                   mesh.Cell2DsMap,
-                                                                   problemData,
-                                                                   problemData,
-                                                                   numeric_k,
-                                                                   strong_k,
-                                                                   advectionTriplets,
-                                                                   advectionStrongTriplets);
+      double residual_norm = 1.0, solution_norm = 1.0;
+      const double newton_tol = 1e-5;
 
-      const Eigen::VectorXd forcingTerm = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(Burger::ForcingTerm,
+      const Eigen::VectorXd u_strong = Eigen::VectorXd::Zero(problemData.NumberStrongs);
+
+      while (residual_norm > newton_tol * solution_norm)
+      {
+        std::list<Eigen::Triplet<double>> J_stiffnessTriplets, J_stiffnessStrongTriplets;
+        GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(Burger::DiffusionTerm,
+                                                            meshDAO,
+                                                            mesh.Cell2DsMap,
+                                                            problemData,
+                                                            J_stiffnessTriplets,
+                                                            J_stiffnessStrongTriplets);
+        std::list<Eigen::Triplet<double>> J_reactionTriplets, J_reactionStrongTriplets;
+        GedimForPy::GeDiM4Py_Logic::AssembleNonLinearReactionMatrix(Burger::ReactionTerm,
+                                                                    Burger::NonLinear_Reaction,
+                                                                    meshDAO,
+                                                                    mesh.Cell2DsMap,
+                                                                    problemData,
+                                                                    u_k,
+                                                                    u_strong,
+                                                                    J_reactionTriplets,
+                                                                    J_reactionStrongTriplets);
+        std::list<Eigen::Triplet<double>> J_advectionTriplets, J_advectionStrongTriplets;
+        GedimForPy::GeDiM4Py_Logic::AssembleNonLinearAdvectionMatrix(Burger::AdvectionTerm,
+                                                                     Burger::NonLinear_Advection,
+                                                                     meshDAO,
+                                                                     mesh.Cell2DsMap,
+                                                                     problemData,
+                                                                     problemData,
+                                                                     u_k,
+                                                                     u_strong,
+                                                                     J_advectionTriplets,
+                                                                     J_advectionStrongTriplets);
+
+        const Eigen::VectorXd J_forcingTerm = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(Burger::ForcingTerm,
+                                                                                              meshDAO,
+                                                                                              mesh.Cell2DsMap,
+                                                                                              problemData);
+
+
+        Eigen::SparseMatrix<double> J_stiffness(problemData.NumberDOFs,
+                                                problemData.NumberDOFs);
+        J_stiffness.setFromTriplets(J_stiffnessTriplets.begin(),
+                                    J_stiffnessTriplets.end());
+        J_stiffness.makeCompressed();
+        J_stiffnessTriplets.clear();
+
+
+        Eigen::SparseLU<Eigen::SparseMatrix<double>> linearSolver;
+        linearSolver.compute(J_stiffness);
+
+        const Eigen::VectorXd du = linearSolver.solve(J_forcingTerm);
+        u_k = u_k + du;
+
+        const Eigen::VectorXd cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(Burger::ExactSolution,
+                                                                                          u_k,
+                                                                                          u_strong,
                                                                                           meshDAO,
                                                                                           mesh.Cell2DsMap,
                                                                                           problemData);
-
-      const Eigen::VectorXd solutionStrong = GedimForPy::GeDiM4Py_Logic::AssembleStrongSolution(Burger::ExactSolution,
-                                                                                                1,
-                                                                                                meshDAO,
-                                                                                                mesh.Cell2DsMap,
-                                                                                                problemData);
-
-      Eigen::SparseMatrix<double> stiffness(problemData.NumberDOFs,
-                                            problemData.NumberDOFs);
-      stiffness.setFromTriplets(stiffnessTriplets.begin(),
-                                stiffnessTriplets.end());
-      stiffness.makeCompressed();
-      stiffnessTriplets.clear();
-
-      Eigen::SparseMatrix<double> stiffnessStrong(problemData.NumberDOFs,
-                                                  problemData.NumberStrongs);
-      stiffnessStrong.setFromTriplets(stiffnessStrongTriplets.begin(),
-                                      stiffnessStrongTriplets.end());
-      stiffnessStrong.makeCompressed();
-      stiffnessStrongTriplets.clear();
-
-      Eigen::SparseLU<Eigen::SparseMatrix<double>> linearSolver;
-      linearSolver.compute(stiffness);
-
-      const Eigen::VectorXd solution = linearSolver.solve(forcingTerm -
-                                                          stiffnessStrong *
-                                                          solutionStrong);
-
-      const Eigen::VectorXd cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(Burger::ExactSolution,
-                                                                                        solution,
-                                                                                        solutionStrong,
-                                                                                        meshDAO,
-                                                                                        mesh.Cell2DsMap,
-                                                                                        problemData);
-      const Eigen::VectorXd cell2DsErrorH1 = GedimForPy::GeDiM4Py_Logic::ComputeErrorH1(Burger::ExactDerivativeSolution,
-                                                                                        solution,
-                                                                                        solutionStrong,
-                                                                                        meshDAO,
-                                                                                        mesh.Cell2DsMap,
-                                                                                        problemData);
-
+        const Eigen::VectorXd cell2DsErrorH1 = GedimForPy::GeDiM4Py_Logic::ComputeErrorH1(Burger::ExactDerivativeSolution,
+                                                                                          u_k,
+                                                                                          u_strong,
+                                                                                          meshDAO,
+                                                                                          mesh.Cell2DsMap,
+                                                                                          problemData);
+        const Eigen::VectorXd cell2DsNormL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(Burger::ZeroSolution,
+                                                                                         u_k,
+                                                                                         u_strong,
+                                                                                         meshDAO,
+                                                                                         mesh.Cell2DsMap,
+                                                                                         problemData);
+        const Eigen::VectorXd cell2DsNormH1 = GedimForPy::GeDiM4Py_Logic::ComputeErrorH1(Burger::ZeroDerivativeSolution,
+                                                                                         u_k,
+                                                                                         u_strong,
+                                                                                         meshDAO,
+                                                                                         mesh.Cell2DsMap,
+                                                                                         problemData);
+        solution_norm = std::sqrt(cell2DsNormL2.sum());
 
 #if ACTIVE_CHECK == 0
-      std::cerr.precision(16);
-      std::cerr<< std::scientific<< "dofs"<< ","<< "h"<< ","<< "errorL2"<< ","<< "errorH1"<< std::endl;
-      std::cerr<< std::scientific<< problemData.NumberDOFs<< ","<< problemData.H<< ","<< sqrt(cell2DsErrorL2.sum())<< ","<< sqrt(cell2DsErrorH1.sum())<< std::endl;
+        std::cerr.precision(16);
+        std::cerr<< std::scientific<< "dofs"<< ","
+                 << "h"<< ","<< "errorL2"<< ","
+                 << "errorH1"<< "normL2"<< ","
+                 << "normH1"<< std::endl;
+        std::cerr<< std::scientific<< problemData.NumberDOFs<< ","
+                 << problemData.H<< ","<< sqrt(cell2DsErrorL2.sum())<< ","
+                 << sqrt(cell2DsErrorH1.sum())<< ","
+                 << sqrt(cell2DsNormL2.sum())<< ","
+                 << sqrt(cell2DsNormH1.sum())
+                 << std::endl;
 #endif
 
-      // export
-      {
-        GedimForPy::GeDiM4Py_Logic::ExportSolution(Burger::ExactSolution,
-                                                   solution,
-                                                   solutionStrong,
-                                                   meshDAO,
-                                                   problemData,
-                                                   {
-                                                     exportFolder,
-                                                     "Solution"
-                                                   });
-
+        // export
         {
-          std::vector<double> cell0Ds_numeric_solution(meshDAO.Cell0DTotalNumber(),
-                                                       0.0);
-          const Eigen::MatrixXd coordinates = meshDAO.Cell0DsCoordinates();
+          GedimForPy::GeDiM4Py_Logic::ExportSolution(Burger::ExactSolution,
+                                                     u_k,
+                                                     u_strong,
+                                                     meshDAO,
+                                                     problemData,
+                                                     {
+                                                       exportFolder,
+                                                       "Solution"
+                                                     });
 
-          const double* cell0Ds_exact_solution = Burger::ExactSolution(coordinates.cols(),
-                                                                       coordinates.data());
-
-          for (unsigned int p = 0; p < meshDAO.Cell0DTotalNumber(); p++)
           {
-            const GedimForPy::DiscreteProblemData::DOF& dof = problemData.Cell0Ds_DOF[p];
+            std::vector<double> cell0Ds_numeric_solution(meshDAO.Cell0DTotalNumber(),
+                                                         0.0);
+            const Eigen::MatrixXd coordinates = meshDAO.Cell0DsCoordinates();
 
-            switch (dof.Type)
+            const double* cell0Ds_exact_solution = Burger::ExactSolution(coordinates.cols(),
+                                                                         coordinates.data());
+
+            for (unsigned int p = 0; p < meshDAO.Cell0DTotalNumber(); p++)
             {
-              case GedimForPy::DiscreteProblemData::DOF::Types::DOF:
-                cell0Ds_numeric_solution[p] = solution[dof.Global_Index];
-                break;
-              case GedimForPy::DiscreteProblemData::DOF::Types::Strong:
-                cell0Ds_numeric_solution[p] = solutionStrong[dof.Global_Index];
-                break;
-              default:
-                throw std::runtime_error("DOF Type " +
-                                         std::to_string((unsigned int)dof.Type) +
-                                         " not supported");
+              const GedimForPy::DiscreteProblemData::DOF& dof = problemData.Cell0Ds_DOF[p];
+
+              switch (dof.Type)
+              {
+                case GedimForPy::DiscreteProblemData::DOF::Types::DOF:
+                  cell0Ds_numeric_solution[p] = u_k[dof.Global_Index];
+                  break;
+                case GedimForPy::DiscreteProblemData::DOF::Types::Strong:
+                  cell0Ds_numeric_solution[p] = u_strong[dof.Global_Index];
+                  break;
+                default:
+                  throw std::runtime_error("DOF Type " +
+                                           std::to_string((unsigned int)dof.Type) +
+                                           " not supported");
+              }
             }
+
+            Gedim::VTKUtilities exporter;
+            exporter.AddPolygons(meshDAO.Cell0DsCoordinates(),
+                                 meshDAO.Cell2DsVertices(),
+                                 {
+                                   {
+                                     "cell0Ds_exact_solution",
+                                     Gedim::VTPProperty::Formats::Points,
+                                     static_cast<unsigned int>(coordinates.cols()),
+                                     cell0Ds_exact_solution
+                                   },
+                                   {
+                                     "cell0Ds_numeric_solution",
+                                     Gedim::VTPProperty::Formats::Points,
+                                     static_cast<unsigned int>(cell0Ds_numeric_solution.size()),
+                                     cell0Ds_numeric_solution.data()
+                                   },
+                                   {
+                                     "cell2Ds_errorL2",
+                                     Gedim::VTPProperty::Formats::Cells,
+                                     static_cast<unsigned int>(cell2DsErrorL2.size()),
+                                     cell2DsErrorL2.data()
+                                   },
+                                   {
+                                     "cell2Ds_errorH1",
+                                     Gedim::VTPProperty::Formats::Cells,
+                                     static_cast<unsigned int>(cell2DsErrorH1.size()),
+                                     cell2DsErrorH1.data()
+                                   }
+                                 });
+            exporter.Export(exportFolder +
+                            "/Solution.vtu");
+
+            delete[] cell0Ds_exact_solution;
           }
-
-          Gedim::VTKUtilities exporter;
-          exporter.AddPolygons(meshDAO.Cell0DsCoordinates(),
-                               meshDAO.Cell2DsVertices(),
-                               {
-                                 {
-                                   "cell0Ds_exact_solution",
-                                   Gedim::VTPProperty::Formats::Points,
-                                   static_cast<unsigned int>(coordinates.cols()),
-                                   cell0Ds_exact_solution
-                                 },
-                                 {
-                                   "cell0Ds_numeric_solution",
-                                   Gedim::VTPProperty::Formats::Points,
-                                   static_cast<unsigned int>(cell0Ds_numeric_solution.size()),
-                                   cell0Ds_numeric_solution.data()
-                                 },
-                                 {
-                                   "cell2Ds_errorL2",
-                                   Gedim::VTPProperty::Formats::Cells,
-                                   static_cast<unsigned int>(cell2DsErrorL2.size()),
-                                   cell2DsErrorL2.data()
-                                 },
-                                 {
-                                   "cell2Ds_errorH1",
-                                   Gedim::VTPProperty::Formats::Cells,
-                                   static_cast<unsigned int>(cell2DsErrorH1.size()),
-                                   cell2DsErrorH1.data()
-                                 }
-                               });
-          exporter.Export(exportFolder +
-                          "/Solution.vtu");
-
-          delete[] cell0Ds_exact_solution;
         }
+
+        std::cout<< "Newton Iteration "<<
+      }
+      }
+
+                    gedimData.Destroy();
       }
     }
-
-    gedimData.Destroy();
-  }
-}
 
 #endif // __TEST_GEOMETRY_H

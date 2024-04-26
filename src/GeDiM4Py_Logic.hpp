@@ -235,6 +235,13 @@ namespace GedimForPy
                                                           const DiscreteProblemData& problemData,
                                                           const Eigen::VectorXd& numeric_k,
                                                           const Eigen::VectorXd& strong_k);
+      static Eigen::VectorXd AssembleNonLinearDerivativeForcingTerm(F f,
+                                                                    NNL non_linear_f,
+                                                                    const Gedim::IMeshDAO& mesh,
+                                                                    const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                                    const DiscreteProblemData& problemData,
+                                                                    const Eigen::VectorXd& numeric_k,
+                                                                    const Eigen::VectorXd& strong_k);
 
       static Eigen::VectorXd AssembleStrongSolution(Strong g,
                                                     const unsigned int& marker,
