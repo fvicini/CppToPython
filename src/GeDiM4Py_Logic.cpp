@@ -851,9 +851,9 @@ namespace GedimForPy
                                             cell2DQuadraturePoints.data());
       const Eigen::MatrixXd advectionTerm = (Eigen::Map<const Eigen::MatrixXd>(advectionTermValues,
                                                                                2,
-                                                                               cell2DQuadraturePoints.cols()).array().colwise() *
+                                                                               cell2DQuadraturePoints.cols()).array().rowwise() *
                                              Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
-                                                                               cell2DQuadraturePoints.cols()).array()).matrix();
+                                                                               cell2DQuadraturePoints.cols()).transpose().array()).matrix();
       const Eigen::MatrixXd cellMatrixB = equation.ComputeCellAdvectionMatrix(trial_numLocals,
                                                                               test_numLocals,
                                                                               advectionTerm,

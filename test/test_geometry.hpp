@@ -1107,6 +1107,17 @@ namespace UnitTesting
                                                                   strong_k,
                                                                   reactionTriplets,
                                                                   reactionStrongTriplets);
+      std::list<Eigen::Triplet<double>> advectionTriplets, advectionStrongTriplets;
+      GedimForPy::GeDiM4Py_Logic::AssembleNonLinearAdvectionMatrix(Burger::AdvectionTerm,
+                                                                   Burger::NonLinear_Advection,
+                                                                   meshDAO,
+                                                                   mesh.Cell2DsMap,
+                                                                   problemData,
+                                                                   problemData,
+                                                                   numeric_k,
+                                                                   strong_k,
+                                                                   advectionTriplets,
+                                                                   advectionStrongTriplets);
 
       const Eigen::VectorXd forcingTerm = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(Burger::ForcingTerm,
                                                                                           meshDAO,
