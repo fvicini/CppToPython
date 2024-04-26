@@ -43,11 +43,11 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
-      static double* NonLinear_Stiffness(const int numPoints,
-                                         const double* points,
-                                         const double* u,
-                                         const double* u_x,
-                                         const double* u_y)
+      static double* NonLinear_f_der_v(const int numPoints,
+                                       const double* points,
+                                       const double* u,
+                                       const double* u_x,
+                                       const double* u_y)
       {
         double* values = new double[2 * numPoints];
 
@@ -58,6 +58,26 @@ namespace UnitTesting
                                                              numPoints).transpose();
         matValues.row(1)<< Eigen::Map<const Eigen::VectorXd>(u_y,
                                                              numPoints).transpose();
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* NonLinear_f_v(const int numPoints,
+                                   const double* points,
+                                   const double* u,
+                                   const double* u_x,
+                                   const double* u_y)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> matValues(values,
+                                              numPoints);
+        matValues = Eigen::Map<const Eigen::VectorXd>(u_x,
+                                                      numPoints).array() *
+                    (Eigen::Map<const Eigen::VectorXd>(u_x,
+                                                       numPoints) +
+                     Eigen::Map<const Eigen::VectorXd>(u_y,
+                                                       numPoints)).array();
 
         return values;
       }
@@ -92,6 +112,17 @@ namespace UnitTesting
                                               numPoints);
         matValues = Eigen::Map<const Eigen::VectorXd>(u,
                                                       numPoints);
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* Ones(const int numPoints,
+                          const double* points)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> matValues(values, numPoints);
+        matValues.setConstant(1.0);
 
         return values;
       }

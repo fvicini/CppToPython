@@ -1128,10 +1128,24 @@ namespace UnitTesting
                                                                      J_advectionTriplets,
                                                                      J_advectionStrongTriplets);
 
-        const Eigen::VectorXd J_forcingTerm = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(Burger::ForcingTerm,
-                                                                                              meshDAO,
-                                                                                              mesh.Cell2DsMap,
-                                                                                              problemData);
+        const Eigen::VectorXd J_forcingTerm_g = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(Burger::ForcingTerm,
+                                                                                                meshDAO,
+                                                                                                mesh.Cell2DsMap,
+                                                                                                problemData);
+        const Eigen::VectorXd J_forcingTerm_der_v = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearDerivativeForcingTerm(Burger::Ones,
+                                                                                                                       Burger::NonLinear_f_der_v,
+                                                                                                                       meshDAO,
+                                                                                                                       mesh.Cell2DsMap,
+                                                                                                                       problemData,
+                                                                                                                       u_k,
+                                                                                                                       u_strong);
+        const Eigen::VectorXd J_forcingTerm_v = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearDerivativeForcingTerm(Burger::Ones,
+                                                                                                                   Burger::NonLinear_f_v,
+                                                                                                                   meshDAO,
+                                                                                                                   mesh.Cell2DsMap,
+                                                                                                                   problemData,
+                                                                                                                   u_k,
+                                                                                                                   u_strong);
 
 
         Eigen::SparseMatrix<double> J_stiffness(problemData.NumberDOFs,
@@ -1141,11 +1155,29 @@ namespace UnitTesting
         J_stiffness.makeCompressed();
         J_stiffnessTriplets.clear();
 
+        Eigen::SparseMatrix<double> J_reaction(problemData.NumberDOFs,
+                                               problemData.NumberDOFs);
+        J_reaction.setFromTriplets(J_reactionTriplets.begin(),
+                                   J_reactionTriplets.end());
+        J_reaction.makeCompressed();
+        J_reactionTriplets.clear();
+
+        Eigen::SparseMatrix<double> J_advection(problemData.NumberDOFs,
+                                                problemData.NumberDOFs);
+        J_advection.setFromTriplets(J_advectionTriplets.begin(),
+                                    J_advectionTriplets.end());
+        J_advection.makeCompressed();
+        J_advectionTriplets.clear();
+
 
         Eigen::SparseLU<Eigen::SparseMatrix<double>> linearSolver;
-        linearSolver.compute(J_stiffness);
+        linearSolver.compute(J_stiffness +
+                             J_reaction +
+                             J_advection);
 
-        const Eigen::VectorXd du = linearSolver.solve(J_forcingTerm);
+        const Eigen::VectorXd du = linearSolver.solve(J_forcingTerm_g -
+                                                      J_forcingTerm_der_v -
+                                                      J_forcingTerm_v);
         u_k = u_k + du;
 
         const Eigen::VectorXd cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(Burger::ExactSolution,
@@ -1250,7 +1282,7 @@ namespace UnitTesting
                                    }
                                  });
             exporter.Export(exportFolder +
-                            "/Solution.vtu");
+                            "/Solution_" + std::to_string(num_iteration) + ".vtu");
 
             delete[] cell0Ds_exact_solution;
           }
