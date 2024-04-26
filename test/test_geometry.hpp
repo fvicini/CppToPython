@@ -1132,20 +1132,20 @@ namespace UnitTesting
                                                                                                 meshDAO,
                                                                                                 mesh.Cell2DsMap,
                                                                                                 problemData);
-        const Eigen::VectorXd J_forcingTerm_der_v = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearDerivativeForcingTerm(Burger::Ones,
+        const Eigen::VectorXd J_forcingTerm_der_v = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearDerivativeForcingTerm(Burger::OnesDerivative,
                                                                                                                        Burger::NonLinear_f_der_v,
                                                                                                                        meshDAO,
                                                                                                                        mesh.Cell2DsMap,
                                                                                                                        problemData,
                                                                                                                        u_k,
                                                                                                                        u_strong);
-        const Eigen::VectorXd J_forcingTerm_v = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearDerivativeForcingTerm(Burger::Ones,
-                                                                                                                   Burger::NonLinear_f_v,
-                                                                                                                   meshDAO,
-                                                                                                                   mesh.Cell2DsMap,
-                                                                                                                   problemData,
-                                                                                                                   u_k,
-                                                                                                                   u_strong);
+        const Eigen::VectorXd J_forcingTerm_v = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearForcingTerm(Burger::Ones,
+                                                                                                         Burger::NonLinear_f_v,
+                                                                                                         meshDAO,
+                                                                                                         mesh.Cell2DsMap,
+                                                                                                         problemData,
+                                                                                                         u_k,
+                                                                                                         u_strong);
 
 
         Eigen::SparseMatrix<double> J_stiffness(problemData.NumberDOFs,

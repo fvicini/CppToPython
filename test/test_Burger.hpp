@@ -127,6 +127,19 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
+      static double* OnesDerivative(const int numPoints,
+                                    const double* points)
+      {
+        double* values = new double[2 * numPoints];
+
+        Eigen::Map<Eigen::MatrixXd> matValues(values,
+                                              2,
+                                              numPoints);
+        matValues.setOnes();
+
+        return values;
+      }
+      // ***************************************************************************
       static double* ForcingTerm(const int numPoints, const double* points)
       {
         double* values = new double[numPoints];
