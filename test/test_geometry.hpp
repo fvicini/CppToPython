@@ -14,7 +14,7 @@
 #include "test_Stokes.hpp"
 #include "test_Burger.hpp"
 
-#define ACTIVE_CHECK 0
+#define ACTIVE_CHECK 1
 
 namespace UnitTesting
 {
@@ -1295,7 +1295,7 @@ namespace UnitTesting
         std::cerr.precision(3);
         std::cerr<< std::scientific<< "dofs"<< ","
                  << "h"<< ","<< "errorL2"<< ","
-                 << "errorH1"<< "normL2"<< ","
+                 << "errorH1"<< ","<< "normL2"<< ","
                  << "normH1"<< std::endl;
         std::cerr<< std::scientific<< problemData.NumberDOFs<< ","
                  << problemData.H<< ","<< sqrt(cell2DsErrorL2.sum())<< ","
