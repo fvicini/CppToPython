@@ -72,7 +72,7 @@ namespace UnitTesting
 
         Eigen::Map<Eigen::VectorXd> matValues(values,
                                               numPoints);
-        matValues = Eigen::Map<const Eigen::VectorXd>(u_x,
+        matValues = Eigen::Map<const Eigen::VectorXd>(u,
                                                       numPoints).array() *
                     (Eigen::Map<const Eigen::VectorXd>(u_x,
                                                        numPoints) +
@@ -147,13 +147,13 @@ namespace UnitTesting
         Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
         vecValues = 32.0 * (matPoints.row(1).array() * (1.0 - matPoints.row(1).array()) +
-                            matPoints.row(0).array() * (1.0 - matPoints.row(0).array())) +
+                            matPoints.row(0).array() * (1.0 - matPoints.row(0).array())).array() +
                     16.0 * ((1.0 - 2.0 * matPoints.row(0).array()) *
                             matPoints.row(1).array() *
                             (1.0 - matPoints.row(1).array()) +
                             (1.0 - 2.0 * matPoints.row(1).array()) *
                             matPoints.row(0).array() *
-                            (1.0 - matPoints.row(0).array())) *
+                            (1.0 - matPoints.row(0).array())).array() *
                     16.0 * (matPoints.row(1).array() *
                             (1.0 - matPoints.row(1).array()) *
                             matPoints.row(0).array() *
