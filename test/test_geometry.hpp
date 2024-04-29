@@ -1312,6 +1312,10 @@ namespace UnitTesting
 
         num_iteration++;
       }
+
+#if ACTIVE_CHECK == 1
+      ASSERT_EQ(5, num_iteration);
+#endif
     }
 
     gedimData.Destroy();
