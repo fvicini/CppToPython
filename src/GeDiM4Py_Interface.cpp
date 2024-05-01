@@ -397,6 +397,37 @@ void GedimForPy_AssembleForcingTerm(const int testSpaceIndex,
                                                *forcingTerm);
 }
 // ***************************************************************************
+void GedimForPy_AssembleNonLinearForcingTerm(const int trialSpaceIndex,
+                                             const int testSpaceIndex,
+                                             GedimForPy::GeDiM4Py_Logic::F f,
+                                             GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                             const double* pointerNumericSolution,
+                                             const double* pointerStrongSolution,
+                                             int* size,
+                                             double** forcingTerm)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertArray(GedimForPy::GeDiM4Py_Logic::AssembleNonLinearForcingTerm(f,
+                                                                                                        non_linear_f,
+                                                                                                        meshDAO,
+                                                                                                        mesh.Cell2DsMap,
+                                                                                                        problemsData[testSpaceIndex],
+                                                                                                        Eigen::Map<const Eigen::VectorXd>(pointerNumericSolution,
+                                                                                                                                          problemsData[trialSpaceIndex].NumberDOFs),
+                                                                                                        Eigen::Map<const Eigen::VectorXd>(pointerStrongSolution,
+                                                                                                                                          problemsData[trialSpaceIndex].NumberStrongs)),
+                                               *size,
+                                               *forcingTerm);
+}
+// ***************************************************************************
 void GedimForPy_AssembleStrongSolution(const int trialSpaceIndex,
                                        GedimForPy::GeDiM4Py_Logic::Strong g,
                                        int marker,

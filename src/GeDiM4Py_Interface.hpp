@@ -95,6 +95,15 @@ void GedimForPy_AssembleForcingTerm(const int testSpaceIndex,
                                     int* size,
                                     double** forcingTerm);
 extern "C"
+void GedimForPy_AssembleNonLinearForcingTerm(const int trialSpaceIndex,
+                                             const int testSpaceIndex,
+                                             GedimForPy::GeDiM4Py_Logic::F f,
+                                             GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                             const double* pointerNumericSolution,
+                                             const double* pointerStrongSolution,
+                                             int* size,
+                                             double** forcingTerm);
+extern "C"
 void GedimForPy_AssembleStrongSolution(const int trialSpaceIndex,
                                        GedimForPy::GeDiM4Py_Logic::Strong g,
                                        int marker,
