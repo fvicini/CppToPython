@@ -624,9 +624,15 @@ double GedimForPy_ComputeErrorH1_LastSpace(GedimForPy::GeDiM4Py_Logic::ExactDeri
                                    pointerStrongSolution);
 }
 // ***************************************************************************
-PyObject* GedimForPy_EvaluateSolutionOnPoints(const int trialSpaceIndex,
-                                              const double* pointerNumericSolution,
-                                              const double* pointerStrongSolution)
+void GedimForPy_EvaluateSolutionOnPoints(const int trialSpaceIndex,
+                                         const double* pointerNumericSolution,
+                                         const double* pointerStrongSolution,
+                                         int* numPoints,
+                                         double** quadraturePoints,
+                                         double** quadratureWeights,
+                                         double** solution,
+                                         double** solutionDerivativeX,
+                                         double** solutionDerivativeY)
 {
   GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
   GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
@@ -637,7 +643,7 @@ PyObject* GedimForPy_EvaluateSolutionOnPoints(const int trialSpaceIndex,
 
   Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
-  const GedimForPy::SolutionOnPoints solution =
+  const GedimForPy::SolutionOnPoints solutionOnPoints =
       GedimForPy::GeDiM4Py_Logic::EvaluateSolutionOnPoints(meshDAO,
                                                            mesh.Cell2DsMap,
                                                            problemsData[trialSpaceIndex],
@@ -645,15 +651,35 @@ PyObject* GedimForPy_EvaluateSolutionOnPoints(const int trialSpaceIndex,
                                                                                              problemsData[trialSpaceIndex].NumberDOFs),
                                                            Eigen::Map<const Eigen::VectorXd>(pointerStrongSolution,
                                                                                              problemsData[trialSpaceIndex].NumberStrongs));
-  return nullptr;
+
+  GedimForPy::GeDiM4Py_Interface::ConvertSolutionOnPoints(solutionOnPoints,
+                                                          *numPoints,
+                                                          *quadraturePoints,
+                                                          *quadratureWeights,
+                                                          *solution,
+                                                          *solutionDerivativeX,
+                                                          *solutionDerivativeY);
+
 }
 // ***************************************************************************
-PyObject* GedimForPy_EvaluateSolutionOnPoints_LastSpace(const double* pointerNumericSolution,
-                                                        const double* pointerStrongSolution)
+void GedimForPy_EvaluateSolutionOnPoints_LastSpace(const double* pointerNumericSolution,
+                                                   const double* pointerStrongSolution,
+                                                   int* numPoints,
+                                                   double** quadraturePoints,
+                                                   double** quadratureWeights,
+                                                   double** solution,
+                                                   double** solutionDerivativeX,
+                                                   double** solutionDerivativeY)
 {
-  return GedimForPy_EvaluateSolutionOnPoints(GedimForPy::GeDiM4Py_Interface::ProblemsData.size() - 1,
-                                             pointerNumericSolution,
-                                             pointerStrongSolution);
+  GedimForPy_EvaluateSolutionOnPoints(GedimForPy::GeDiM4Py_Interface::ProblemsData.size() - 1,
+                                      pointerNumericSolution,
+                                      pointerStrongSolution,
+                                      numPoints,
+                                      quadraturePoints,
+                                      quadratureWeights,
+                                      solution,
+                                      solutionDerivativeX,
+                                      solutionDerivativeY);
 }
 // ***************************************************************************
 void GedimForPy_ExportSolution(const int trialSpaceIndex,
@@ -926,5 +952,28 @@ namespace GedimForPy
     arr = array;
   }
   // ***************************************************************************
+  void GeDiM4Py_Interface::ConvertSolutionOnPoints(const SolutionOnPoints solutionOnPoints,
+                                                   int& numPoints,
+                                                   double*& quadraturePoints,
+                                                   double*& quadratureWeights,
+                                                   double*& solution,
+                                                   double*& solutionDerivativeX,
+                                                   double*& solutionDerivativeY)
+  {
+    ConvertMatrix(solutionOnPoints.QuadraturePoints,
+                  quadraturePoints);
+    ConvertArray(solutionOnPoints.QuadratureWeights,
+                 numPoints,
+                 quadratureWeights);
+    ConvertArray(solutionOnPoints.Solution,
+                 numPoints,
+                 solution);
+    ConvertArray(solutionOnPoints.SolutionDerivativeX,
+                 numPoints,
+                 solutionDerivativeX);
+    ConvertArray(solutionOnPoints.SolutionDerivativeY,
+                 numPoints,
+                 solutionDerivativeY);
+  }
+  // ***************************************************************************
 }
-// ***************************************************************************

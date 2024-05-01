@@ -156,12 +156,24 @@ double GedimForPy_ComputeErrorH1_LastSpace(GedimForPy::GeDiM4Py_Logic::ExactDeri
                                            const double* pointerNumericSolution,
                                            const double* pointerStrongSolution);
 extern "C"
-PyObject* GedimForPy_EvaluateSolutionOnPoints(const int trialSpaceIndex,
-                                              const double* pointerNumericSolution,
-                                              const double* pointerStrongSolution);
+void GedimForPy_EvaluateSolutionOnPoints(const int trialSpaceIndex,
+                                         const double* pointerNumericSolution,
+                                         const double* pointerStrongSolution,
+                                         int* numPoints,
+                                         double** quadraturePoints,
+                                         double** quadratureWeights,
+                                         double** solution,
+                                         double** solutionDerivativeX,
+                                         double** solutionDerivativeY);
 extern "C"
-PyObject* GedimForPy_EvaluateSolutionOnPoints_LastSpace(const double* pointerNumericSolution,
-                                                       const double* pointerStrongSolution);
+void GedimForPy_EvaluateSolutionOnPoints_LastSpace(const double* pointerNumericSolution,
+                                                   const double* pointerStrongSolution,
+                                                   int* numPoints,
+                                                   double** quadraturePoints,
+                                                   double** quadratureWeights,
+                                                   double** solution,
+                                                   double** solutionDerivativeX,
+                                                   double** solutionDerivativeY);
 extern "C"
 void GedimForPy_ExportSolution(const int trialSpaceIndex,
                                GedimForPy::GeDiM4Py_Logic::Exact u,
@@ -226,6 +238,13 @@ namespace GedimForPy
       static void ConvertArray(const Eigen::VectorXd& array,
                                int& size,
                                double*& convertedArray);
+      static void ConvertSolutionOnPoints(const GedimForPy::SolutionOnPoints solutionOnPoints,
+                                          int& numPoints,
+                                          double*& quadraturePoints,
+                                          double*& quadratureWeights,
+                                          double*& solution,
+                                          double*& solutionDerivativeX,
+                                          double*& solutionDerivativeY);
   };
 }
 
