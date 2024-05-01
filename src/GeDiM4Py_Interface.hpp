@@ -33,6 +33,17 @@ void GedimForPy_AssembleStiffnessMatrix(const int trialSpaceIndex,
                                         int* numStiffnessStrongTriplets,
                                         double** stiffnessStrongTriplets);
 extern "C"
+void GedimForPy_AssembleNonLinearStiffnessMatrix(const int trialSpaceIndex,
+                                                 const int testSpaceIndex,
+                                                 GedimForPy::GeDiM4Py_Logic::A a,
+                                                 GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                                 const double* pointerNumericSolution,
+                                                 const double* pointerStrongSolution,
+                                                 int* numStiffnessTriplets,
+                                                 double** stiffnessTriplets,
+                                                 int* numStiffnessStrongTriplets,
+                                                 double** stiffnessStrongTriplets);
+extern "C"
 void GedimForPy_AssembleAnisotropicStiffnessMatrix(const int trialSpaceIndex,
                                                    const int testSpaceIndex,
                                                    GedimForPy::GeDiM4Py_Logic::A a,
@@ -49,6 +60,17 @@ void GedimForPy_AssembleAdvectionMatrix(const int trialSpaceIndex,
                                         int* numAdvectionStrongTriplets,
                                         double** advectionStrongTriplets);
 extern "C"
+void GedimForPy_AssembleNonLinearAdvectionMatrix(const int trialSpaceIndex,
+                                                 const int testSpaceIndex,
+                                                 GedimForPy::GeDiM4Py_Logic::B b,
+                                                 GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                                 const double* pointerNumericSolution,
+                                                 const double* pointerStrongSolution,
+                                                 int* numAdvectionTriplets,
+                                                 double** advectionTriplets,
+                                                 int* numAdvectionStrongTriplets,
+                                                 double** advectionStrongTriplets);
+extern "C"
 void GedimForPy_AssembleReactionMatrix(const int trialSpaceIndex,
                                        const int testSpaceIndex,
                                        GedimForPy::GeDiM4Py_Logic::C c,
@@ -56,6 +78,17 @@ void GedimForPy_AssembleReactionMatrix(const int trialSpaceIndex,
                                        double** reactionTriplets,
                                        int* numReactionStrongTriplets,
                                        double** reactionStrongTriplets);
+extern "C"
+void GedimForPy_AssembleNonLinearReactionMatrix(const int trialSpaceIndex,
+                                                const int testSpaceIndex,
+                                                GedimForPy::GeDiM4Py_Logic::C c,
+                                                GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                                const double* pointerNumericSolution,
+                                                const double* pointerStrongSolution,
+                                                int* numReactionTriplets,
+                                                double** reactionTriplets,
+                                                int* numReactionStrongTriplets,
+                                                double** reactionStrongTriplets);
 extern "C"
 void GedimForPy_AssembleForcingTerm(const int testSpaceIndex,
                                     GedimForPy::GeDiM4Py_Logic::F f,
