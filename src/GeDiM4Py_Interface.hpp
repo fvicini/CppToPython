@@ -104,6 +104,15 @@ void GedimForPy_AssembleNonLinearForcingTerm(const int trialSpaceIndex,
                                              int* size,
                                              double** forcingTerm);
 extern "C"
+void GedimForPy_AssembleNonLinearDerivativeForcingTerm(const int trialSpaceIndex,
+                                                       const int testSpaceIndex,
+                                                       GedimForPy::GeDiM4Py_Logic::F f,
+                                                       GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                                       const double* pointerNumericSolution,
+                                                       const double* pointerStrongSolution,
+                                                       int* size,
+                                                       double** forcingTerm);
+extern "C"
 void GedimForPy_AssembleStrongSolution(const int trialSpaceIndex,
                                        GedimForPy::GeDiM4Py_Logic::Strong g,
                                        int marker,
@@ -155,6 +164,15 @@ extern "C"
 void GedimForPy_ExportSolution_LastSpace(GedimForPy::GeDiM4Py_Logic::Exact u,
                                          const double* pointerNumericSolution,
                                          const double* pointerStrongSolution);
+extern "C"
+void GedimForPy_ExportSolutionOnPoints(const int trialSpaceIndex,
+                                       const int numPoints,
+                                       const double* coordinates,
+                                       const double* pointerNumericSolution);
+extern "C"
+void GedimForPy_ExportSolutionOnPoints_LastSpace(const int numPoints,
+                                                 const double* coordinates,
+                                                 const double* pointerNumericSolution);
 // ***************************************************************************
 
 namespace GedimForPy
