@@ -156,6 +156,13 @@ double GedimForPy_ComputeErrorH1_LastSpace(GedimForPy::GeDiM4Py_Logic::ExactDeri
                                            const double* pointerNumericSolution,
                                            const double* pointerStrongSolution);
 extern "C"
+PyObject* GedimForPy_EvaluateSolutionOnPoints(const int trialSpaceIndex,
+                                              const double* pointerNumericSolution,
+                                              const double* pointerStrongSolution);
+extern "C"
+PyObject* GedimForPy_EvaluateSolutionOnPoints_LastSpace(const double* pointerNumericSolution,
+                                                       const double* pointerStrongSolution);
+extern "C"
 void GedimForPy_ExportSolution(const int trialSpaceIndex,
                                GedimForPy::GeDiM4Py_Logic::Exact u,
                                const double* pointerNumericSolution,
