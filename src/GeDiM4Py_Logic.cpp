@@ -1472,6 +1472,95 @@ namespace GedimForPy
     return weakTerm;
   }
   // ***************************************************************************
+  SolutionOnPoints GeDiM4Py_Logic::EvaluateSolutionOnPoints(const Gedim::IMeshDAO& mesh,
+                                                            const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                            const DiscreteProblemData& problemData,
+                                                            const Eigen::VectorXd& numeric,
+                                                            const Eigen::VectorXd& strong)
+  {
+    SolutionOnPoints result;
+
+    FEM_RefElement_Langrange_PCC_Triangle_2D femValues;
+    Gedim::MapTriangle mapTriangle;
+    const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& localSpace = problemData.LocalSpace;
+
+    const unsigned int numCellQuadraturePoints = localSpace.ReferenceElement.InternalQuadrature.Weights.size();
+
+    const Eigen::MatrixXd referenceBasisFunctions = femValues.Reference_BasisFunctions(localSpace,
+                                                                                       localSpace.ReferenceElement.InternalQuadrature.Points);
+    const std::vector<Eigen::MatrixXd> referenceBasisFunctionDerivatives = femValues.Reference_BasisFunctionDerivatives(localSpace,
+                                                                                                                        localSpace.ReferenceElement.InternalQuadrature.Points);
+
+    const unsigned int numLocals = problemData.LocalSpace.NumberBasisFunctions;
+
+    const unsigned int numTotalPoints = mesh.Cell2DTotalNumber() *
+                                        numCellQuadraturePoints;
+    result.QuadraturePoints.resize(3, numTotalPoints);
+    result.QuadratureWeights.resize(numTotalPoints);
+    result.Solution.resize(numTotalPoints);
+    result.SolutionDerivativeX.resize(numTotalPoints);
+    result.SolutionDerivativeY.resize(numTotalPoints);
+
+    for (unsigned int cell2DIndex = 0; cell2DIndex < mesh.Cell2DTotalNumber(); cell2DIndex++)
+    {
+      const Gedim::MapTriangle::MapTriangleData& cell2DMapData = cell2DsMap.at(cell2DIndex);
+
+      const Eigen::MatrixXd cell2DQuadraturePoints = mapTriangle.F(cell2DMapData,
+                                                                   localSpace.ReferenceElement.InternalQuadrature.Points);
+      const Eigen::VectorXd cell2DQuadratureWeights = localSpace.ReferenceElement.InternalQuadrature.Weights *
+                                                      abs(cell2DMapData.DetB);
+
+      const Eigen::MatrixXd basisFunctionValues2D = femValues.BasisFunctions(localSpace,
+                                                                             cell2DMapData,
+                                                                             referenceBasisFunctions);
+      const std::vector<Eigen::MatrixXd> basisFunctionDerivativeValues2D = femValues.BasisFunctionDerivatives(localSpace,
+                                                                                                              cell2DMapData,
+                                                                                                              referenceBasisFunctionDerivatives);
+      const std::vector<DiscreteProblemData::DOF*>& cell2D_DOF = problemData.Cell2Ds_DOF[cell2DIndex];
+
+      Eigen::VectorXd localNumericSolution = Eigen::VectorXd::Zero(numLocals);
+      for(unsigned int i = 0; i < numLocals; ++i)
+      {
+        const DiscreteProblemData::DOF& dofI = *cell2D_DOF[i];
+
+        switch (dofI.Type)
+        {
+          case DiscreteProblemData::DOF::Types::DOF:
+            localNumericSolution[i] = numeric[dofI.Global_Index];
+            break;
+          case DiscreteProblemData::DOF::Types::Strong:
+            localNumericSolution[i] = strong[dofI.Global_Index];
+            break;
+          default:
+            throw std::runtime_error("DOF Type " +
+                                     std::to_string((unsigned int)dofI.Type) +
+                                     " not supported");
+        }
+      }
+
+      const Eigen::VectorXd u = basisFunctionValues2D *
+                                localNumericSolution;
+      const Eigen::VectorXd u_x = basisFunctionDerivativeValues2D[0] *
+                                  localNumericSolution;
+      const Eigen::VectorXd u_y = basisFunctionDerivativeValues2D[1] *
+                                  localNumericSolution;
+
+      result.QuadraturePoints.block(0,
+                                    cell2DIndex * numCellQuadraturePoints,
+                                    3,
+                                    numCellQuadraturePoints) = cell2DQuadraturePoints;
+      result.QuadratureWeights.segment(cell2DIndex * numCellQuadraturePoints,
+                                       numCellQuadraturePoints) = cell2DQuadratureWeights;
+      result.Solution.segment(cell2DIndex * numCellQuadraturePoints,
+                              numCellQuadraturePoints) = u;
+      result.SolutionDerivativeX.segment(cell2DIndex * numCellQuadraturePoints,
+                                         numCellQuadraturePoints) = u_x;
+      result.SolutionDerivativeY.segment(cell2DIndex * numCellQuadraturePoints,
+                                         numCellQuadraturePoints) = u_y;
+    }
+
+    return result;
+  }
   // ***************************************************************************
   Eigen::VectorXd GeDiM4Py_Logic::ComputeErrorL2(Exact u,
                                                  const Eigen::VectorXd& numeric,
@@ -1673,6 +1762,26 @@ namespace GedimForPy
                                 exactSolutionCell0Ds.data()
                               }
                             });
+  }
+  // ***************************************************************************
+  void GeDiM4Py_Logic::ExportSolutionOnPoints(const Eigen::MatrixXd& points,
+                                              const Eigen::VectorXd& solution,
+                                              const ExportData& exportData)
+  {
+    Gedim::Output::CreateFolder(exportData.ExportFolder);
+    Gedim::UCDUtilities exporter;
+    exporter.ExportPoints(exportData.ExportFolder + "/" +
+                          exportData.FileName + ".inp",
+                          points,
+                          {
+                            {
+                              "Numeric",
+                              "[]",
+                              static_cast<unsigned int>(solution.size()),
+                              1,
+                              solution.data()
+                            }
+                          });
   }
   // ***************************************************************************
 }

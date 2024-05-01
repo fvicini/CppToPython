@@ -1549,6 +1549,12 @@ namespace UnitTesting
         solution_norm = std::sqrt(cell2DsNormL2.sum());
         residual_norm = std::sqrt(cell2DsduNormL2.sum());
 
+        const auto solutionOnPoints = GedimForPy::GeDiM4Py_Logic::EvaluateSolutionOnPoints(meshDAO,
+                                                                                           mesh.Cell2DsMap,
+                                                                                           problemData,
+                                                                                           u_k,
+                                                                                           u_strong);
+
         // export
         {
           GedimForPy::GeDiM4Py_Logic::ExportSolution(NonLinearPoisson::ZeroSolution,
@@ -1622,6 +1628,13 @@ namespace UnitTesting
 
             delete[] cell0Ds_exact_solution;
           }
+
+          GedimForPy::GeDiM4Py_Logic::ExportSolutionOnPoints(solutionOnPoints.QuadraturePoints,
+                                                             solutionOnPoints.Solution,
+                                                             {
+                                                               exportSolutionFolder,
+                                                               "SolutionOnPoints_" + std::to_string(num_iteration)
+                                                             });
         }
 
 

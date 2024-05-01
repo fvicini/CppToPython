@@ -136,6 +136,15 @@ namespace GedimForPy
       FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace LocalSpace;
   };
 
+  struct SolutionOnPoints final
+  {
+      Eigen::MatrixXd QuadraturePoints;
+      Eigen::VectorXd QuadratureWeights;
+      Eigen::VectorXd Solution;
+      Eigen::VectorXd SolutionDerivativeX;
+      Eigen::VectorXd SolutionDerivativeY;
+  };
+
   class GeDiM4Py_Logic final
   {
     public:
@@ -258,6 +267,12 @@ namespace GedimForPy
                                               const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                               const DiscreteProblemData& problemData);
 
+      static SolutionOnPoints EvaluateSolutionOnPoints(const Gedim::IMeshDAO& mesh,
+                                                       const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                       const DiscreteProblemData& problemData,
+                                                       const Eigen::VectorXd& numeric,
+                                                       const Eigen::VectorXd& strong);
+
       static Eigen::VectorXd ComputeErrorL2(Exact u,
                                             const Eigen::VectorXd& numeric,
                                             const Eigen::VectorXd& strong,
@@ -277,8 +292,12 @@ namespace GedimForPy
                                  const Gedim::IMeshDAO& mesh,
                                  const DiscreteProblemData& problemData,
                                  const ExportData& exportData);
+
+      static void ExportSolutionOnPoints(const Eigen::MatrixXd& points,
+                                         const Eigen::VectorXd& solution,
+                                         const ExportData& exportData);
   };
 
-}
+  }
 
 #endif
