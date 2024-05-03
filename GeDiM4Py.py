@@ -384,14 +384,27 @@ def ExportSolution(u, solution, solutionStrong, lib, problemData = None):
 	
 	if problemData is None:
 		lib.GedimForPy_ExportSolution_LastSpace.argtypes = [ExactFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
-		lib.GedimForPy_ExportSolution_LastSpace.restype =  ct.c_double
+		lib.GedimForPy_ExportSolution_LastSpace.restype =  None
 
 		lib.GedimForPy_ExportSolution_LastSpace(ExactFN(u), solution, solutionStrong)
 	else:
 		lib.GedimForPy_ExportSolution.argtypes = [ct.c_int, ExactFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
-		lib.GedimForPy_ExportSolution.restype =  ct.c_double
+		lib.GedimForPy_ExportSolution.restype =  None
 
 		lib.GedimForPy_ExportSolution(problemData['SpaceIndex'], ExactFN(u), solution, solutionStrong)
+
+def ExportSolutionOnPoints(numPoints, points, solution, lib, problemData = None):
+
+	if problemData is None:
+		lib.GedimForPy_ExportSolutionOnPoints_LastSpace.argtypes = [ct.c_int, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+		lib.GedimForPy_ExportSolutionOnPoints_LastSpace.restype =  None
+
+		lib.GedimForPy_ExportSolutionOnPoints_LastSpace(numPoints, points, solution)
+	else:
+		lib.GedimForPy_ExportSolutionOnPoints.argtypes = [ct.c_int, ct.c_int, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double)]
+		lib.GedimForPy_ExportSolutionOnPoints.restype =  None
+
+		lib.GedimForPy_ExportSolutionOnPoints(problemData['SpaceIndex'], numPoints, points, solution)
 
 def PythonSolver(A, f, lib):
 	return scipy.sparse.linalg.spsolve(A, f)
