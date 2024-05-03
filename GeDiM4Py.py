@@ -128,7 +128,7 @@ def AssembleNonLinearStiffnessMatrix_Shift(trialIndex, testIndex, a, non_linear_
 	DiffusionFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 	NonLinearFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double))
 		
-	lib.GedimForPy_AssembleNonLinearStiffnessMatrix.argtypes = [ct.c_int, ct.c_int, DiffusionFN, NonLinearFN, ct.POINTER(ct.c_double), ct.POINTER(ct.c_double), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleNonLinearStiffnessMatrix.argtypes = [ct.c_int, ct.c_int, DiffusionFN, NonLinearFN,np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_AssembleNonLinearStiffnessMatrix.restype =  None
 	
 	pointerStiffness = ct.POINTER(ct.c_double)()
@@ -189,7 +189,7 @@ def AssembleNonLinearAdvectionMatrix_Shift(trialIndex, testIndex, b, non_linear_
 	AdvectionFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 	NonLinearFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double))
 		
-	lib.GedimForPy_AssembleNonLinearAdvectionMatrix.argtypes = [ct.c_int, ct.c_int, AdvectionFN, NonLinearFN, ct.POINTER(ct.c_double), ct.POINTER(ct.c_double), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleNonLinearAdvectionMatrix.argtypes = [ct.c_int, ct.c_int, AdvectionFN, NonLinearFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_AssembleNonLinearAdvectionMatrix.restype =  None
 	
 	pointerAdvection = ct.POINTER(ct.c_double)()
@@ -227,7 +227,7 @@ def AssembleNonLinearReactionMatrix(c, non_linear_f, solution, solutionStrong, p
 	ReactionFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 	NonLinearFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double))
 		
-	lib.GedimForPy_AssembleNonLinearReactionMatrix.argtypes = [ct.c_int, ct.c_int, ReactionFN, NonLinearFN, ct.POINTER(ct.c_double), ct.POINTER(ct.c_double), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleNonLinearReactionMatrix.argtypes = [ct.c_int, ct.c_int, ReactionFN, NonLinearFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_AssembleNonLinearReactionMatrix.restype =  None
 	
 	pointerReaction = ct.POINTER(ct.c_double)()
@@ -260,12 +260,12 @@ def AssembleNonLinearForcingTerm(f, non_linear_f, solution, solutionStrong, prob
 	ForcingTermFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 	NonLinearFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double))
 		
-	lib.GedimForPy_AssembleNonLinearForcingTerm.argtypes = [ct.c_int, ForcingTermFN, NonLinearFN, ct.POINTER(ct.c_double), ct.POINTER(ct.c_double), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleNonLinearForcingTerm.argtypes = [ct.c_int,ct.c_int, ForcingTermFN, NonLinearFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_AssembleNonLinearForcingTerm.restype =  None
 	
 	pointerF = ct.POINTER(ct.c_double)()
 	size = ct.c_int(0)
-	lib.GedimForPy_AssembleNonLinearForcingTerm(problemData['SpaceIndex'], ForcingTermFN(f), NonLinearFN(non_linear_f), solution, solutionStrong, ct.byref(size), ct.byref(pointerF))
+	lib.GedimForPy_AssembleNonLinearForcingTerm(problemData['SpaceIndex'],problemData['SpaceIndex'], ForcingTermFN(f), NonLinearFN(non_linear_f), solution, solutionStrong, ct.byref(size), ct.byref(pointerF))
 	size = size.value
 	return make_nd_array(pointerF, size)
 	
@@ -273,12 +273,12 @@ def AssembleNonLinearDerivativeForcingTerm(f, non_linear_f, solution, solutionSt
 	ForcingTermFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 	NonLinearFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double))
 		
-	lib.GedimForPy_AssembleNonLinearDerivativeForcingTerm.argtypes = [ct.c_int, ForcingTermFN, NonLinearFN, ct.POINTER(ct.c_double), ct.POINTER(ct.c_double), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
+	lib.GedimForPy_AssembleNonLinearDerivativeForcingTerm.argtypes = [ct.c_int,ct.c_int, ForcingTermFN, NonLinearFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_AssembleNonLinearDerivativeForcingTerm.restype =  None
 	
 	pointerF = ct.POINTER(ct.c_double)()
 	size = ct.c_int(0)
-	lib.GedimForPy_AssembleNonLinearDerivativeForcingTerm(problemData['SpaceIndex'], ForcingTermFN(f), NonLinearFN(non_linear_f), solution, solutionStrong, ct.byref(size), ct.byref(pointerF))
+	lib.GedimForPy_AssembleNonLinearDerivativeForcingTerm(problemData['SpaceIndex'],problemData['SpaceIndex'], ForcingTermFN(f), NonLinearFN(non_linear_f), solution, solutionStrong, ct.byref(size), ct.byref(pointerF))
 	size = size.value
 	return make_nd_array(pointerF, size)
 
@@ -373,7 +373,7 @@ def EvaluateSolutionOnPoints(solution, solutionStrong, lib, problemData = None):
 		lib.GedimForPy_EvaluateSolutionOnPoints_LastSpace.restype =  None
 		lib.GedimForPy_EvaluateSolutionOnPoints_LastSpace(solution, solutionStrong, ct.byref(numPoints), ct.byref(quadraturePoints), ct.byref(quadratureWeights), ct.byref(solution), ct.byref(solutionDerivativeX), ct.byref(solutionDerivativeY))
 	else:
-		lib.GedimForPy_EvaluateSolutionOnPoints.argtypes = [ct.c_int, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double) ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double))]
+		lib.GedimForPy_EvaluateSolutionOnPoints.argtypes = [ct.c_int, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double))]
 		lib.GedimForPy_EvaluateSolutionOnPoints.restype =  None
 		lib.GedimForPy_EvaluateSolutionOnPoints(problemData['SpaceIndex'], solution, solutionStrong, ct.byref(numPoints), ct.byref(quadraturePoints), ct.byref(quadratureWeights), ct.byref(solution), ct.byref(solutionDerivativeX), ct.byref(solutionDerivativeY))
 		
