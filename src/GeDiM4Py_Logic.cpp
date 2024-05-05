@@ -1049,10 +1049,6 @@ namespace GedimForPy
       const Eigen::VectorXd reactionTerm = (reactionTermValues.array() *
                                             nonLinearValues.array());
 
-      std::cout<< "RT: "<< reactionTermValues.transpose()<< std::endl;
-      std::cout<< "NL: "<< nonLinearValues.transpose()<< std::endl;
-      std::cout<< "PR: "<< reactionTerm.transpose()<< std::endl;
-
       const Eigen::MatrixXd cellMatrixC = equation.ComputeCellReactionMatrix(reactionTerm,
                                                                              basisFunctionValues2D,
                                                                              cell2DQuadratureWeights);
