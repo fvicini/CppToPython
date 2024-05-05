@@ -1048,7 +1048,7 @@ namespace GedimForPy
                                                    u_x.data(),
                                                    u_y.data());
 
-      std::cout<< "NNL: "<< nonLinearValue<< ": "<< *nonLinearValue<< std::endl;
+      std::cout<< "NNL: "<< nonLinearValues<< ": "<< *nonLinearValues<< std::endl;
       std::cout<< "RCT: "<< reactionTermValues<< ": "<< *reactionTermValues<< std::endl;
       const Eigen::VectorXd reactionTerm = (Eigen::Map<const Eigen::VectorXd>(reactionTermValues,
                                                                               cell2DQuadraturePoints.cols()).array() *
