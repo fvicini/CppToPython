@@ -1039,28 +1039,21 @@ namespace GedimForPy
       const Eigen::VectorXd u_y = basisFunctionDerivativeValues2D[1] *
                                   localNumericSolution;
 
-      const double* nonLinearValues = non_linear_f(cell2DQuadraturePoints.cols(),
-                                                   cell2DQuadraturePoints.data(),
-                                                   u.data(),
-                                                   u_x.data(),
-                                                   u_y.data());
-      const Eigen::VectorXd test = Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
-                                                                     cell2DQuadraturePoints.cols());
-      const double* reactionTermValues = c(cell2DQuadraturePoints.cols(),
-                                           cell2DQuadraturePoints.data());
+      const Eigen::VectorXd nonLinearValues = Eigen::Map<const Eigen::VectorXd>(non_linear_f(cell2DQuadraturePoints.cols(),
+                                                                                             cell2DQuadraturePoints.data(),
+                                                                                             u.data(),
+                                                                                             u_x.data(),
+                                                                                             u_y.data()),
+                                                                                cell2DQuadraturePoints.cols());
+      const Eigen::VectorXd reactionTermValues = Eigen::Map<const Eigen::VectorXd>(c(cell2DQuadraturePoints.cols(),
+                                                                                     cell2DQuadraturePoints.data()),
+                                                                                   cell2DQuadraturePoints.cols());
 
-      const Eigen::VectorXd reactionTerm = (Eigen::Map<const Eigen::VectorXd>(reactionTermValues,
-                                                                              cell2DQuadraturePoints.cols()).array() *
-                                            Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
-                                                                              cell2DQuadraturePoints.cols()).array());
+      const Eigen::VectorXd reactionTerm = (reactionTermValues.array() *
+                                            nonLinearValues.array());
 
-      std::cout<< "PTR_1: "<< reactionTermValues<< std::endl;
-      std::cout<< "PTR_2: "<< nonLinearValues<< std::endl;
-      std::cout<< "TEST "<< test.transpose()<< std::endl;
-      std::cout<< "RT: "<< Eigen::Map<const Eigen::VectorXd>(reactionTermValues,
-                                                             cell2DQuadraturePoints.cols()).transpose()<< std::endl;
-      std::cout<< "NL: "<< Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
-                                                             cell2DQuadraturePoints.cols()).transpose()<< std::endl;
+      std::cout<< "RT: "<< reactionTermValues.transpose()<< std::endl;
+      std::cout<< "NL: "<< nonLinearValues.transpose()<< std::endl;
       std::cout<< "PR: "<< reactionTerm.transpose()<< std::endl;
 
       const Eigen::MatrixXd cellMatrixC = equation.ComputeCellReactionMatrix(reactionTerm,
