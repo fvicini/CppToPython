@@ -853,7 +853,7 @@ namespace GedimForPy
                                                                                2,
                                                                                cell2DQuadraturePoints.cols()).array().rowwise() *
                                              Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
-                                                                               cell2DQuadraturePoints.cols()).transpose().array()).matrix();
+                                                                               cell2DQuadraturePoints.cols()).transpose().array());
       const Eigen::MatrixXd cellMatrixB = equation.ComputeCellAdvectionMatrix(trial_numLocals,
                                                                               test_numLocals,
                                                                               advectionTerm,
@@ -1229,7 +1229,7 @@ namespace GedimForPy
       const Eigen::VectorXd fValues = (Eigen::Map<const Eigen::VectorXd>(forcingTermValues,
                                                                          cell2DQuadraturePoints.cols()).array() *
                                        Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
-                                                                         cell2DQuadraturePoints.cols()).array()).matrix();
+                                                                         cell2DQuadraturePoints.cols()).array());
       const Eigen::VectorXd cellForcingTerm = equation.ComputeCellForcingTerm(fValues,
                                                                               basisFunctionValues2D,
                                                                               cell2DQuadratureWeights);
@@ -1328,7 +1328,7 @@ namespace GedimForPy
                                                                          cell2DQuadraturePoints.cols()).array() *
                                        Eigen::Map<const Eigen::MatrixXd>(nonLinearValues,
                                                                          2,
-                                                                         cell2DQuadraturePoints.cols()).array()).matrix();
+                                                                         cell2DQuadraturePoints.cols()).array());
 
       const Eigen::VectorXd cellForcingTerm = equation.ComputeCellForcingTerm(fValues,
                                                                               basisFunctionDerivativeValues2D,
