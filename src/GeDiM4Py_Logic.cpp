@@ -1055,7 +1055,7 @@ namespace GedimForPy
                                             Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
                                                                               cell2DQuadraturePoints.cols()).array());
 
-      std::cout<< "RV: "<< Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
+      std::cout<< "RV: "<< Eigen::Map<const Eigen::VectorXd>(reactionTermValues,
                                                              cell2DQuadraturePoints.cols()).transpose()<< std::endl;
       std::cout<< "NL: "<< Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
                                                              cell2DQuadraturePoints.cols()).transpose()<< std::endl;
