@@ -731,7 +731,7 @@ void GedimForPy_ExportSolutionOnPoints(const int trialSpaceIndex,
                                                                                        numPoints),
                                                      {
                                                        "./Export",
-                                                       "Solution_" + std::to_string(trialSpaceIndex)
+                                                       "SolutionOnPoints_" + std::to_string(trialSpaceIndex)
                                                      });
 }
 // ***************************************************************************

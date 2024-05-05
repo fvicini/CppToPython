@@ -224,9 +224,9 @@ def AssembleReactionMatrix(c, problemData, lib):
 	return [reaction, reactionStrong]
 
 def AssembleNonLinearReactionMatrix(c, non_linear_f, solution, solutionStrong, problemData, lib):
-	ReactionFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
 	NonLinearFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double))
-		
+	ReactionFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
+    
 	lib.GedimForPy_AssembleNonLinearReactionMatrix.argtypes = [ct.c_int, ct.c_int, ReactionFN, NonLinearFN, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double))]
 	lib.GedimForPy_AssembleNonLinearReactionMatrix.restype =  None
 	
@@ -360,24 +360,24 @@ def ComputeErrorH1(uDer, solution, solutionStrong, lib, problemData = None):
 		return lib.GedimForPy_ComputeErrorH1(problemData['SpaceIndex'], ExactDerivativeFN(uDer), solution, solutionStrong)
 
 def EvaluateSolutionOnPoints(solution, solutionStrong, lib, problemData = None):
-
 	numPoints = ct.c_int(0)
 	quadraturePoints = ct.POINTER(ct.c_double)()
 	quadratureWeights = ct.POINTER(ct.c_double)()
-	solution = ct.POINTER(ct.c_double)()
-	solutionDerivativeX = ct.POINTER(ct.c_double)()
-	solutionDerivativeY = ct.POINTER(ct.c_double)()
+	solution_res = ct.POINTER(ct.c_double)()
+	solutionDerivativeX_res = ct.POINTER(ct.c_double)()
+	solutionDerivativeY_res = ct.POINTER(ct.c_double)()
 	
 	if problemData is None:
 		lib.GedimForPy_EvaluateSolutionOnPoints_LastSpace.argtypes = [np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double))]
 		lib.GedimForPy_EvaluateSolutionOnPoints_LastSpace.restype =  None
-		lib.GedimForPy_EvaluateSolutionOnPoints_LastSpace(solution, solutionStrong, ct.byref(numPoints), ct.byref(quadraturePoints), ct.byref(quadratureWeights), ct.byref(solution), ct.byref(solutionDerivativeX), ct.byref(solutionDerivativeY))
+		lib.GedimForPy_EvaluateSolutionOnPoints_LastSpace(solution, solutionStrong, ct.byref(numPoints), ct.byref(quadraturePoints), ct.byref(quadratureWeights), ct.byref(solution_res), ct.byref(solutionDerivativeX_res), ct.byref(solutionDerivativeY_res))
 	else:
 		lib.GedimForPy_EvaluateSolutionOnPoints.argtypes = [ct.c_int, np.ctypeslib.ndpointer(dtype=np.double), np.ctypeslib.ndpointer(dtype=np.double), ct.POINTER(ct.c_int), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double)), ct.POINTER(ct.POINTER(ct.c_double))]
 		lib.GedimForPy_EvaluateSolutionOnPoints.restype =  None
-		lib.GedimForPy_EvaluateSolutionOnPoints(problemData['SpaceIndex'], solution, solutionStrong, ct.byref(numPoints), ct.byref(quadraturePoints), ct.byref(quadratureWeights), ct.byref(solution), ct.byref(solutionDerivativeX), ct.byref(solutionDerivativeY))
-		
-	return [make_nd_matrix(quadraturePoints, (3, numPoints)), make_nd_array(quadratureWeights, numPoints), make_nd_array(solution, numPoints), make_nd_array(solutionDerivativeX, numPoints), make_nd_array(solutionDerivativeY, numPoints)]
+		lib.GedimForPy_EvaluateSolutionOnPoints(problemData['SpaceIndex'], solution, solutionStrong, ct.byref(numPoints), ct.byref(quadraturePoints), ct.byref(quadratureWeights), ct.byref(solution_res), ct.byref(solutionDerivativeX_res), ct.byref(solutionDerivativeY_res))
+
+	numPoints = numPoints.value
+	return [numPoints, make_nd_matrix(quadraturePoints, (3, numPoints)), make_nd_array(quadratureWeights, numPoints), make_nd_array(solution_res, numPoints), make_nd_array(solutionDerivativeX_res, numPoints), make_nd_array(solutionDerivativeY_res, numPoints)]
 
 def ExportSolution(u, solution, solutionStrong, lib, problemData = None):
 	ExactFN = ct.CFUNCTYPE(np.ctypeslib.ndpointer(dtype=np.double), ct.c_int, np.ctypeslib.ndpointer(dtype=np.double))
