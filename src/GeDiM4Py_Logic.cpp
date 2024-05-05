@@ -1045,8 +1045,8 @@ namespace GedimForPy
                                                    u_x.data(),
                                                    u_y.data());
 
-      //const double* reactionTermValues = c(cell2DQuadraturePoints.cols(),
-      //                                     cell2DQuadraturePoints.data());
+      const double* reactionTermValues = c(cell2DQuadraturePoints.cols(),
+                                           cell2DQuadraturePoints.data());
       const Eigen::VectorXd reactionTerm = (Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
                                                                               cell2DQuadraturePoints.cols()).array() *
                                             Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
