@@ -1039,17 +1039,18 @@ namespace GedimForPy
       const Eigen::VectorXd u_y = basisFunctionDerivativeValues2D[1] *
                                   localNumericSolution;
 
+      const double* reactionTermValues = c(cell2DQuadraturePoints.cols(),
+                                           cell2DQuadraturePoints.data());
+
       const double* nonLinearValues = non_linear_f(cell2DQuadraturePoints.cols(),
                                                    cell2DQuadraturePoints.data(),
                                                    u.data(),
                                                    u_x.data(),
                                                    u_y.data());
 
-      const double* reactionTermValues = c(cell2DQuadraturePoints.cols(),
-                                           cell2DQuadraturePoints.data());
       std::cout<< "NNL: "<< nonLinearValues<< std::endl;
       std::cout<< "RCT: "<< reactionTermValues<< std::endl;
-      const Eigen::VectorXd reactionTerm = (Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
+      const Eigen::VectorXd reactionTerm = (Eigen::Map<const Eigen::VectorXd>(reactionTermValues,
                                                                               cell2DQuadraturePoints.cols()).array() *
                                             Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
                                                                               cell2DQuadraturePoints.cols()).array());
