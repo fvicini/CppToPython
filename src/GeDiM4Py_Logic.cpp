@@ -420,14 +420,13 @@ namespace GedimForPy
                                                                                                               cell2DMapData,
                                                                                                               referenceBasisFunctionDerivatives);
 
-      const double* diffusioTermValues = a(cell2DQuadraturePoints.cols(),
-                                           cell2DQuadraturePoints.data());
-
+      const Eigen::VectorXd diffusionTermValues = Eigen::Map<const Eigen::VectorXd>(a(cell2DQuadraturePoints.cols(),
+                                                                                      cell2DQuadraturePoints.data()),
+                                                                                    cell2DQuadraturePoints.cols());
       Eigen::MatrixXd diffusionTerm = Eigen::MatrixXd::Zero(3, cell2DQuadraturePoints.cols());
-      diffusionTerm.row(0)<< Eigen::Map<const Eigen::VectorXd>(diffusioTermValues,
-                                                               cell2DQuadraturePoints.cols()).transpose();
-      diffusionTerm.row(2)<< Eigen::Map<const Eigen::VectorXd>(diffusioTermValues,
-                                                               cell2DQuadraturePoints.cols()).transpose();
+      diffusionTerm.row(0)<< diffusionTermValues.transpose();
+      diffusionTerm.row(2)<< diffusionTermValues.transpose();
+
       const Eigen::MatrixXd cellMatrixA = equation.ComputeStiffnessMatrix(numLocals,
                                                                           basisFunctionDerivativeValues2D,
                                                                           diffusionTerm,
@@ -538,23 +537,21 @@ namespace GedimForPy
       const Eigen::VectorXd u_y = basisFunctionDerivativeValues2D[1] *
                                   localNumericSolution;
 
-      const double* nonLinearValues = non_linear_f(cell2DQuadraturePoints.cols(),
-                                                   cell2DQuadraturePoints.data(),
-                                                   u.data(),
-                                                   u_x.data(),
-                                                   u_y.data());
+      const Eigen::VectorXd nonLinearValues = Eigen::Map<const Eigen::VectorXd>(non_linear_f(cell2DQuadraturePoints.cols(),
+                                                                                             cell2DQuadraturePoints.data(),
+                                                                                             u.data(),
+                                                                                             u_x.data(),
+                                                                                             u_y.data()),
+                                                                                cell2DQuadraturePoints.cols());
 
-      const double* diffusioTermValues = a(cell2DQuadraturePoints.cols(),
-                                           cell2DQuadraturePoints.data());
+      const Eigen::VectorXd diffusioTermValues = Eigen::Map<const Eigen::VectorXd>(a(cell2DQuadraturePoints.cols(),
+                                                                                     cell2DQuadraturePoints.data()),
+                                                                                   cell2DQuadraturePoints.cols());
       Eigen::MatrixXd diffusionTerm = Eigen::MatrixXd::Zero(3, cell2DQuadraturePoints.cols());
-      diffusionTerm.row(0)<< (Eigen::Map<const Eigen::VectorXd>(diffusioTermValues,
-                                                                cell2DQuadraturePoints.cols()).array() *
-                              Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
-                                                                cell2DQuadraturePoints.cols()).array()).matrix().transpose();
-      diffusionTerm.row(2)<< (Eigen::Map<const Eigen::VectorXd>(diffusioTermValues,
-                                                                cell2DQuadraturePoints.cols()).array() *
-                              Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
-                                                                cell2DQuadraturePoints.cols()).array()).matrix().transpose();
+      diffusionTerm.row(0)<< (diffusioTermValues.array() *
+                              nonLinearValues.array()).matrix().transpose();
+      diffusionTerm.row(2)<< (diffusioTermValues.array() *
+                              nonLinearValues.array()).matrix().transpose();
       const Eigen::MatrixXd cellMatrixA = equation.ComputeStiffnessMatrix(numLocals,
                                                                           basisFunctionDerivativeValues2D,
                                                                           diffusionTerm,
@@ -624,14 +621,14 @@ namespace GedimForPy
                                                                                                               cell2DMapData,
                                                                                                               referenceBasisFunctionDerivatives);
 
-      const double* diffusioTermValues = a(cell2DQuadraturePoints.cols(),
-                                           cell2DQuadraturePoints.data());
+      const Eigen::MatrixXd diffusioTermValues = Eigen::Map<const Eigen::MatrixXd>(a(cell2DQuadraturePoints.cols(),
+                                                                                     cell2DQuadraturePoints.data()),
+                                                                                   3,
+                                                                                   cell2DQuadraturePoints.cols());
 
       const Eigen::MatrixXd cellMatrixA = equation.ComputeStiffnessMatrix(numLocals,
                                                                           basisFunctionDerivativeValues2D,
-                                                                          Eigen::Map<const Eigen::MatrixXd>(diffusioTermValues,
-                                                                                                            3,
-                                                                                                            cell2DQuadraturePoints.cols()),
+                                                                          diffusioTermValues,
                                                                           cell2DQuadratureWeights);
 
       const std::vector<DiscreteProblemData::DOF*>& cell2D_DOF = problemData.Cell2Ds_DOF[cell2DIndex];
@@ -713,13 +710,13 @@ namespace GedimForPy
                                                                                                                           cell2DMapData,
                                                                                                                           trial_referenceBasisFunctionDerivatives);
 
-      const double* advectionTermValues = b(cell2DQuadraturePoints.cols(),
-                                            cell2DQuadraturePoints.data());
+      const Eigen::MatrixXd advectionTermValues = Eigen::Map<const Eigen::MatrixXd>(b(cell2DQuadraturePoints.cols(),
+                                                                                      cell2DQuadraturePoints.data()),
+                                                                                    2,
+                                                                                    cell2DQuadraturePoints.cols());
       const Eigen::MatrixXd cellMatrixB = equation.ComputeCellAdvectionMatrix(trial_numLocals,
                                                                               test_numLocals,
-                                                                              Eigen::Map<const Eigen::MatrixXd>(advectionTermValues,
-                                                                                                                2,
-                                                                                                                cell2DQuadraturePoints.cols()),
+                                                                              advectionTermValues,
                                                                               test_basisFunctionValues2D,
                                                                               trial_basisFunctionDerivativeValues2D,
                                                                               cell2DQuadratureWeights);
@@ -841,19 +838,19 @@ namespace GedimForPy
       const Eigen::VectorXd u_y = trial_basisFunctionDerivativeValues2D[1] *
                                   localNumericSolution;
 
-      const double* nonLinearValues = non_linear_f(cell2DQuadraturePoints.cols(),
-                                                   cell2DQuadraturePoints.data(),
-                                                   u.data(),
-                                                   u_x.data(),
-                                                   u_y.data());
+      const Eigen::VectorXd nonLinearValues = Eigen::Map<const Eigen::VectorXd>(non_linear_f(cell2DQuadraturePoints.cols(),
+                                                                                             cell2DQuadraturePoints.data(),
+                                                                                             u.data(),
+                                                                                             u_x.data(),
+                                                                                             u_y.data()),
+                                                                                cell2DQuadraturePoints.cols());
 
-      const double* advectionTermValues = b(cell2DQuadraturePoints.cols(),
-                                            cell2DQuadraturePoints.data());
-      const Eigen::MatrixXd advectionTerm = (Eigen::Map<const Eigen::MatrixXd>(advectionTermValues,
-                                                                               2,
-                                                                               cell2DQuadraturePoints.cols()).array().rowwise() *
-                                             Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
-                                                                               cell2DQuadraturePoints.cols()).transpose().array());
+      const Eigen::MatrixXd advectionTermValues = Eigen::Map<const Eigen::MatrixXd>(b(cell2DQuadraturePoints.cols(),
+                                                                                      cell2DQuadraturePoints.data()),
+                                                                                    2,
+                                                                                    cell2DQuadraturePoints.cols());
+      const Eigen::MatrixXd advectionTerm = advectionTermValues.array().rowwise() *
+                                            nonLinearValues.transpose().array();
       const Eigen::MatrixXd cellMatrixB = equation.ComputeCellAdvectionMatrix(trial_numLocals,
                                                                               test_numLocals,
                                                                               advectionTerm,
@@ -927,10 +924,10 @@ namespace GedimForPy
                                                                              cell2DMapData,
                                                                              referenceBasisFunctions);
 
-      const double* reactionTermValues = c(cell2DQuadraturePoints.cols(),
-                                           cell2DQuadraturePoints.data());
-      const Eigen::MatrixXd cellMatrixC = equation.ComputeCellReactionMatrix(Eigen::Map<const Eigen::VectorXd>(reactionTermValues,
-                                                                                                               cell2DQuadraturePoints.cols()),
+      const Eigen::VectorXd reactionTermValues = Eigen::Map<const Eigen::VectorXd>(c(cell2DQuadraturePoints.cols(),
+                                                                                     cell2DQuadraturePoints.data()),
+                                                                                   cell2DQuadraturePoints.cols());
+      const Eigen::MatrixXd cellMatrixC = equation.ComputeCellReactionMatrix(reactionTermValues,
                                                                              basisFunctionValues2D,
                                                                              cell2DQuadratureWeights);
 
@@ -1127,10 +1124,10 @@ namespace GedimForPy
                                                                              cell2DMapData,
                                                                              referenceBasisFunctions);
 
-      const double* forcingTermValues = f(cell2DQuadraturePoints.cols(),
-                                          cell2DQuadraturePoints.data());
-      const Eigen::VectorXd cellForcingTerm = equation.ComputeCellForcingTerm(Eigen::Map<const Eigen::VectorXd>(forcingTermValues,
-                                                                                                                cell2DQuadraturePoints.cols()),
+      const Eigen::VectorXd forcingTermValues = Eigen::Map<const Eigen::VectorXd>(f(cell2DQuadraturePoints.cols(),
+                                                                                    cell2DQuadraturePoints.data()),
+                                                                                  cell2DQuadraturePoints.cols());
+      const Eigen::VectorXd cellForcingTerm = equation.ComputeCellForcingTerm(forcingTermValues,
                                                                               basisFunctionValues2D,
                                                                               cell2DQuadratureWeights);
 
@@ -1215,19 +1212,19 @@ namespace GedimForPy
       const Eigen::VectorXd u_y = basisFunctionDerivativeValues2D[1] *
                                   localNumericSolution;
 
-      const double* nonLinearValues = non_linear_f(cell2DQuadraturePoints.cols(),
-                                                   cell2DQuadraturePoints.data(),
-                                                   u.data(),
-                                                   u_x.data(),
-                                                   u_y.data());
+      const Eigen::VectorXd nonLinearValues = Eigen::Map<const Eigen::VectorXd>(non_linear_f(cell2DQuadraturePoints.cols(),
+                                                                                             cell2DQuadraturePoints.data(),
+                                                                                             u.data(),
+                                                                                             u_x.data(),
+                                                                                             u_y.data()),
+                                                                                cell2DQuadraturePoints.cols());
 
 
-      const double* forcingTermValues = f(cell2DQuadraturePoints.cols(),
-                                          cell2DQuadraturePoints.data());
-      const Eigen::VectorXd fValues = (Eigen::Map<const Eigen::VectorXd>(forcingTermValues,
-                                                                         cell2DQuadraturePoints.cols()).array() *
-                                       Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
-                                                                         cell2DQuadraturePoints.cols()).array());
+      const Eigen::VectorXd forcingTermValues = Eigen::Map<const Eigen::VectorXd>(f(cell2DQuadraturePoints.cols(),
+                                                                                    cell2DQuadraturePoints.data()),
+                                                                                  cell2DQuadraturePoints.cols());
+      const Eigen::VectorXd fValues = nonLinearValues.array() *
+                                      forcingTermValues.array();
       const Eigen::VectorXd cellForcingTerm = equation.ComputeCellForcingTerm(fValues,
                                                                               basisFunctionValues2D,
                                                                               cell2DQuadratureWeights);
@@ -1311,22 +1308,22 @@ namespace GedimForPy
       const Eigen::VectorXd u_y = basisFunctionDerivativeValues2D[1] *
                                   localNumericSolution;
 
-      const double* nonLinearValues = non_linear_f(cell2DQuadraturePoints.cols(),
-                                                   cell2DQuadraturePoints.data(),
-                                                   u.data(),
-                                                   u_x.data(),
-                                                   u_y.data());
+      const Eigen::MatrixXd nonLinearValues = Eigen::Map<const Eigen::MatrixXd>(non_linear_f(cell2DQuadraturePoints.cols(),
+                                                                                             cell2DQuadraturePoints.data(),
+                                                                                             u.data(),
+                                                                                             u_x.data(),
+                                                                                             u_y.data()),
+                                                                                2,
+                                                                                cell2DQuadraturePoints.cols());
 
 
-      const double* forcingTermValues = f(cell2DQuadraturePoints.cols(),
-                                          cell2DQuadraturePoints.data());
+      const Eigen::MatrixXd forcingTermValues = Eigen::Map<const Eigen::MatrixXd>(f(cell2DQuadraturePoints.cols(),
+                                                                                    cell2DQuadraturePoints.data()),
+                                                                                  2,
+                                                                                  cell2DQuadraturePoints.cols());
 
-      const Eigen::MatrixXd fValues = (Eigen::Map<const Eigen::MatrixXd>(forcingTermValues,
-                                                                         2,
-                                                                         cell2DQuadraturePoints.cols()).array() *
-                                       Eigen::Map<const Eigen::MatrixXd>(nonLinearValues,
-                                                                         2,
-                                                                         cell2DQuadraturePoints.cols()).array());
+      const Eigen::MatrixXd fValues = nonLinearValues.array() *
+                                      forcingTermValues.array();
 
       const Eigen::VectorXd cellForcingTerm = equation.ComputeCellForcingTerm(fValues,
                                                                               basisFunctionDerivativeValues2D,
@@ -1458,10 +1455,10 @@ namespace GedimForPy
                                                                                           cell2DMapData,
                                                                                           weakQuadraturePoints);
 
-        const double* weakTermValues = g(numEdgeQuadraturePoints,
-                                         weakQuadraturePoints.data());
-        const Eigen::VectorXd neumannContributions = equation.ComputeCellWeakTerm(Eigen::Map<const Eigen::VectorXd>(weakTermValues,
-                                                                                                                    numEdgeQuadraturePoints),
+        const Eigen::VectorXd weakTermValues = Eigen::Map<const Eigen::VectorXd>(g(numEdgeQuadraturePoints,
+                                                                                   weakQuadraturePoints.data()),
+                                                                                 numEdgeQuadraturePoints);
+        const Eigen::VectorXd neumannContributions = equation.ComputeCellWeakTerm(weakTermValues,
                                                                                   weakBasisFunctionsValues,
                                                                                   weakQuadratureWeights);
 
@@ -1621,12 +1618,12 @@ namespace GedimForPy
         }
       }
 
-      const double* exactSolutionValues = u(cell2DQuadraturePoints.cols(),
-                                            cell2DQuadraturePoints.data());
+      const Eigen::VectorXd exactSolutionValues = Eigen::Map<const Eigen::VectorXd>(u(cell2DQuadraturePoints.cols(),
+                                                                                      cell2DQuadraturePoints.data()),
+                                                                                    cell2DQuadraturePoints.cols());
 
       const Eigen::VectorXd localError = (basisFunctionValues2D * localNumericSolution -
-                                          Eigen::Map<const Eigen::VectorXd>(exactSolutionValues,
-                                                                            cell2DQuadraturePoints.cols())).array().square();
+                                          exactSolutionValues).array().square();
 
       errorL2[cell2DIndex] = cell2DQuadratureWeights.transpose() * localError;
     }
@@ -1690,13 +1687,13 @@ namespace GedimForPy
       Eigen::VectorXd localError = Eigen::VectorXd::Zero(cell2DQuadraturePoints.cols());
       for (unsigned int dim = 0; dim < 2; dim++)
       {
-        double* exactSolutionDerivativeValues = uDer(dim,
-                                                     cell2DQuadraturePoints.cols(),
-                                                     cell2DQuadraturePoints.data());
+        const Eigen::VectorXd exactSolutionDerivativeValues = Eigen::Map<const Eigen::VectorXd>(uDer(dim,
+                                                                                                     cell2DQuadraturePoints.cols(),
+                                                                                                     cell2DQuadraturePoints.data()),
+                                                                                                cell2DQuadraturePoints.cols());
 
         localError.array() += (basisFunctionDerivativeValues2D[dim] * localNumericSolution -
-                               Eigen::Map<const Eigen::VectorXd>(exactSolutionDerivativeValues,
-                                                                 cell2DQuadraturePoints.cols())).array().square();
+                               exactSolutionDerivativeValues).array().square();
       }
 
       errorH1[cell2DIndex] = cell2DQuadratureWeights.transpose() * localError;
@@ -1719,10 +1716,8 @@ namespace GedimForPy
     for (unsigned int p = 0; p < mesh.Cell0DTotalNumber(); p++)
     {
       const Eigen::Vector3d point = mesh.Cell0DCoordinates(p);
-      const double* exactSolutionValues = u(point.cols(),
-                                            point.data());
-
-      exactSolutionCell0Ds[p] = Eigen::Map<const Eigen::VectorXd>(exactSolutionValues,
+      exactSolutionCell0Ds[p] = Eigen::Map<const Eigen::VectorXd>(u(point.cols(),
+                                                                    point.data()),
                                                                   point.cols())[0];
     }
 
