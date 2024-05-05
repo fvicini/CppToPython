@@ -1090,7 +1090,7 @@ namespace UnitTesting
         }
       }
 
-      Eigen::VectorXd u_k = Eigen::VectorXd::Zero(problemData.NumberDOFs);
+      Eigen::VectorXd u_k = Eigen::VectorXd::Ones(problemData.NumberDOFs);
 
       double residual_norm = 1.0, solution_norm = 1.0;
       const double newton_tol = 1.0e-6;

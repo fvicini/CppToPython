@@ -1052,10 +1052,12 @@ namespace GedimForPy
                                             Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
                                                                               cell2DQuadraturePoints.cols()).array());
 
+      std::cout<< "PTR_1: "<< reactionTermValues<< std::endl;
+      std::cout<< "PTR_2: "<< nonLinearValues<< std::endl;
       std::cout<< "RT: "<< Eigen::Map<const Eigen::VectorXd>(reactionTermValues,
-                                                    cell2DQuadraturePoints.cols()).transpose()<< std::endl;
+                                                             cell2DQuadraturePoints.cols()).transpose()<< std::endl;
       std::cout<< "NL: "<< Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
-                                                    cell2DQuadraturePoints.cols()).transpose()<< std::endl;
+                                                             cell2DQuadraturePoints.cols()).transpose()<< std::endl;
       std::cout<< "PR: "<< reactionTerm.transpose()<< std::endl;
 
       const Eigen::MatrixXd cellMatrixC = equation.ComputeCellReactionMatrix(reactionTerm,
