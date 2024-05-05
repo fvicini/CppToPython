@@ -725,11 +725,11 @@ void GedimForPy_ExportSolutionOnPoints(const int trialSpaceIndex,
                                        const double* pointerNumericSolution)
 {
   std::cout<< Eigen::Map<const Eigen::MatrixXd>(coordinates,
-                                                3,
-                                                numPoints)<< std::endl;
+                                                numPoints,
+                                                3)<< std::endl;
   GedimForPy::GeDiM4Py_Logic::ExportSolutionOnPoints(Eigen::Map<const Eigen::MatrixXd>(coordinates,
-                                                                                       3,
-                                                                                       numPoints),
+                                                                                       numPoints,
+                                                                                       3).transpose(),
                                                      Eigen::Map<const Eigen::VectorXd>(pointerNumericSolution,
                                                                                        numPoints),
                                                      {
