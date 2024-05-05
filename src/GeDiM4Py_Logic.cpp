@@ -1044,6 +1044,8 @@ namespace GedimForPy
                                                    u.data(),
                                                    u_x.data(),
                                                    u_y.data());
+      const Eigen::VectorXd test = Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
+                                                                     cell2DQuadraturePoints.cols());
       const double* reactionTermValues = c(cell2DQuadraturePoints.cols(),
                                            cell2DQuadraturePoints.data());
 
@@ -1054,6 +1056,7 @@ namespace GedimForPy
 
       std::cout<< "PTR_1: "<< reactionTermValues<< std::endl;
       std::cout<< "PTR_2: "<< nonLinearValues<< std::endl;
+      std::cout<< "TEST "<< test.transpose()<< std::endl;
       std::cout<< "RT: "<< Eigen::Map<const Eigen::VectorXd>(reactionTermValues,
                                                              cell2DQuadraturePoints.cols()).transpose()<< std::endl;
       std::cout<< "NL: "<< Eigen::Map<const Eigen::VectorXd>(nonLinearValues,
