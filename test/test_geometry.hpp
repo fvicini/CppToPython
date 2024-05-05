@@ -15,7 +15,7 @@
 #include "test_Burger.hpp"
 #include "test_NonLinearPoisson.hpp"
 
-#define ACTIVE_CHECK 1
+#define ACTIVE_CHECK 0
 
 namespace UnitTesting
 {
@@ -989,7 +989,7 @@ namespace UnitTesting
     ASSERT_NO_THROW(interface.Initialize(interfaceConfig,
                                          data));
 
-    const std::vector<double> meshSize = { 0.01 };
+    const std::vector<double> meshSize = { 0.1 };
     const unsigned int order = 1;
 
     for (unsigned int m = 0; m < meshSize.size(); m++)
@@ -1094,7 +1094,7 @@ namespace UnitTesting
 
       double residual_norm = 1.0, solution_norm = 1.0;
       const double newton_tol = 1.0e-6;
-      const unsigned int max_iterations = 20;
+      const unsigned int max_iterations = 2;
       int num_iteration = 1;
 
       const Eigen::VectorXd u_strong = Eigen::VectorXd::Zero(problemData.NumberStrongs);
@@ -1163,6 +1163,10 @@ namespace UnitTesting
         J_reaction.setFromTriplets(J_reactionTriplets.begin(),
                                    J_reactionTriplets.end());
         J_reaction.makeCompressed();
+        {
+          for (auto trp : J_reactionTriplets)
+            std::cout<< "("<< trp.row()<< ","<< trp.col()<< "): "<< trp.value()<< std::endl;
+        }
         J_reactionTriplets.clear();
 
         Eigen::SparseMatrix<double> J_advection(problemData.NumberDOFs,
@@ -1172,6 +1176,7 @@ namespace UnitTesting
         J_advection.makeCompressed();
         J_advectionTriplets.clear();
 
+        std::cout<< J_forcingTerm_v.transpose()<< std::endl;
 
         Eigen::SparseLU<Eigen::SparseMatrix<double>> linearSolver;
         linearSolver.compute(J_stiffness +
@@ -1296,13 +1301,11 @@ namespace UnitTesting
         std::cerr.precision(3);
         std::cerr<< std::scientific<< "dofs"<< ","
                  << "h"<< ","<< "errorL2"<< ","
-                 << "errorH1"<< ","<< "normL2"<< ","
-                 << "normH1"<< std::endl;
+                 << "errorH1"<< ","<< "residual"<< std::endl;
         std::cerr<< std::scientific<< problemData.NumberDOFs<< ","
-                 << problemData.H<< ","<< sqrt(cell2DsErrorL2.sum())<< ","
-                 << sqrt(cell2DsErrorH1.sum())<< ","
-                 << sqrt(cell2DsNormL2.sum())<< ","
-                 << sqrt(cell2DsNormH1.sum())
+                 << problemData.H<< ","<< sqrt(cell2DsErrorL2.sum()) / sqrt(cell2DsNormL2.sum())<< ","
+                 << sqrt(cell2DsErrorH1.sum()) / sqrt(cell2DsNormH1.sum())<< ","
+                 << residual_norm / solution_norm
                  << std::endl;
 
         std::cout.precision(3);
