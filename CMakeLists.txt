@@ -96,7 +96,7 @@ target_include_directories(hello_program SYSTEM PRIVATE ${THIRDPARTY_INCLUDE})
 add_library(hello SHARED ${THIRDPARTY_HEADERS} hello.cpp)
 target_link_libraries(hello ${THIRDPARTY_LINKED_LIBRARIES})
 target_include_directories(hello SYSTEM PRIVATE ${THIRDPARTY_INCLUDE})
-target_compile_options(hello PUBLIC -fPIC)
+target_compile_options(hello PUBLIC -fPIC -Wbad-function-cast -Wcast-function-type)
 set_target_properties(
     hello
     PROPERTIES
