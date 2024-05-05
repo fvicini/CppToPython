@@ -66,6 +66,19 @@ namespace GedimForPy
         forcingTermValues;
   }
   // ***************************************************************************
+  VectorXd PDE_Equation::ComputeCellForcingTerm(const Eigen::MatrixXd& forcingTermValues,
+                                                const std::vector<Eigen::MatrixXd>& basisFunctionDerivativeValues,
+                                                const Eigen::VectorXd& quadratureWeights)
+  {
+    return
+        basisFunctionDerivativeValues[0].transpose() *
+        quadratureWeights.asDiagonal() *
+        forcingTermValues.row(0).transpose() +
+        basisFunctionDerivativeValues[1].transpose() *
+        quadratureWeights.asDiagonal() *
+        forcingTermValues.row(1).transpose();
+  }
+  // ***************************************************************************
   VectorXd PDE_Equation::ComputeCellWeakTerm(const Eigen::VectorXd& weakTermValues,
                                              const Eigen::MatrixXd& basisFunctionValues,
                                              const Eigen::VectorXd& quadratureWeights)

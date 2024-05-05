@@ -136,6 +136,15 @@ namespace GedimForPy
       FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace LocalSpace;
   };
 
+  struct SolutionOnPoints final
+  {
+      Eigen::MatrixXd QuadraturePoints;
+      Eigen::VectorXd QuadratureWeights;
+      Eigen::VectorXd Solution;
+      Eigen::VectorXd SolutionDerivativeX;
+      Eigen::VectorXd SolutionDerivativeY;
+  };
+
   class GeDiM4Py_Logic final
   {
     public:
@@ -143,6 +152,7 @@ namespace GedimForPy
       typedef double* (*B)(const int numPoints, const double* points);
       typedef double* (*C)(const int numPoints, const double* points);
       typedef double* (*F)(const int numPoints, const double* points);
+      typedef double* (*NNL)(const int numPoints, const double* points, const double* u, const double* u_x, const double* u_y);
       typedef double* (*Strong)(const int numPoints, const double* points);
       typedef double* (*Weak)(const int numPoints, const double* points);
       typedef double* (*Exact)(const int numPoints, const double* points);
@@ -174,6 +184,15 @@ namespace GedimForPy
                                           const DiscreteProblemData& problemData,
                                           std::list<Eigen::Triplet<double> >& stiffnessTriplets,
                                           std::list<Eigen::Triplet<double> >& stiffnessStrongTriplets);
+      static void AssembleNonLinearStiffnessMatrix(A a,
+                                                   NNL non_linear_f,
+                                                   const Gedim::IMeshDAO& mesh,
+                                                   const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                   const DiscreteProblemData& problemData,
+                                                   const Eigen::VectorXd& numeric_k,
+                                                   const Eigen::VectorXd& strong_k,
+                                                   std::list<Eigen::Triplet<double> >& stiffnessTriplets,
+                                                   std::list<Eigen::Triplet<double> >& stiffnessStrongTriplets);
       static void AssembleAnisotropicStiffnessMatrix(A a,
                                                      const Gedim::IMeshDAO& mesh,
                                                      const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
@@ -187,17 +206,51 @@ namespace GedimForPy
                                           const DiscreteProblemData& test_Functions,
                                           std::list<Eigen::Triplet<double>>& advectionTriplets,
                                           std::list<Eigen::Triplet<double>>& advectionStrongTriplets);
+      static void AssembleNonLinearAdvectionMatrix(B b,
+                                                   NNL non_linear_f,
+                                                   const Gedim::IMeshDAO& mesh,
+                                                   const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                   const DiscreteProblemData& trial_Functions,
+                                                   const DiscreteProblemData& test_Functions,
+                                                   const Eigen::VectorXd& numeric_k,
+                                                   const Eigen::VectorXd& strong_k,
+                                                   std::list<Eigen::Triplet<double>>& advectionTriplets,
+                                                   std::list<Eigen::Triplet<double>>& advectionStrongTriplets);
       static void AssembleReactionMatrix(C c,
                                          const Gedim::IMeshDAO& mesh,
                                          const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                          const DiscreteProblemData& problemData,
                                          std::list<Eigen::Triplet<double>>& reactionTriplets,
                                          std::list<Eigen::Triplet<double>>& reactionStrongTriplets);
+      static void AssembleNonLinearReactionMatrix(C c,
+                                                  NNL non_linear_f,
+                                                  const Gedim::IMeshDAO& mesh,
+                                                  const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                  const DiscreteProblemData& problemData,
+                                                  const Eigen::VectorXd& numeric_k,
+                                                  const Eigen::VectorXd& strong_k,
+                                                  std::list<Eigen::Triplet<double>>& reactionTriplets,
+                                                  std::list<Eigen::Triplet<double>>& reactionStrongTriplets);
+
 
       static Eigen::VectorXd AssembleForcingTerm(F f,
                                                  const Gedim::IMeshDAO& mesh,
                                                  const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                                  const DiscreteProblemData& problemData);
+      static Eigen::VectorXd AssembleNonLinearForcingTerm(F f,
+                                                          NNL non_linear_f,
+                                                          const Gedim::IMeshDAO& mesh,
+                                                          const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                          const DiscreteProblemData& problemData,
+                                                          const Eigen::VectorXd& numeric_k,
+                                                          const Eigen::VectorXd& strong_k);
+      static Eigen::VectorXd AssembleNonLinearDerivativeForcingTerm(F f,
+                                                                    NNL non_linear_f,
+                                                                    const Gedim::IMeshDAO& mesh,
+                                                                    const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                                    const DiscreteProblemData& problemData,
+                                                                    const Eigen::VectorXd& numeric_k,
+                                                                    const Eigen::VectorXd& strong_k);
 
       static Eigen::VectorXd AssembleStrongSolution(Strong g,
                                                     const unsigned int& marker,
@@ -213,6 +266,12 @@ namespace GedimForPy
                                               const std::vector<Eigen::MatrixXd>& cell2DsEdgeTangents,
                                               const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                               const DiscreteProblemData& problemData);
+
+      static SolutionOnPoints EvaluateSolutionOnPoints(const Gedim::IMeshDAO& mesh,
+                                                       const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                       const DiscreteProblemData& problemData,
+                                                       const Eigen::VectorXd& numeric,
+                                                       const Eigen::VectorXd& strong);
 
       static Eigen::VectorXd ComputeErrorL2(Exact u,
                                             const Eigen::VectorXd& numeric,
@@ -233,8 +292,12 @@ namespace GedimForPy
                                  const Gedim::IMeshDAO& mesh,
                                  const DiscreteProblemData& problemData,
                                  const ExportData& exportData);
+
+      static void ExportSolutionOnPoints(const Eigen::MatrixXd& points,
+                                         const Eigen::VectorXd& solution,
+                                         const ExportData& exportData);
   };
 
-}
+  }
 
 #endif

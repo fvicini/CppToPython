@@ -33,6 +33,17 @@ void GedimForPy_AssembleStiffnessMatrix(const int trialSpaceIndex,
                                         int* numStiffnessStrongTriplets,
                                         double** stiffnessStrongTriplets);
 extern "C"
+void GedimForPy_AssembleNonLinearStiffnessMatrix(const int trialSpaceIndex,
+                                                 const int testSpaceIndex,
+                                                 GedimForPy::GeDiM4Py_Logic::A a,
+                                                 GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                                 const double* pointerNumericSolution,
+                                                 const double* pointerStrongSolution,
+                                                 int* numStiffnessTriplets,
+                                                 double** stiffnessTriplets,
+                                                 int* numStiffnessStrongTriplets,
+                                                 double** stiffnessStrongTriplets);
+extern "C"
 void GedimForPy_AssembleAnisotropicStiffnessMatrix(const int trialSpaceIndex,
                                                    const int testSpaceIndex,
                                                    GedimForPy::GeDiM4Py_Logic::A a,
@@ -49,6 +60,17 @@ void GedimForPy_AssembleAdvectionMatrix(const int trialSpaceIndex,
                                         int* numAdvectionStrongTriplets,
                                         double** advectionStrongTriplets);
 extern "C"
+void GedimForPy_AssembleNonLinearAdvectionMatrix(const int trialSpaceIndex,
+                                                 const int testSpaceIndex,
+                                                 GedimForPy::GeDiM4Py_Logic::B b,
+                                                 GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                                 const double* pointerNumericSolution,
+                                                 const double* pointerStrongSolution,
+                                                 int* numAdvectionTriplets,
+                                                 double** advectionTriplets,
+                                                 int* numAdvectionStrongTriplets,
+                                                 double** advectionStrongTriplets);
+extern "C"
 void GedimForPy_AssembleReactionMatrix(const int trialSpaceIndex,
                                        const int testSpaceIndex,
                                        GedimForPy::GeDiM4Py_Logic::C c,
@@ -57,10 +79,39 @@ void GedimForPy_AssembleReactionMatrix(const int trialSpaceIndex,
                                        int* numReactionStrongTriplets,
                                        double** reactionStrongTriplets);
 extern "C"
+void GedimForPy_AssembleNonLinearReactionMatrix(const int trialSpaceIndex,
+                                                const int testSpaceIndex,
+                                                GedimForPy::GeDiM4Py_Logic::C c,
+                                                GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                                const double* pointerNumericSolution,
+                                                const double* pointerStrongSolution,
+                                                int* numReactionTriplets,
+                                                double** reactionTriplets,
+                                                int* numReactionStrongTriplets,
+                                                double** reactionStrongTriplets);
+extern "C"
 void GedimForPy_AssembleForcingTerm(const int testSpaceIndex,
                                     GedimForPy::GeDiM4Py_Logic::F f,
                                     int* size,
                                     double** forcingTerm);
+extern "C"
+void GedimForPy_AssembleNonLinearForcingTerm(const int trialSpaceIndex,
+                                             const int testSpaceIndex,
+                                             GedimForPy::GeDiM4Py_Logic::F f,
+                                             GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                             const double* pointerNumericSolution,
+                                             const double* pointerStrongSolution,
+                                             int* size,
+                                             double** forcingTerm);
+extern "C"
+void GedimForPy_AssembleNonLinearDerivativeForcingTerm(const int trialSpaceIndex,
+                                                       const int testSpaceIndex,
+                                                       GedimForPy::GeDiM4Py_Logic::F f,
+                                                       GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                                       const double* pointerNumericSolution,
+                                                       const double* pointerStrongSolution,
+                                                       int* size,
+                                                       double** forcingTerm);
 extern "C"
 void GedimForPy_AssembleStrongSolution(const int trialSpaceIndex,
                                        GedimForPy::GeDiM4Py_Logic::Strong g,
@@ -105,6 +156,25 @@ double GedimForPy_ComputeErrorH1_LastSpace(GedimForPy::GeDiM4Py_Logic::ExactDeri
                                            const double* pointerNumericSolution,
                                            const double* pointerStrongSolution);
 extern "C"
+void GedimForPy_EvaluateSolutionOnPoints(const int trialSpaceIndex,
+                                         const double* pointerNumericSolution,
+                                         const double* pointerStrongSolution,
+                                         int* numPoints,
+                                         double** quadraturePoints,
+                                         double** quadratureWeights,
+                                         double** solution,
+                                         double** solutionDerivativeX,
+                                         double** solutionDerivativeY);
+extern "C"
+void GedimForPy_EvaluateSolutionOnPoints_LastSpace(const double* pointerNumericSolution,
+                                                   const double* pointerStrongSolution,
+                                                   int* numPoints,
+                                                   double** quadraturePoints,
+                                                   double** quadratureWeights,
+                                                   double** solution,
+                                                   double** solutionDerivativeX,
+                                                   double** solutionDerivativeY);
+extern "C"
 void GedimForPy_ExportSolution(const int trialSpaceIndex,
                                GedimForPy::GeDiM4Py_Logic::Exact u,
                                const double* pointerNumericSolution,
@@ -113,6 +183,15 @@ extern "C"
 void GedimForPy_ExportSolution_LastSpace(GedimForPy::GeDiM4Py_Logic::Exact u,
                                          const double* pointerNumericSolution,
                                          const double* pointerStrongSolution);
+extern "C"
+void GedimForPy_ExportSolutionOnPoints(const int trialSpaceIndex,
+                                       const int numPoints,
+                                       const double* coordinates,
+                                       const double* pointerNumericSolution);
+extern "C"
+void GedimForPy_ExportSolutionOnPoints_LastSpace(const int numPoints,
+                                                 const double* coordinates,
+                                                 const double* pointerNumericSolution);
 // ***************************************************************************
 
 namespace GedimForPy
@@ -159,6 +238,13 @@ namespace GedimForPy
       static void ConvertArray(const Eigen::VectorXd& array,
                                int& size,
                                double*& convertedArray);
+      static void ConvertSolutionOnPoints(const GedimForPy::SolutionOnPoints solutionOnPoints,
+                                          int& numPoints,
+                                          double*& quadraturePoints,
+                                          double*& quadratureWeights,
+                                          double*& solution,
+                                          double*& solutionDerivativeX,
+                                          double*& solutionDerivativeY);
   };
 }
 

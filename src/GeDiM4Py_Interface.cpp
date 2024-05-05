@@ -145,6 +145,48 @@ void GedimForPy_AssembleStiffnessMatrix(const int trialSpaceIndex,
                                                   *stiffnessStrongTriplets);
 }
 // ***************************************************************************
+void GedimForPy_AssembleNonLinearStiffnessMatrix(const int trialSpaceIndex,
+                                                 const int testSpaceIndex,
+                                                 GedimForPy::GeDiM4Py_Logic::A a,
+                                                 GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                                 const double* pointerNumericSolution,
+                                                 const double* pointerStrongSolution,
+                                                 int* numStiffnessTriplets,
+                                                 double** stiffnessTriplets,
+                                                 int* numStiffnessStrongTriplets,
+                                                 double** stiffnessStrongTriplets)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  std::list<Eigen::Triplet<double>> stiffness, stiffnessStrong;
+  GedimForPy::GeDiM4Py_Logic::AssembleNonLinearStiffnessMatrix(a,
+                                                               non_linear_f,
+                                                               meshDAO,
+                                                               mesh.Cell2DsMap,
+                                                               problemsData[trialSpaceIndex],
+                                                               Eigen::Map<const Eigen::VectorXd>(pointerNumericSolution,
+                                                                                                 problemsData[trialSpaceIndex].NumberDOFs),
+                                                               Eigen::Map<const Eigen::VectorXd>(pointerStrongSolution,
+                                                                                                 problemsData[trialSpaceIndex].NumberStrongs),
+                                                               stiffness,
+                                                               stiffnessStrong);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertTriplets(stiffness,
+                                                  *numStiffnessTriplets,
+                                                  *stiffnessTriplets);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertTriplets(stiffnessStrong,
+                                                  *numStiffnessStrongTriplets,
+                                                  *stiffnessStrongTriplets);
+}
+// ***************************************************************************
 void GedimForPy_AssembleAnisotropicStiffnessMatrix(const int trialSpaceIndex,
                                                    const int testSpaceIndex,
                                                    GedimForPy::GeDiM4Py_Logic::A a,
@@ -214,6 +256,49 @@ void GedimForPy_AssembleAdvectionMatrix(const int trialSpaceIndex,
                                                   *advectionStrongTriplets);
 }
 // ***************************************************************************
+void GedimForPy_AssembleNonLinearAdvectionMatrix(const int trialSpaceIndex,
+                                                 const int testSpaceIndex,
+                                                 GedimForPy::GeDiM4Py_Logic::B b,
+                                                 GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                                 const double* pointerNumericSolution,
+                                                 const double* pointerStrongSolution,
+                                                 int* numAdvectionTriplets,
+                                                 double** advectionTriplets,
+                                                 int* numAdvectionStrongTriplets,
+                                                 double** advectionStrongTriplets)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  std::list<Eigen::Triplet<double>> advection, advectionStrong;
+  GedimForPy::GeDiM4Py_Logic::AssembleNonLinearAdvectionMatrix(b,
+                                                               non_linear_f,
+                                                               meshDAO,
+                                                               mesh.Cell2DsMap,
+                                                               problemsData[trialSpaceIndex],
+                                                               problemsData[testSpaceIndex],
+                                                               Eigen::Map<const Eigen::VectorXd>(pointerNumericSolution,
+                                                                                                 problemsData[trialSpaceIndex].NumberDOFs),
+                                                               Eigen::Map<const Eigen::VectorXd>(pointerStrongSolution,
+                                                                                                 problemsData[trialSpaceIndex].NumberStrongs),
+                                                               advection,
+                                                               advectionStrong);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertTriplets(advection,
+                                                  *numAdvectionTriplets,
+                                                  *advectionTriplets);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertTriplets(advectionStrong,
+                                                  *numAdvectionStrongTriplets,
+                                                  *advectionStrongTriplets);
+}
+// ***************************************************************************
 void GedimForPy_AssembleReactionMatrix(const int trialSpaceIndex,
                                        const int testSpaceIndex,
                                        GedimForPy::GeDiM4Py_Logic::C c,
@@ -248,6 +333,48 @@ void GedimForPy_AssembleReactionMatrix(const int trialSpaceIndex,
                                                   *reactionStrongTriplets);
 }
 // ***************************************************************************
+void GedimForPy_AssembleNonLinearReactionMatrix(const int trialSpaceIndex,
+                                                const int testSpaceIndex,
+                                                GedimForPy::GeDiM4Py_Logic::C c,
+                                                GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                                const double* pointerNumericSolution,
+                                                const double* pointerStrongSolution,
+                                                int* numReactionTriplets,
+                                                double** reactionTriplets,
+                                                int* numReactionStrongTriplets,
+                                                double** reactionStrongTriplets)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  std::list<Eigen::Triplet<double>> reaction, reactionStrong;
+  GedimForPy::GeDiM4Py_Logic::AssembleNonLinearReactionMatrix(c,
+                                                              non_linear_f,
+                                                              meshDAO,
+                                                              mesh.Cell2DsMap,
+                                                              problemsData[trialSpaceIndex],
+                                                              Eigen::Map<const Eigen::VectorXd>(pointerNumericSolution,
+                                                                                                problemsData[trialSpaceIndex].NumberDOFs),
+                                                              Eigen::Map<const Eigen::VectorXd>(pointerStrongSolution,
+                                                                                                problemsData[trialSpaceIndex].NumberStrongs),
+                                                              reaction,
+                                                              reactionStrong);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertTriplets(reaction,
+                                                  *numReactionTriplets,
+                                                  *reactionTriplets);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertTriplets(reactionStrong,
+                                                  *numReactionStrongTriplets,
+                                                  *reactionStrongTriplets);
+}
+// ***************************************************************************
 void GedimForPy_AssembleForcingTerm(const int testSpaceIndex,
                                     GedimForPy::GeDiM4Py_Logic::F f,
                                     int* size,
@@ -266,6 +393,68 @@ void GedimForPy_AssembleForcingTerm(const int testSpaceIndex,
                                                                                                meshDAO,
                                                                                                mesh.Cell2DsMap,
                                                                                                problemsData[testSpaceIndex]),
+                                               *size,
+                                               *forcingTerm);
+}
+// ***************************************************************************
+void GedimForPy_AssembleNonLinearForcingTerm(const int trialSpaceIndex,
+                                             const int testSpaceIndex,
+                                             GedimForPy::GeDiM4Py_Logic::F f,
+                                             GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                             const double* pointerNumericSolution,
+                                             const double* pointerStrongSolution,
+                                             int* size,
+                                             double** forcingTerm)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertArray(GedimForPy::GeDiM4Py_Logic::AssembleNonLinearForcingTerm(f,
+                                                                                                        non_linear_f,
+                                                                                                        meshDAO,
+                                                                                                        mesh.Cell2DsMap,
+                                                                                                        problemsData[testSpaceIndex],
+                                                                                                        Eigen::Map<const Eigen::VectorXd>(pointerNumericSolution,
+                                                                                                                                          problemsData[trialSpaceIndex].NumberDOFs),
+                                                                                                        Eigen::Map<const Eigen::VectorXd>(pointerStrongSolution,
+                                                                                                                                          problemsData[trialSpaceIndex].NumberStrongs)),
+                                               *size,
+                                               *forcingTerm);
+}
+// ***************************************************************************
+void GedimForPy_AssembleNonLinearDerivativeForcingTerm(const int trialSpaceIndex,
+                                                       const int testSpaceIndex,
+                                                       GedimForPy::GeDiM4Py_Logic::F f,
+                                                       GedimForPy::GeDiM4Py_Logic::NNL non_linear_f,
+                                                       const double* pointerNumericSolution,
+                                                       const double* pointerStrongSolution,
+                                                       int* size,
+                                                       double** forcingTerm)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  GedimForPy::GeDiM4Py_Interface::ConvertArray(GedimForPy::GeDiM4Py_Logic::AssembleNonLinearDerivativeForcingTerm(f,
+                                                                                                                  non_linear_f,
+                                                                                                                  meshDAO,
+                                                                                                                  mesh.Cell2DsMap,
+                                                                                                                  problemsData[testSpaceIndex],
+                                                                                                                  Eigen::Map<const Eigen::VectorXd>(pointerNumericSolution,
+                                                                                                                                                    problemsData[trialSpaceIndex].NumberDOFs),
+                                                                                                                  Eigen::Map<const Eigen::VectorXd>(pointerStrongSolution,
+                                                                                                                                                    problemsData[trialSpaceIndex].NumberStrongs)),
                                                *size,
                                                *forcingTerm);
 }
@@ -435,6 +624,64 @@ double GedimForPy_ComputeErrorH1_LastSpace(GedimForPy::GeDiM4Py_Logic::ExactDeri
                                    pointerStrongSolution);
 }
 // ***************************************************************************
+void GedimForPy_EvaluateSolutionOnPoints(const int trialSpaceIndex,
+                                         const double* pointerNumericSolution,
+                                         const double* pointerStrongSolution,
+                                         int* numPoints,
+                                         double** quadraturePoints,
+                                         double** quadratureWeights,
+                                         double** solution,
+                                         double** solutionDerivativeX,
+                                         double** solutionDerivativeY)
+{
+  GedimForPy::InterfaceConfiguration& configuration = GedimForPy::GeDiM4Py_Interface::InterfaceConfig;
+  GedimForPy::InterfaceData& data = GedimForPy::GeDiM4Py_Interface::InterfaceData;
+  GedimForPy::Domain2D& domain2D = GedimForPy::GeDiM4Py_Interface::Domain;
+  GedimForPy::Domain2DMesh& mesh = GedimForPy::GeDiM4Py_Interface::Mesh;
+  std::vector<GedimForPy::DiscreteSpace>& spaces = GedimForPy::GeDiM4Py_Interface::Spaces;
+  std::vector<GedimForPy::DiscreteProblemData>& problemsData = GedimForPy::GeDiM4Py_Interface::ProblemsData;
+
+  Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+  const GedimForPy::SolutionOnPoints solutionOnPoints =
+      GedimForPy::GeDiM4Py_Logic::EvaluateSolutionOnPoints(meshDAO,
+                                                           mesh.Cell2DsMap,
+                                                           problemsData[trialSpaceIndex],
+                                                           Eigen::Map<const Eigen::VectorXd>(pointerNumericSolution,
+                                                                                             problemsData[trialSpaceIndex].NumberDOFs),
+                                                           Eigen::Map<const Eigen::VectorXd>(pointerStrongSolution,
+                                                                                             problemsData[trialSpaceIndex].NumberStrongs));
+
+  GedimForPy::GeDiM4Py_Interface::ConvertSolutionOnPoints(solutionOnPoints,
+                                                          *numPoints,
+                                                          *quadraturePoints,
+                                                          *quadratureWeights,
+                                                          *solution,
+                                                          *solutionDerivativeX,
+                                                          *solutionDerivativeY);
+
+}
+// ***************************************************************************
+void GedimForPy_EvaluateSolutionOnPoints_LastSpace(const double* pointerNumericSolution,
+                                                   const double* pointerStrongSolution,
+                                                   int* numPoints,
+                                                   double** quadraturePoints,
+                                                   double** quadratureWeights,
+                                                   double** solution,
+                                                   double** solutionDerivativeX,
+                                                   double** solutionDerivativeY)
+{
+  GedimForPy_EvaluateSolutionOnPoints(GedimForPy::GeDiM4Py_Interface::ProblemsData.size() - 1,
+                                      pointerNumericSolution,
+                                      pointerStrongSolution,
+                                      numPoints,
+                                      quadraturePoints,
+                                      quadratureWeights,
+                                      solution,
+                                      solutionDerivativeX,
+                                      solutionDerivativeY);
+}
+// ***************************************************************************
 void GedimForPy_ExportSolution(const int trialSpaceIndex,
                                GedimForPy::GeDiM4Py_Logic::Exact u,
                                const double* pointerNumericSolution,
@@ -470,6 +717,32 @@ void GedimForPy_ExportSolution_LastSpace(GedimForPy::GeDiM4Py_Logic::Exact u,
                             u,
                             pointerNumericSolution,
                             pointerStrongSolution);
+}
+// ***************************************************************************
+void GedimForPy_ExportSolutionOnPoints(const int trialSpaceIndex,
+                                       const int numPoints,
+                                       const double* coordinates,
+                                       const double* pointerNumericSolution)
+{
+  GedimForPy::GeDiM4Py_Logic::ExportSolutionOnPoints(Eigen::Map<const Eigen::MatrixXd>(coordinates,
+                                                                                       numPoints,
+                                                                                       3).transpose(),
+                                                     Eigen::Map<const Eigen::VectorXd>(pointerNumericSolution,
+                                                                                       numPoints),
+                                                     {
+                                                       "./Export",
+                                                       "SolutionOnPoints_" + std::to_string(trialSpaceIndex)
+                                                     });
+}
+// ***************************************************************************
+void GedimForPy_ExportSolutionOnPoints_LastSpace(const int numPoints,
+                                                 const double* coordinates,
+                                                 const double* pointerNumericSolution)
+{
+  GedimForPy_ExportSolutionOnPoints(GedimForPy::GeDiM4Py_Interface::ProblemsData.size() - 1,
+                                    numPoints,
+                                    coordinates,
+                                    pointerNumericSolution);
 }
 // ***************************************************************************
 namespace GedimForPy
@@ -679,5 +952,28 @@ namespace GedimForPy
     arr = array;
   }
   // ***************************************************************************
+  void GeDiM4Py_Interface::ConvertSolutionOnPoints(const SolutionOnPoints solutionOnPoints,
+                                                   int& numPoints,
+                                                   double*& quadraturePoints,
+                                                   double*& quadratureWeights,
+                                                   double*& solution,
+                                                   double*& solutionDerivativeX,
+                                                   double*& solutionDerivativeY)
+  {
+    ConvertMatrix(solutionOnPoints.QuadraturePoints,
+                  quadraturePoints);
+    ConvertArray(solutionOnPoints.QuadratureWeights,
+                 numPoints,
+                 quadratureWeights);
+    ConvertArray(solutionOnPoints.Solution,
+                 numPoints,
+                 solution);
+    ConvertArray(solutionOnPoints.SolutionDerivativeX,
+                 numPoints,
+                 solutionDerivativeX);
+    ConvertArray(solutionOnPoints.SolutionDerivativeY,
+                 numPoints,
+                 solutionDerivativeY);
+  }
+  // ***************************************************************************
 }
-// ***************************************************************************
