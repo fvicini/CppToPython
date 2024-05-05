@@ -96,7 +96,7 @@ target_include_directories(hello_program SYSTEM PRIVATE ${THIRDPARTY_INCLUDE})
 add_library(hello SHARED ${THIRDPARTY_HEADERS} hello.cpp)
 target_link_libraries(hello ${THIRDPARTY_LINKED_LIBRARIES})
 target_include_directories(hello SYSTEM PRIVATE ${THIRDPARTY_INCLUDE})
-target_compile_options(hello PUBLIC -fPIC -Wbad-function-cast -Wcast-function-type)
+target_compile_options(hello PUBLIC -fPIC)
 set_target_properties(
     hello
     PROPERTIES
@@ -116,7 +116,7 @@ add_library(GeDiM4Py SHARED ${THIRDPARTY_HEADERS} ${${GEDIMFORPY_HEADERS}} ${${G
 target_link_libraries(GeDiM4Py ${THIRDPARTY_LINKED_LIBRARIES})
 target_include_directories(GeDiM4Py SYSTEM PRIVATE ${THIRDPARTY_INCLUDE})
 target_include_directories(GeDiM4Py SYSTEM PRIVATE ${${GEDIMFORPY_INCLUDE}})
-target_compile_options(GeDiM4Py PUBLIC -fPIC -Wbad-function-cast -Wcast-function-type)
+target_compile_options(GeDiM4Py PUBLIC -fPIC)
 set_target_properties(
     GeDiM4Py
     PROPERTIES
