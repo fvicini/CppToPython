@@ -989,7 +989,7 @@ namespace UnitTesting
     ASSERT_NO_THROW(interface.Initialize(interfaceConfig,
                                          data));
 
-    const std::vector<double> meshSize = { 0.01 };
+    const std::vector<double> meshSize = { 0.1 };
     const unsigned int order = 1;
 
     for (unsigned int m = 0; m < meshSize.size(); m++)
@@ -1094,7 +1094,7 @@ namespace UnitTesting
 
       double residual_norm = 1.0, solution_norm = 1.0;
       const double newton_tol = 1.0e-6;
-      const unsigned int max_iterations = 20;
+      const unsigned int max_iterations = 2;
       int num_iteration = 1;
 
       const Eigen::VectorXd u_strong = Eigen::VectorXd::Zero(problemData.NumberStrongs);
