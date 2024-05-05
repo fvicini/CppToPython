@@ -15,7 +15,7 @@
 #include "test_Burger.hpp"
 #include "test_NonLinearPoisson.hpp"
 
-#define ACTIVE_CHECK 0
+#define ACTIVE_CHECK 1
 
 namespace UnitTesting
 {
@@ -989,7 +989,7 @@ namespace UnitTesting
     ASSERT_NO_THROW(interface.Initialize(interfaceConfig,
                                          data));
 
-    const std::vector<double> meshSize = { 0.1 };
+    const std::vector<double> meshSize = { 0.01 };
     const unsigned int order = 1;
 
     for (unsigned int m = 0; m < meshSize.size(); m++)
