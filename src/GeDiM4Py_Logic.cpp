@@ -75,22 +75,22 @@ namespace GedimForPy
     Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
 
     Eigen::MatrixXd cell0Ds;
-    vector<Eigen::VectorXi> originalCell2Ds;
-    vector<Eigen::VectorXi> cell2Ds;
+    std::vector<Eigen::VectorXi> originalCell2Ds;
+    std::vector<Eigen::VectorXi> cell2Ds;
 
     {
       std::vector<std::string> cell0DsLines;
       Gedim::FileReader csvFileReader(domain.InputFolder + "/Cell0Ds.csv");
 
       if (!csvFileReader.Open())
-        throw runtime_error("File not found in folder " + domain.InputFolder);
+        throw std::runtime_error("File not found in folder " + domain.InputFolder);
 
       csvFileReader.GetAllLines(cell0DsLines);
       csvFileReader.Close();
 
       unsigned int numCell0Ds = cell0DsLines.size() - 1;
       if (numCell0Ds == 0)
-        throw runtime_error("File cell0Ds empty");
+        throw std::runtime_error("File cell0Ds empty");
 
 
       cell0Ds.setZero(3, numCell0Ds);
@@ -99,7 +99,7 @@ namespace GedimForPy
       unsigned int id;
       for (unsigned int v = 0; v < numCell0Ds; v++)
       {
-        istringstream converter(cell0DsLines[v + 1]);
+        std::istringstream converter(cell0DsLines[v + 1]);
 
         converter >> id;
         if (domain.Separator != ' ')
@@ -116,14 +116,14 @@ namespace GedimForPy
       Gedim::FileReader csvFileReader(domain.InputFolder + "/Cell2Ds.csv");
 
       if (!csvFileReader.Open())
-        throw runtime_error("File not found in folder " + domain.InputFolder);
+        throw std::runtime_error("File not found in folder " + domain.InputFolder);
 
       csvFileReader.GetAllLines(cell2DsLines);
       csvFileReader.Close();
 
       unsigned int numCell2Ds = cell2DsLines.size() - 1;
       if (numCell2Ds == 0)
-        throw runtime_error("File cell2Ds empty");
+        throw std::runtime_error("File cell2Ds empty");
 
       cell2Ds.resize(numCell2Ds, Eigen::VectorXi::Zero(3));
       originalCell2Ds.resize(numCell2Ds, Eigen::VectorXi::Zero(3));
@@ -132,7 +132,7 @@ namespace GedimForPy
       unsigned int id;
       for (unsigned int t = 0; t < numCell2Ds; t++)
       {
-        istringstream converter(cell2DsLines[t + 1]);
+        std::istringstream converter(cell2DsLines[t + 1]);
 
         converter >> id;
         if (domain.Separator != ' ')
@@ -170,20 +170,20 @@ namespace GedimForPy
       Gedim::FileReader csvFileReader(domain.InputFolder + "/Cell2DsMarker.csv");
 
       if (!csvFileReader.Open())
-        throw runtime_error("File not found in folder " + domain.InputFolder);
+        throw std::runtime_error("File not found in folder " + domain.InputFolder);
 
       csvFileReader.GetAllLines(cell2DsLines);
       csvFileReader.Close();
 
       unsigned int numCell2Ds = cell2DsLines.size() - 1;
       if (numCell2Ds == 0)
-        throw runtime_error("File cell2DsMarker empty");
+        throw std::runtime_error("File cell2DsMarker empty");
 
       char temp;
       unsigned int cell2DIndex, vertexIndex, marker;
       for (unsigned int t = 0; t < numCell2Ds; t++)
       {
-        istringstream converter(cell2DsLines[t + 1]);
+        std::istringstream converter(cell2DsLines[t + 1]);
 
         converter >> cell2DIndex;
         if (domain.Separator != ' ')
@@ -1717,7 +1717,7 @@ namespace GedimForPy
                                                                   point.cols())[0];
     }
 
-    vector<double> cell0DNumericSolution(mesh.Cell0DTotalNumber(), 0.0);
+    std::vector<double> cell0DNumericSolution(mesh.Cell0DTotalNumber(), 0.0);
 
     for (unsigned int p = 0; p < mesh.Cell0DTotalNumber(); p++)
     {
