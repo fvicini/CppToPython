@@ -834,14 +834,14 @@ namespace GedimForPy
     Gedim::FileReader csvFileReader("./ImportMesh.csv");
 
     if (!csvFileReader.Open())
-      throw runtime_error("File ImportMesh.csv not found in folder ./");
+      throw std::runtime_error("File ImportMesh.csv not found in folder ./");
 
     csvFileReader.GetAllLines(inputFolders);
     csvFileReader.Close();
 
     unsigned int numInputFolders = inputFolders.size() - 1;
     if (numInputFolders != 1)
-      throw runtime_error("File ImportMesh.csv wrong");
+      throw std::runtime_error("File ImportMesh.csv wrong");
 
     domain.InputFolder = inputFolders[1];
     domain.Separator = ';';

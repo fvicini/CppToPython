@@ -107,12 +107,13 @@ namespace GedimForPy
     for (unsigned int e = 0; e < 3; e++)
       localSpace.Dof1DsIndex[e + 1] = localSpace.Dof1DsIndex[e] + localSpace.NumberDofs1D;
 
-    Gedim::Quadrature_Gauss2D_Triangle::FillPointsAndWeights(2 * order,
-                                                             localSpace.ReferenceElement.InternalQuadrature.Points,
-                                                             localSpace.ReferenceElement.InternalQuadrature.Weights);
-    Gedim::Quadrature_Gauss1D::FillPointsAndWeights(2 * order,
-                                                    localSpace.ReferenceElement.BorderQuadrature.Points,
-                                                    localSpace.ReferenceElement.BorderQuadrature.Weights);
+    const auto internalQuadrature = Gedim::Quadrature::Quadrature_Gauss2D_Triangle::FillPointsAndWeights(2 * order);
+    const auto borderQuadrature = Gedim::Quadrature::Quadrature_Gauss1D::FillPointsAndWeights(2 * order);
+
+    localSpace.ReferenceElement.InternalQuadrature.Points = internalQuadrature.Points;
+    localSpace.ReferenceElement.InternalQuadrature.Weights = internalQuadrature.Weights;
+    localSpace.ReferenceElement.BorderQuadrature.Points = borderQuadrature.Points;
+    localSpace.ReferenceElement.BorderQuadrature.Weights = borderQuadrature.Weights;
 
     return localSpace;
   }

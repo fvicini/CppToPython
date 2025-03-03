@@ -2,17 +2,6 @@ cmake_minimum_required(VERSION 3.18)
 
 project(GeDiM4Py LANGUAGES CXX C VERSION 1.0.0)
 
-# Set C++ Standard
-################################################################################
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# Create library test variables
-###############################################################################################
-set(GEDIMFORPY_SOURCES ${PROJECT_NAME}_sources)
-set(GEDIMFORPY_HEADERS ${PROJECT_NAME}_headers)
-set(GEDIMFORPY_INCLUDE ${PROJECT_NAME}_include)
-set(GEDIMFORPY_LINKED_LIBRARIES ${PROJECT_NAME}_linked_libraries)
 
 # ADD GEDIM DIRECTORY
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/gedim/GeDiM)
@@ -55,10 +44,14 @@ if(${ENABLE_VTK})
 endif()
 
 ## triangle
-find_package(triangle CONFIG REQUIRED)
+if(${ENABLE_TRIANGLE})
+  find_package(triangle CONFIG REQUIRED)
+endif()
 
 ## tetgen
-find_package(tetgen CONFIG REQUIRED)
+if(${ENABLE_TETGEN})
+  find_package(tetgen CONFIG REQUIRED)
+endif()
 
 ## GTest
 if (CMAKE_VERSION VERSION_LESS 3.20)
@@ -81,9 +74,9 @@ endif()
 ###############################################################################################
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src)
-list(APPEND ${GEDIMFORPY_HEADERS} ${src_headers})
-list(APPEND ${GEDIMFORPY_SOURCES} ${src_sources})
-list(APPEND ${GEDIMFORPY_INCLUDE} ${src_include})
+list(APPEND GEDIMFORPY_HEADERS ${src_headers})
+list(APPEND GEDIMFORPY_SOURCES ${src_sources})
+list(APPEND GEDIMFORPY_INCLUDE ${src_include})
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
 
@@ -103,19 +96,22 @@ set_target_properties(
         PREFIX ""
         OUTPUT_NAME "hello"
         LINKER_LANGUAGE CXX
+        CXX_STANDARD 20
+    	CXX_STANDARD_REQUIRED ON
+    	CXX_EXTENSIONS OFF
     )
 
-add_executable(GeDiM4Py_Test ${THIRDPARTY_HEADERS} ${${GEDIMFORPY_HEADERS}} ${${GEDIMFORPY_SOURCES}} ${test_sources} GeDiM4Py.cpp)
+add_executable(GeDiM4Py_Test ${THIRDPARTY_HEADERS} ${GEDIMFORPY_HEADERS} ${GEDIMFORPY_SOURCES} ${test_sources} GeDiM4Py.cpp)
 target_link_libraries(GeDiM4Py_Test ${THIRDPARTY_LINKED_LIBRARIES})
 target_link_libraries(GeDiM4Py_Test ${TEST_LINKED_LIBRARIES})
 target_include_directories(GeDiM4Py_Test SYSTEM PRIVATE ${THIRDPARTY_INCLUDE})
-target_include_directories(GeDiM4Py_Test SYSTEM PRIVATE ${${GEDIMFORPY_INCLUDE}})
+target_include_directories(GeDiM4Py_Test SYSTEM PRIVATE ${GEDIMFORPY_INCLUDE})
 target_include_directories(GeDiM4Py_Test SYSTEM PRIVATE ${test_include})
 
-add_library(GeDiM4Py SHARED ${THIRDPARTY_HEADERS} ${${GEDIMFORPY_HEADERS}} ${${GEDIMFORPY_SOURCES}})
+add_library(GeDiM4Py SHARED ${THIRDPARTY_HEADERS} ${GEDIMFORPY_HEADERS} ${GEDIMFORPY_SOURCES})
 target_link_libraries(GeDiM4Py ${THIRDPARTY_LINKED_LIBRARIES})
 target_include_directories(GeDiM4Py SYSTEM PRIVATE ${THIRDPARTY_INCLUDE})
-target_include_directories(GeDiM4Py SYSTEM PRIVATE ${${GEDIMFORPY_INCLUDE}})
+target_include_directories(GeDiM4Py SYSTEM PRIVATE ${GEDIMFORPY_INCLUDE})
 target_compile_options(GeDiM4Py PUBLIC -fPIC)
 set_target_properties(
     GeDiM4Py
@@ -123,4 +119,7 @@ set_target_properties(
         PREFIX ""
         OUTPUT_NAME "GeDiM4Py"
         LINKER_LANGUAGE CXX
+        CXX_STANDARD 20
+    	CXX_STANDARD_REQUIRED ON
+    	CXX_EXTENSIONS OFF
     )
