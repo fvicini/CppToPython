@@ -1,4 +1,4 @@
-list(APPEND test_sources ${CMAKE_CURRENT_SOURCE_DIR}/test_geometry.hpp)
+list(APPEND test_sources ${CMAKE_CURRENT_SOURCE_DIR}/test_utilities.hpp)
 list(APPEND test_sources ${CMAKE_CURRENT_SOURCE_DIR}/test_python.hpp)
 list(APPEND test_sources ${CMAKE_CURRENT_SOURCE_DIR}/test_Poisson.hpp)
 list(APPEND test_sources ${CMAKE_CURRENT_SOURCE_DIR}/test_heat_conductivity.hpp)
