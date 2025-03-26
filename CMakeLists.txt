@@ -101,7 +101,7 @@ set_target_properties(
     	CXX_EXTENSIONS OFF
     )
 
-add_executable(GeDiM4Py_Test ${THIRDPARTY_HEADERS} ${GEDIMFORPY_HEADERS} ${GEDIMFORPY_SOURCES} ${test_sources} GeDiM4Py.cpp)
+add_executable(GeDiM4Py_Test ${THIRDPARTY_HEADERS} ${GEDIMFORPY_HEADERS} ${GEDIMFORPY_SOURCES} ${test_sources} main_test.cpp)
 target_link_libraries(GeDiM4Py_Test ${THIRDPARTY_LINKED_LIBRARIES})
 target_link_libraries(GeDiM4Py_Test ${TEST_LINKED_LIBRARIES})
 target_include_directories(GeDiM4Py_Test SYSTEM PRIVATE ${THIRDPARTY_INCLUDE})

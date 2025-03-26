@@ -6,6 +6,7 @@
 #include "test_Burger.hpp"
 #include "test_NonLinearPoisson.hpp"
 #include "test_python.hpp"
+#include "test_NavierStokes.hpp"
 
 int main(int argc, char *argv[])
 {
