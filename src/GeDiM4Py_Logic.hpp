@@ -157,6 +157,9 @@ namespace GedimForPy
       typedef double* (*Weak)(const int numPoints, const double* points);
       typedef double* (*Exact)(const int numPoints, const double* points);
       typedef double* (*ExactDerivative)(const int direction, const int numPoints, const double* points);
+      typedef int (*transform_triplet_row)(const int row, const int col);
+      typedef int (*transform_triplet_col)(const int row, const int col);
+      typedef double (*transform_triplet_value)(const double value);
 
     private:
 
@@ -296,8 +299,16 @@ namespace GedimForPy
       static void ExportSolutionOnPoints(const Eigen::MatrixXd& points,
                                          const Eigen::VectorXd& solution,
                                          const ExportData& exportData);
+
+      static void ShiftTriplets(const std::list<Eigen::Triplet<double>>& local_triplets,
+                                const unsigned int shift_row,
+                                const unsigned int shift_col,
+                                transform_triplet_row t_row,
+                                transform_triplet_col t_col,
+                                transform_triplet_value t_value,
+                                std::list<Eigen::Triplet<double>>& global_triplets);
   };
 
-  }
+}
 
 #endif

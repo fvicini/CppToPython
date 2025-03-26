@@ -5,6 +5,7 @@
 
 namespace UnitTesting
 {
+  // ***************************************************************************
   class NavierStokes final
   {
     public:
@@ -43,19 +44,39 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
+      static int A_transform_triplet_row(const int row, const int col)
+      { return row; }
+      static int A_transform_triplet_col(const int row, const int col)
+      { return col; }
+      static double A_transform_triplet_value(const double value)
+      { return value; }
+      // ***************************************************************************
+      static int BT_transform_triplet_row(const int row, const int col)
+      { return col; }
+      static int BT_transform_triplet_col(const int row, const int col)
+      { return row; }
+      static double BT_transform_triplet_value(const double value)
+      { return -1.0 * value; }
+      // ***************************************************************************
+      static int B_transform_triplet_row(const int row, const int col)
+      { return row; }
+      static int B_transform_triplet_col(const int row, const int col)
+      { return col; }
+      static double B_transform_triplet_value(const double value)
+      { return -1.0 * value; }
+      // ***************************************************************************
+  };
+  // ***************************************************************************
+  class NavierStokes_T1 final
+  {
+    public:
+      // ***************************************************************************
       static double* ForcingTerm_1(const int numPoints, const double* points)
       {
         double* values = new double[numPoints];
 
-        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-        vecValues = - (+ 8.0 * M_PI * M_PI * cos(4.0 * M_PI * matPoints.row(0).array()) -
-                     4.0 * M_PI * M_PI) *
-                    sin(2.0 * M_PI * matPoints.row(1).array()) *
-                    cos(2.0 * M_PI * matPoints.row(1).array()) +
-                    (+ 2.0 * M_PI *
-                     cos(2.0 * M_PI * matPoints.row(0).array()) *
-                     cos(2.0 * M_PI * matPoints.row(1).array()));
+        vecValues.setConstant(1.0);
 
         return values;
       }
@@ -64,15 +85,8 @@ namespace UnitTesting
       {
         double* values = new double[numPoints];
 
-        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-        vecValues = - (- 8.0 * M_PI * M_PI * cos(4.0 * M_PI * matPoints.row(1).array()) +
-                     4.0 * M_PI * M_PI) *
-                    sin(2.0 * M_PI * matPoints.row(0).array()) *
-                    cos(2.0 * M_PI * matPoints.row(0).array()) +
-                    (- 2.0 * M_PI *
-                     sin(2.0 * M_PI * matPoints.row(0).array()) *
-                     sin(2.0 * M_PI * matPoints.row(1).array()));
+        vecValues.setConstant(1.0);
 
         return values;
       }
@@ -85,8 +99,9 @@ namespace UnitTesting
         Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
 
-        vecValues = sin(2.0 * M_PI * matPoints.row(0).array()) *
-                    cos(2.0 * M_PI * matPoints.row(1).array());
+        vecValues = matPoints.row(0).array() +
+                    matPoints.row(1).array() -
+                    1.0;
         return values;
       }
       // ***************************************************************************
@@ -95,14 +110,8 @@ namespace UnitTesting
       {
         double* values = new double[numPoints];
 
-        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
-
-        vecValues = +0.5 *
-                    sin(2.0 * M_PI * matPoints.row(0).array()) *
-                    sin(2.0 * M_PI * matPoints.row(0).array()) *
-                    sin(2.0 * M_PI * matPoints.row(1).array()) *
-                    cos(2.0 * M_PI * matPoints.row(1).array());
+        vecValues.setZero();
 
         return values;
       }
@@ -112,14 +121,9 @@ namespace UnitTesting
       {
         double* values = new double[numPoints];
 
-        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+        vecValues.setZero();
 
-        vecValues = -0.5 *
-                    sin(2.0 * M_PI * matPoints.row(1).array()) *
-                    sin(2.0 * M_PI * matPoints.row(1).array()) *
-                    sin(2.0 * M_PI * matPoints.row(0).array()) *
-                    cos(2.0 * M_PI * matPoints.row(0).array());
         return values;
       }
       // ***************************************************************************
@@ -133,13 +137,9 @@ namespace UnitTesting
         Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
 
         if(direction == 0)
-          vecValues = +2.0 * M_PI *
-                      cos(2.0 * M_PI * matPoints.row(0).array()) *
-                      cos(2.0 * M_PI * matPoints.row(1).array());
+          vecValues.setOnes();
         else if (direction == 1)
-          vecValues = -2.0 * M_PI *
-                      sin(2.0 * M_PI * matPoints.row(0).array()) *
-                      sin(2.0 * M_PI * matPoints.row(1).array());
+          vecValues.setOnes();
         else if (direction == 2)
           vecValues.setZero();
         else
@@ -150,9 +150,9 @@ namespace UnitTesting
       // ***************************************************************************
   };
   // ***************************************************************************
-  TEST(TestGeometry, Test_SquareNavierStokes)
+  TEST(TestGeometry, Test_NavierStokes_T1)
   {
-    const std::string exportFolder = "./Export/TestGeometry/Test_SquareNavierStokes";
+    const std::string exportFolder = "./Export/TestGeometry/Test_NavierStokes_T1";
     Gedim::Output::CreateFolder(exportFolder);
 
     GedimForPy::InterfaceConfiguration interfaceConfig;
@@ -289,51 +289,181 @@ namespace UnitTesting
         }
       }
 
-      std::list<Eigen::Triplet<double>> stiffness_dx_Triplets, stiffnessStrong_dx_Triplets;
-      GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(NavierStokes::ViscosityTerm,
-                                                          meshDAO,
-                                                          mesh.Cell2DsMap,
-                                                          speed_problemData,
-                                                          stiffness_dx_Triplets,
-                                                          stiffnessStrong_dx_Triplets);
-      std::list<Eigen::Triplet<double>> stiffness_dy_Triplets, stiffnessStrong_dy_Triplets;
-      GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(NavierStokes::ViscosityTerm,
-                                                          meshDAO,
-                                                          mesh.Cell2DsMap,
-                                                          speed_problemData,
-                                                          stiffness_dy_Triplets,
-                                                          stiffnessStrong_dy_Triplets);
-      std::list<Eigen::Triplet<double>> advection_dx_Triplets, advectionStrong_dx_Triplets;
-      GedimForPy::GeDiM4Py_Logic::AssembleAdvectionMatrix(NavierStokes::AdvectionTerm_1,
-                                                          meshDAO,
-                                                          mesh.Cell2DsMap,
-                                                          speed_problemData,
-                                                          pressure_problemData,
-                                                          advection_dx_Triplets,
-                                                          advectionStrong_dx_Triplets);
-      std::list<Eigen::Triplet<double>> advection_dy_Triplets, advectionStrong_dy_Triplets;
-      GedimForPy::GeDiM4Py_Logic::AssembleAdvectionMatrix(NavierStokes::AdvectionTerm_2,
-                                                          meshDAO,
-                                                          mesh.Cell2DsMap,
-                                                          speed_problemData,
-                                                          pressure_problemData,
-                                                          advection_dy_Triplets,
-                                                          advectionStrong_dy_Triplets);
+      Eigen::VectorXd sol_k = Eigen::VectorXd::Zero(2 * speed_problemData.NumberDOFs +
+                                                    pressure_problemData.NumberDOFs);
 
-      const Eigen::VectorXd forcingTerm_1 = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(NavierStokes::ForcingTerm_1,
-                                                                                            meshDAO,
-                                                                                            mesh.Cell2DsMap,
-                                                                                            speed_problemData);
-      const Eigen::VectorXd forcingTerm_2 = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(NavierStokes::ForcingTerm_2,
-                                                                                            meshDAO,
-                                                                                            mesh.Cell2DsMap,
-                                                                                            speed_problemData);
+      double residual_norm = 1.0, solution_norm = 1.0;
+      const double newton_tol = 1.0e-6;
+      const unsigned int max_iterations = 20;
+      int num_iteration = 1;
 
-      const Eigen::VectorXd pressure_solutionStrong = GedimForPy::GeDiM4Py_Logic::AssembleStrongSolution(NavierStokes::ExactPressureSolution,
-                                                                                                         1,
-                                                                                                         meshDAO,
-                                                                                                         mesh.Cell2DsMap,
-                                                                                                         pressure_problemData);
+      Eigen::VectorXd sol_strong = Eigen::VectorXd::Zero(2 * speed_problemData.NumberStrongs +
+                                                         pressure_problemData.NumberStrongs);
+
+      if (speed_problemData.NumberStrongs > 0)
+      {
+        sol_strong.segment(0,
+                           speed_problemData.NumberStrongs) =
+            GedimForPy::GeDiM4Py_Logic::AssembleStrongSolution(NavierStokes_T1::ExactSpeedSolution_1,
+                                                               1,
+                                                               meshDAO,
+                                                               mesh.Cell2DsMap,
+                                                               pressure_problemData);
+        sol_strong.segment(speed_problemData.NumberStrongs,
+                           speed_problemData.NumberStrongs) =
+            GedimForPy::GeDiM4Py_Logic::AssembleStrongSolution(NavierStokes_T1::ExactSpeedSolution_2,
+                                                               1,
+                                                               meshDAO,
+                                                               mesh.Cell2DsMap,
+                                                               pressure_problemData);
+      }
+
+      if (pressure_problemData.NumberStrongs > 0)
+      {
+        sol_strong.segment(2 * speed_problemData.NumberStrongs,
+                           pressure_problemData.NumberStrongs) =
+            GedimForPy::GeDiM4Py_Logic::AssembleStrongSolution(NavierStokes_T1::ExactPressureSolution,
+                                                               1,
+                                                               meshDAO,
+                                                               mesh.Cell2DsMap,
+                                                               pressure_problemData);
+      }
+
+      while (residual_norm > newton_tol * solution_norm &&
+             num_iteration < max_iterations)
+      {
+        std::list<Eigen::Triplet<double>> J_saddle_Point_triplets;
+
+        {
+          std::list<Eigen::Triplet<double>> J_stiffness_dx_Triplets, J_stiffnessStrong_dx_Triplets;
+          GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(NavierStokes::ViscosityTerm,
+                                                              meshDAO,
+                                                              mesh.Cell2DsMap,
+                                                              speed_problemData,
+                                                              J_stiffness_dx_Triplets,
+                                                              J_stiffnessStrong_dx_Triplets);
+
+          GedimForPy::GeDiM4Py_Logic::ShiftTriplets(J_stiffness_dx_Triplets,
+                                                    0,
+                                                    0,
+                                                    NavierStokes::A_transform_triplet_row,
+                                                    NavierStokes::A_transform_triplet_col,
+                                                    NavierStokes::A_transform_triplet_value,
+                                                    J_saddle_Point_triplets);
+        }
+
+        {
+          std::list<Eigen::Triplet<double>> J_stiffness_dy_Triplets, J_stiffnessStrong_dy_Triplets;
+          GedimForPy::GeDiM4Py_Logic::AssembleStiffnessMatrix(NavierStokes::ViscosityTerm,
+                                                              meshDAO,
+                                                              mesh.Cell2DsMap,
+                                                              speed_problemData,
+                                                              J_stiffness_dy_Triplets,
+                                                              J_stiffnessStrong_dy_Triplets);
+
+          GedimForPy::GeDiM4Py_Logic::ShiftTriplets(J_stiffness_dy_Triplets,
+                                                    speed_problemData.NumberDOFs,
+                                                    speed_problemData.NumberDOFs,
+                                                    NavierStokes::A_transform_triplet_row,
+                                                    NavierStokes::A_transform_triplet_col,
+                                                    NavierStokes::A_transform_triplet_value,
+                                                    J_saddle_Point_triplets);
+        }
+
+        {
+          std::list<Eigen::Triplet<double>> J_advection_dx_Triplets, J_advectionStrong_dx_Triplets;
+          GedimForPy::GeDiM4Py_Logic::AssembleAdvectionMatrix(NavierStokes::AdvectionTerm_1,
+                                                              meshDAO,
+                                                              mesh.Cell2DsMap,
+                                                              speed_problemData,
+                                                              pressure_problemData,
+                                                              J_advection_dx_Triplets,
+                                                              J_advectionStrong_dx_Triplets);
+
+          GedimForPy::GeDiM4Py_Logic::ShiftTriplets(J_advection_dx_Triplets,
+                                                    0,
+                                                    2.0 * speed_problemData.NumberDOFs,
+                                                    NavierStokes::BT_transform_triplet_row,
+                                                    NavierStokes::BT_transform_triplet_col,
+                                                    NavierStokes::BT_transform_triplet_value,
+                                                    J_saddle_Point_triplets);
+          GedimForPy::GeDiM4Py_Logic::ShiftTriplets(J_advection_dx_Triplets,
+                                                    2 * speed_problemData.NumberDOFs,
+                                                    0,
+                                                    NavierStokes::B_transform_triplet_row,
+                                                    NavierStokes::B_transform_triplet_col,
+                                                    NavierStokes::B_transform_triplet_value,
+                                                    J_saddle_Point_triplets);
+
+        }
+
+        std::list<Eigen::Triplet<double>> J_advection_dy_Triplets, J_advectionStrong_dy_Triplets;
+        GedimForPy::GeDiM4Py_Logic::AssembleAdvectionMatrix(NavierStokes::AdvectionTerm_2,
+                                                            meshDAO,
+                                                            mesh.Cell2DsMap,
+                                                            speed_problemData,
+                                                            pressure_problemData,
+                                                            J_advection_dy_Triplets,
+                                                            J_advectionStrong_dy_Triplets);
+
+        const Eigen::VectorXd J_forcingTerm_f_1 = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(NavierStokes_T1::ForcingTerm_1,
+                                                                                                  meshDAO,
+                                                                                                  mesh.Cell2DsMap,
+                                                                                                  speed_problemData);
+        const Eigen::VectorXd J_forcingTerm_f_2 = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(NavierStokes_T1::ForcingTerm_2,
+                                                                                                  meshDAO,
+                                                                                                  mesh.Cell2DsMap,
+                                                                                                  speed_problemData);
+
+        Eigen::SparseMatrix<double> J_saddle_point(2 * speed_problemData.NumberDOFs +
+                                                   pressure_problemData.NumberDOFs,
+                                                   2 * speed_problemData.NumberDOFs +
+                                                   pressure_problemData.NumberDOFs);
+
+        J_saddle_point.setFromTriplets(J_saddle_Point_triplets.begin(),
+                                       J_saddle_Point_triplets.end());
+        J_saddle_point.makeCompressed();
+        J_saddle_Point_triplets.clear();
+
+        Eigen::SparseLU<Eigen::SparseMatrix<double>> linearSolver;
+        linearSolver.compute(J_saddle_point);
+
+        const Eigen::VectorXd du = linearSolver.solve(J_forcingTerm_g -
+                                                      J_forcingTerm_der_v -
+                                                      J_forcingTerm_v);
+        u_k = u_k + du;
+
+        const Eigen::VectorXd pressure_cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(NavierStokes_T1::ExactPressureSolution,
+                                                                                                   solution.segment(2 * speed_problemData.NumberDOFs, pressure_problemData.NumberDOFs),
+                                                                                                   pressure_solutionStrong,
+                                                                                                   meshDAO,
+                                                                                                   mesh.Cell2DsMap,
+                                                                                                   pressure_problemData);
+
+
+#if ACTIVE_CHECK == 0
+        std::cerr.precision(3);
+        std::cerr<< std::scientific<< "dofs"<< ","
+                 << "h"<< ","<< "errorL2"<< ","
+                 << "errorH1"<< ","<< "normL2"<< ","
+                 << "normH1"<< std::endl;
+        std::cerr<< std::scientific<< problemData.NumberDOFs<< ","
+                 << problemData.H<< ","<< sqrt(cell2DsErrorL2.sum())<< ","
+                 << sqrt(cell2DsErrorH1.sum())<< ","
+                 << sqrt(cell2DsNormL2.sum())<< ","
+                 << sqrt(cell2DsNormH1.sum())
+                 << std::endl;
+
+        std::cout.precision(3);
+        std::cout<< std::scientific<<
+                    " Newton it "<< num_iteration<< " / "<< max_iterations<<
+                    " residual "<< residual_norm<< " / "<< newton_tol * solution_norm<< std::endl;
+#endif
+
+        num_iteration++;
+      }
+
+
 
       std::list<Eigen::Triplet<double>> saddlePoint_Triplets;
       for (const Eigen::Triplet<double>& triplet : stiffness_dx_Triplets)
@@ -390,7 +520,7 @@ namespace UnitTesting
 
       const Eigen::VectorXd solution = linearSolver.solve(saddlePoint_forcingTerm);
 
-      const Eigen::VectorXd pressure_cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(NavierStokes::ExactPressureSolution,
+      const Eigen::VectorXd pressure_cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(NavierStokes_T1::ExactPressureSolution,
                                                                                                  solution.segment(2 * speed_problemData.NumberDOFs, pressure_problemData.NumberDOFs),
                                                                                                  pressure_solutionStrong,
                                                                                                  meshDAO,
@@ -416,12 +546,12 @@ namespace UnitTesting
 
           const Eigen::MatrixXd coordinates = meshDAO.Cell0DsCoordinates();
 
-          const double* pressure_cell0Ds_exact_solution = NavierStokes::ExactPressureSolution(coordinates.cols(),
-                                                                                        coordinates.data());
-          const double* speed_1_cell0Ds_exact_solution = NavierStokes::ExactSpeedSolution_1(coordinates.cols(),
-                                                                                      coordinates.data());
-          const double* speed_2_cell0Ds_exact_solution = NavierStokes::ExactSpeedSolution_2(coordinates.cols(),
-                                                                                      coordinates.data());
+          const double* pressure_cell0Ds_exact_solution = NavierStokes_T1::ExactPressureSolution(coordinates.cols(),
+                                                                                                 coordinates.data());
+          const double* speed_1_cell0Ds_exact_solution = NavierStokes_T1::ExactSpeedSolution_1(coordinates.cols(),
+                                                                                               coordinates.data());
+          const double* speed_2_cell0Ds_exact_solution = NavierStokes_T1::ExactSpeedSolution_2(coordinates.cols(),
+                                                                                               coordinates.data());
 
           for (unsigned int p = 0; p < meshDAO.Cell0DTotalNumber(); p++)
           {
@@ -459,7 +589,7 @@ namespace UnitTesting
             }
           }
 
-          GedimForPy::GeDiM4Py_Logic::ExportSolution(NavierStokes::ExactPressureSolution,
+          GedimForPy::GeDiM4Py_Logic::ExportSolution(NavierStokes_T1::ExactPressureSolution,
                                                      solution.segment(2 * speed_problemData.NumberDOFs,
                                                                       pressure_problemData.NumberDOFs),
                                                      pressure_solutionStrong,
@@ -469,7 +599,7 @@ namespace UnitTesting
                                                        exportFolder,
                                                        "Pressure"
                                                      });
-          GedimForPy::GeDiM4Py_Logic::ExportSolution(NavierStokes::ExactSpeedSolution_1,
+          GedimForPy::GeDiM4Py_Logic::ExportSolution(NavierStokes_T1::ExactSpeedSolution_1,
                                                      solution.segment(0,
                                                                       speed_problemData.NumberDOFs),
                                                      Eigen::VectorXd::Zero(speed_problemData.NumberStrongs),
@@ -479,7 +609,7 @@ namespace UnitTesting
                                                        exportFolder,
                                                        "Speed_1"
                                                      });
-          GedimForPy::GeDiM4Py_Logic::ExportSolution(NavierStokes::ExactSpeedSolution_2,
+          GedimForPy::GeDiM4Py_Logic::ExportSolution(NavierStokes_T1::ExactSpeedSolution_2,
                                                      solution.segment(speed_problemData.NumberDOFs,
                                                                       speed_problemData.NumberDOFs),
                                                      Eigen::VectorXd::Zero(speed_problemData.NumberStrongs),

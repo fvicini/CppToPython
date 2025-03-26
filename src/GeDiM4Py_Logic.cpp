@@ -1780,4 +1780,20 @@ namespace GedimForPy
                           });
   }
   // ***************************************************************************
+  void GeDiM4Py_Logic::ShiftTriplets(const std::list<Eigen::Triplet<double> >& local_triplets,
+                                     const unsigned int shift_row,
+                                     const unsigned int shift_col,
+                                     transform_triplet_row t_row,
+                                     transform_triplet_col t_col,
+                                     transform_triplet_value t_value,
+                                     std::list<Eigen::Triplet<double>>& global_triplets)
+  {
+    for (const Eigen::Triplet<double>& triplet : local_triplets)
+    {
+      global_triplets.push_back(Eigen::Triplet<double>(t_row(triplet.row(), triplet.col()) + shift_row,
+                                                       t_col(triplet.row(), triplet.col()) + shift_col,
+                                                       t_value(triplet.value())));
+    }
+  }
+  // ***************************************************************************
 }

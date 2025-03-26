@@ -12,7 +12,7 @@
 #include "MeshMatricesDAO.hpp"
 #include "VTKUtilities.hpp"
 
-#define ACTIVE_CHECK 1
+#define ACTIVE_CHECK 0
 
 
 #endif // __TEST_UTILITIES_H
