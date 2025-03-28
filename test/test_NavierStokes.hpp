@@ -87,6 +87,49 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
+      static double* Ones(const int numPoints,
+                          const double* points)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> matValues(values, numPoints);
+        matValues.setConstant(1.0);
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* OnesDerivative(const int numPoints,
+                                    const double* points)
+      {
+        double* values = new double[2 * numPoints];
+
+        Eigen::Map<Eigen::MatrixXd> matValues(values,
+                                              2,
+                                              numPoints);
+        matValues.setOnes();
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* NonLinear_double_dot_product(const int numPoints,
+                                                  const double* points,
+                                                  const double* u,
+                                                  const double* u_x,
+                                                  const double* u_y)
+      {
+        double* values = new double[2 * numPoints];
+
+        Eigen::Map<Eigen::MatrixXd> matValues(values,
+                                              2,
+                                              numPoints);
+        matValues.row(0)<< Eigen::Map<const Eigen::VectorXd>(u_x,
+                                                             numPoints).transpose();
+        matValues.row(1)<< Eigen::Map<const Eigen::VectorXd>(u_y,
+                                                             numPoints).transpose();
+
+        return values;
+      }
+      // ***************************************************************************
   };
   // ***************************************************************************
   class NavierStokes_T1 final
@@ -374,6 +417,8 @@ namespace UnitTesting
              num_iteration < max_iterations)
       {
         std::list<Eigen::Triplet<double>> J_saddle_Point_triplets;
+        Eigen::VectorXd J_saddlePoint_f = Eigen::VectorXd::Zero(2 * speed_problemData.NumberDOFs +
+                                                                pressure_problemData.NumberDOFs);
 
         {
           std::list<Eigen::Triplet<double>> J_stiffness_dx_Triplets, J_stiffnessStrong_dx_Triplets;
@@ -464,14 +509,30 @@ namespace UnitTesting
 
         }
 
-        const Eigen::VectorXd J_forcingTerm_f_1 = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(NavierStokes_T1::ForcingTerm_1,
-                                                                                                  meshDAO,
-                                                                                                  mesh.Cell2DsMap,
-                                                                                                  speed_problemData);
-        const Eigen::VectorXd J_forcingTerm_f_2 = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(NavierStokes_T1::ForcingTerm_2,
-                                                                                                  meshDAO,
-                                                                                                  mesh.Cell2DsMap,
-                                                                                                  speed_problemData);
+        {
+          const Eigen::VectorXd J_forcingTerm_f_1 = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(NavierStokes_T1::ForcingTerm_1,
+                                                                                                    meshDAO,
+                                                                                                    mesh.Cell2DsMap,
+                                                                                                    speed_problemData);
+          const Eigen::VectorXd J_forcingTerm_f_2 = GedimForPy::GeDiM4Py_Logic::AssembleForcingTerm(NavierStokes_T1::ForcingTerm_2,
+                                                                                                    meshDAO,
+                                                                                                    mesh.Cell2DsMap,
+                                                                                                    speed_problemData);
+
+          J_saddlePoint_f.segment(0, speed_problemData.NumberDOFs) += J_forcingTerm_f_1;
+          J_saddlePoint_f.segment(speed_problemData.NumberDOFs, speed_problemData.NumberDOFs) += J_forcingTerm_f_2;
+        }
+
+
+        {
+          const Eigen::VectorXd J_forcingTerm_der_v = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearDerivativeForcingTerm(NonLinearPoisson::OnesDerivative,
+                                                                                                                         NonLinearPoisson::NonLinear_f_der_v,
+                                                                                                                         meshDAO,
+                                                                                                                         mesh.Cell2DsMap,
+                                                                                                                         problemData,
+                                                                                                                         u_k,
+                                                                                                                         u_strong);
+        }
 
         Eigen::SparseMatrix<double> J_saddle_point(2 * speed_problemData.NumberDOFs +
                                                    pressure_problemData.NumberDOFs,
@@ -483,10 +544,6 @@ namespace UnitTesting
         J_saddle_point.makeCompressed();
         J_saddle_Point_triplets.clear();
 
-        Eigen::VectorXd J_saddlePoint_f = Eigen::VectorXd::Zero(2 * speed_problemData.NumberDOFs +
-                                                                pressure_problemData.NumberDOFs);
-        J_saddlePoint_f.segment(0, speed_problemData.NumberDOFs) = J_forcingTerm_f_1;
-        J_saddlePoint_f.segment(speed_problemData.NumberDOFs, speed_problemData.NumberDOFs) = J_forcingTerm_f_2;
 
 
         Eigen::SparseLU<Eigen::SparseMatrix<double>> linearSolver;
