@@ -791,8 +791,7 @@ namespace GedimForPy
                                                         const Eigen::VectorXd& numeric_k,
                                                         const Eigen::VectorXd& strong_k,
                                                         std::list<Eigen::Triplet<double> >& advectionTriplets,
-                                                        std::list<Eigen::Triplet<double> >& advectionStrongTriplets,
-                                                        const QuadratureData& quadrature)
+                                                        std::list<Eigen::Triplet<double> >& advectionStrongTriplets)
   {
     return AssembleNonLinearAdvectionMatrix(b,
                                             non_linear_f,
