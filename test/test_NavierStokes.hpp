@@ -591,19 +591,21 @@ namespace UnitTesting
 
         {
           const Eigen::VectorXd J_forcingTerm_divergence_x = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearForcingTerm(NavierStokes::Ones,
-                                                                                                                        NavierStokes::NonLinear_divergence_x,
-                                                                                                                        meshDAO,
-                                                                                                                        mesh.Cell2DsMap,
-                                                                                                                        pressure_problemData,
-                                                                                                                        u_x_k,
-                                                                                                                        u_x_strong);
+                                                                                                                      NavierStokes::NonLinear_divergence_x,
+                                                                                                                      meshDAO,
+                                                                                                                      mesh.Cell2DsMap,
+                                                                                                                      speed_problemData,
+                                                                                                                      pressure_problemData,
+                                                                                                                      u_x_k,
+                                                                                                                      u_x_strong);
           const Eigen::VectorXd J_forcingTerm_divergence_y = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearForcingTerm(NavierStokes::Ones,
-                                                                                                                        NavierStokes::NonLinear_divergence_y,
-                                                                                                                        meshDAO,
-                                                                                                                        mesh.Cell2DsMap,
-                                                                                                                        pressure_problemData,
-                                                                                                                        u_y_k,
-                                                                                                                        u_y_strong);
+                                                                                                                      NavierStokes::NonLinear_divergence_y,
+                                                                                                                      meshDAO,
+                                                                                                                      mesh.Cell2DsMap,
+                                                                                                                      speed_problemData,
+                                                                                                                      pressure_problemData,
+                                                                                                                      u_y_k,
+                                                                                                                      u_y_strong);
           J_saddlePoint_f.segment(2 * speed_problemData.NumberDOFs,
                                   pressure_problemData.NumberDOFs) += J_forcingTerm_divergence_x;
           J_saddlePoint_f.segment(2 * speed_problemData.NumberDOFs,
