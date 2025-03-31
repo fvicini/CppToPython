@@ -757,12 +757,6 @@ namespace UnitTesting
                                                                                                          mesh.Cell2DsMap,
                                                                                                          pressure_problemData);
 
-        std::cerr<< "d_u_x "<< d_sol.segment(0, speed_problemData.NumberDOFs).norm()<< " ";
-        std::cerr<< "d_u_y "<< d_sol.segment(speed_problemData.NumberDOFs, speed_problemData.NumberDOFs).norm()<< " ";
-        std::cerr<< "d_p   "<< d_sol.segment(2 * speed_problemData.NumberDOFs, pressure_problemData.NumberDOFs).norm()<< " ";
-        std::cerr<< std::endl;
-
-
         solution_norm = std::sqrt(speed_x_cell2DsNormL2.sum() + speed_y_cell2DsNormL2.sum() + pressure_cell2DsNormL2.sum());
         residual_norm = std::sqrt(speed_x_cell2Ds_d_sol_NormL2.sum() + speed_y_cell2Ds_d_sol_NormL2.sum() + pressure_cell2Ds_d_sol_NormL2.sum());
 
