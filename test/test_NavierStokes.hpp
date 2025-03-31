@@ -159,10 +159,10 @@ namespace UnitTesting
       }
       // ***************************************************************************
       static double* NonLinear_u(const int numPoints,
-                                   const double* points,
-                                   const double* u,
-                                   const double* u_x,
-                                   const double* u_y)
+                                 const double* points,
+                                 const double* u,
+                                 const double* u_x,
+                                 const double* u_y)
       {
         double* values = new double[numPoints];
 
@@ -248,6 +248,40 @@ namespace UnitTesting
         Eigen::Map<Eigen::VectorXd> matValues(values, numPoints);
         matValues<< Eigen::Map<const Eigen::VectorXd>(u_y,
                                                       numPoints);
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* NonLinear_C_3_x(const int numPoints,
+                                     const double* points,
+                                     const double* u,
+                                     const double* u_x,
+                                     const double* u_y)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> matValues(values, numPoints);
+        matValues<< (Eigen::Map<const Eigen::VectorXd>(u_x,
+                                                       numPoints).array() *
+                     Eigen::Map<const Eigen::VectorXd>(u,
+                                                       numPoints).array()).matrix();
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* NonLinear_C_3_y(const int numPoints,
+                                     const double* points,
+                                     const double* u,
+                                     const double* u_x,
+                                     const double* u_y)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> matValues(values, numPoints);
+        matValues<< (Eigen::Map<const Eigen::VectorXd>(u_y,
+                                                       numPoints).array() *
+                     Eigen::Map<const Eigen::VectorXd>(u,
+                                                       numPoints).array()).matrix();
 
         return values;
       }
@@ -862,6 +896,48 @@ namespace UnitTesting
                                   pressure_problemData.NumberDOFs) += J_forcingTerm_divergence_x;
           J_saddlePoint_f.segment(2 * speed_problemData.NumberDOFs,
                                   pressure_problemData.NumberDOFs) += J_forcingTerm_divergence_y;
+        }
+
+        {
+          const Eigen::VectorXd J_forcingTerm_C_x_1 = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearForcingTerm(NavierStokes::Ones,
+                                                                                                               NavierStokes::NonLinear_C_3_x,
+                                                                                                               meshDAO,
+                                                                                                               mesh.Cell2DsMap,
+                                                                                                               speed_problemData,
+                                                                                                               u_x_k,
+                                                                                                               u_x_strong);
+          const Eigen::VectorXd J_forcingTerm_C_x_2 = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearForcingTerm(NavierStokes::Ones,
+                                                                                                               NavierStokes::NonLinear_C_3_x,
+                                                                                                               meshDAO,
+                                                                                                               mesh.Cell2DsMap,
+                                                                                                               speed_problemData,
+                                                                                                               u_y_k,
+                                                                                                               u_y_strong);
+          J_saddlePoint_f.segment(0,
+                                  speed_problemData.NumberDOFs) += J_forcingTerm_C_x_1;
+          J_saddlePoint_f.segment(0,
+                                  speed_problemData.NumberDOFs) += J_forcingTerm_C_x_2;
+        }
+
+        {
+          const Eigen::VectorXd J_forcingTerm_C_y_1 = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearForcingTerm(NavierStokes::Ones,
+                                                                                                               NavierStokes::NonLinear_C_3_y,
+                                                                                                               meshDAO,
+                                                                                                               mesh.Cell2DsMap,
+                                                                                                               speed_problemData,
+                                                                                                               u_x_k,
+                                                                                                               u_x_strong);
+          const Eigen::VectorXd J_forcingTerm_C_y_2 = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearForcingTerm(NavierStokes::Ones,
+                                                                                                               NavierStokes::NonLinear_C_3_y,
+                                                                                                               meshDAO,
+                                                                                                               mesh.Cell2DsMap,
+                                                                                                               speed_problemData,
+                                                                                                               u_y_k,
+                                                                                                               u_y_strong);
+          J_saddlePoint_f.segment(speed_problemData.NumberDOFs,
+                                  speed_problemData.NumberDOFs) += J_forcingTerm_C_y_1;
+          J_saddlePoint_f.segment(speed_problemData.NumberDOFs,
+                                  speed_problemData.NumberDOFs) += J_forcingTerm_C_y_2;
         }
 
         {
