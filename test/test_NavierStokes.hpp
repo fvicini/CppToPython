@@ -394,6 +394,15 @@ namespace UnitTesting
                                                                pressure_problemData);
       }
 
+
+
+      const Eigen::VectorXd u_x_strong = sol_strong.segment(0,
+                                                            speed_problemData.NumberStrongs);
+      const Eigen::VectorXd u_y_strong = sol_strong.segment(speed_problemData.NumberStrongs,
+                                                            speed_problemData.NumberStrongs);
+      const Eigen::VectorXd p_strong = sol_strong.segment(2 * speed_problemData.NumberStrongs,
+                                                          pressure_problemData.NumberStrongs);
+
       Eigen::VectorXd speed_x_cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(NavierStokes_T1::ExactPressureSolution,
                                                                                           sol_k.segment(0, speed_problemData.NumberDOFs),
                                                                                           sol_strong.segment(0, speed_problemData.NumberStrongs),
@@ -408,7 +417,7 @@ namespace UnitTesting
                                                                                           speed_problemData);
       Eigen::VectorXd pressure_cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(NavierStokes_T1::ExactPressureSolution,
                                                                                            sol_k.segment(2 * speed_problemData.NumberDOFs, pressure_problemData.NumberDOFs),
-                                                                                           sol_strong.segment(2 * speed_problemData.NumberStrongs, pressure_problemData.NumberStrongs),
+                                                                                           p_strong,
                                                                                            meshDAO,
                                                                                            mesh.Cell2DsMap,
                                                                                            pressure_problemData);
@@ -416,6 +425,13 @@ namespace UnitTesting
       while (residual_norm > newton_tol * solution_norm &&
              num_iteration < max_iterations)
       {
+        const Eigen::VectorXd u_x_k = sol_k.segment(0,
+                                                    speed_problemData.NumberDOFs);
+        const Eigen::VectorXd u_y_k = sol_k.segment(speed_problemData.NumberDOFs,
+                                                    speed_problemData.NumberDOFs);
+        const Eigen::VectorXd p_k = sol_k.segment(2 * speed_problemData.NumberDOFs,
+                                                  pressure_problemData.NumberDOFs);
+
         std::list<Eigen::Triplet<double>> J_saddle_Point_triplets;
         Eigen::VectorXd J_saddlePoint_f = Eigen::VectorXd::Zero(2 * speed_problemData.NumberDOFs +
                                                                 pressure_problemData.NumberDOFs);
@@ -525,13 +541,22 @@ namespace UnitTesting
 
 
         {
-          const Eigen::VectorXd J_forcingTerm_der_v = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearDerivativeForcingTerm(NonLinearPoisson::OnesDerivative,
-                                                                                                                         NonLinearPoisson::NonLinear_f_der_v,
-                                                                                                                         meshDAO,
-                                                                                                                         mesh.Cell2DsMap,
-                                                                                                                         problemData,
-                                                                                                                         u_k,
-                                                                                                                         u_strong);
+          const Eigen::VectorXd J_forcingTerm_double_dot_u_x = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearDerivativeForcingTerm(NavierStokes::OnesDerivative,
+                                                                                                                                  NavierStokes::NonLinear_double_dot_product,
+                                                                                                                                  meshDAO,
+                                                                                                                                  mesh.Cell2DsMap,
+                                                                                                                                  speed_problemData,
+                                                                                                                                  u_x_k,
+                                                                                                                                  u_x_strong);
+          const Eigen::VectorXd J_forcingTerm_double_dot_u_y = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearDerivativeForcingTerm(NavierStokes::OnesDerivative,
+                                                                                                                                  NavierStokes::NonLinear_double_dot_product,
+                                                                                                                                  meshDAO,
+                                                                                                                                  mesh.Cell2DsMap,
+                                                                                                                                  speed_problemData,
+                                                                                                                                  u_y_k,
+                                                                                                                                  u_y_strong);
+          J_saddlePoint_f.segment(0, speed_problemData.NumberDOFs) += J_forcingTerm_double_dot_u_x;
+          J_saddlePoint_f.segment(speed_problemData.NumberDOFs, speed_problemData.NumberDOFs) += J_forcingTerm_double_dot_u_y;
         }
 
         Eigen::SparseMatrix<double> J_saddle_point(2 * speed_problemData.NumberDOFs +
@@ -553,58 +578,58 @@ namespace UnitTesting
         sol_k = sol_k + d_sol;
 
         speed_x_cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(NavierStokes_T1::ExactPressureSolution,
-                                                                            sol_k.segment(0, speed_problemData.NumberDOFs),
-                                                                            sol_strong.segment(0, speed_problemData.NumberStrongs),
+                                                                            u_x_k,
+                                                                            u_x_strong,
                                                                             meshDAO,
                                                                             mesh.Cell2DsMap,
                                                                             speed_problemData);
         speed_y_cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(NavierStokes_T1::ExactPressureSolution,
-                                                                            sol_k.segment(speed_problemData.NumberDOFs, speed_problemData.NumberDOFs),
-                                                                            sol_strong.segment(speed_problemData.NumberStrongs, speed_problemData.NumberStrongs),
+                                                                            u_y_k,
+                                                                            u_y_strong,
                                                                             meshDAO,
                                                                             mesh.Cell2DsMap,
                                                                             speed_problemData);
         pressure_cell2DsErrorL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(NavierStokes_T1::ExactPressureSolution,
-                                                                             sol_k.segment(2 * speed_problemData.NumberDOFs, pressure_problemData.NumberDOFs),
-                                                                             sol_strong.segment(2 * speed_problemData.NumberStrongs, pressure_problemData.NumberStrongs),
+                                                                             p_k,
+                                                                             p_strong,
                                                                              meshDAO,
                                                                              mesh.Cell2DsMap,
                                                                              pressure_problemData);
 
         const Eigen::VectorXd speed_x_cell2DsNormL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(NavierStokes::ZeroSolution,
-                                                                                                 sol_k.segment(0, speed_problemData.NumberDOFs),
-                                                                                                 sol_strong.segment(0, speed_problemData.NumberStrongs),
+                                                                                                 u_x_k,
+                                                                                                 u_x_strong,
                                                                                                  meshDAO,
                                                                                                  mesh.Cell2DsMap,
                                                                                                  speed_problemData);
         const Eigen::VectorXd speed_y_cell2DsNormL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(NavierStokes::ZeroSolution,
-                                                                                                 sol_k.segment(speed_problemData.NumberDOFs, speed_problemData.NumberDOFs),
-                                                                                                 sol_strong.segment(speed_problemData.NumberStrongs, speed_problemData.NumberStrongs),
+                                                                                                 u_y_k,
+                                                                                                 u_y_strong,
                                                                                                  meshDAO,
                                                                                                  mesh.Cell2DsMap,
                                                                                                  speed_problemData);
         const Eigen::VectorXd pressure_cell2DsNormL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(NavierStokes::ZeroSolution,
-                                                                                                  sol_k.segment(2 * speed_problemData.NumberDOFs, pressure_problemData.NumberDOFs),
-                                                                                                  sol_strong.segment(2 * speed_problemData.NumberStrongs, pressure_problemData.NumberStrongs),
+                                                                                                  p_k,
+                                                                                                  p_strong,
                                                                                                   meshDAO,
                                                                                                   mesh.Cell2DsMap,
                                                                                                   pressure_problemData);
 
         const Eigen::VectorXd speed_x_cell2Ds_d_sol_NormL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(NavierStokes::ZeroSolution,
                                                                                                         d_sol.segment(0, speed_problemData.NumberDOFs),
-                                                                                                        sol_strong.segment(0, speed_problemData.NumberStrongs),
+                                                                                                        u_x_strong,
                                                                                                         meshDAO,
                                                                                                         mesh.Cell2DsMap,
                                                                                                         speed_problemData);
         const Eigen::VectorXd speed_y_cell2Ds_d_sol_NormL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(NavierStokes::ZeroSolution,
                                                                                                         d_sol.segment(speed_problemData.NumberDOFs, speed_problemData.NumberDOFs),
-                                                                                                        sol_strong.segment(speed_problemData.NumberStrongs, speed_problemData.NumberStrongs),
+                                                                                                        u_y_strong,
                                                                                                         meshDAO,
                                                                                                         mesh.Cell2DsMap,
                                                                                                         speed_problemData);
         const Eigen::VectorXd pressure_cell2Ds_d_sol_NormL2 = GedimForPy::GeDiM4Py_Logic::ComputeErrorL2(NavierStokes::ZeroSolution,
                                                                                                          d_sol.segment(2 * speed_problemData.NumberDOFs, pressure_problemData.NumberDOFs),
-                                                                                                         sol_strong.segment(2 * speed_problemData.NumberStrongs, pressure_problemData.NumberStrongs),
+                                                                                                         p_strong,
                                                                                                          meshDAO,
                                                                                                          mesh.Cell2DsMap,
                                                                                                          pressure_problemData);
@@ -705,8 +730,7 @@ namespace UnitTesting
           GedimForPy::GeDiM4Py_Logic::ExportSolution(NavierStokes_T1::ExactPressureSolution,
                                                      sol_k.segment(2 * speed_problemData.NumberDOFs,
                                                                    pressure_problemData.NumberDOFs),
-                                                     sol_strong.segment(2 * speed_problemData.NumberStrongs,
-                                                                        pressure_problemData.NumberStrongs),
+                                                     p_strong,
                                                      meshDAO,
                                                      pressure_problemData,
                                                      {
@@ -716,8 +740,7 @@ namespace UnitTesting
           GedimForPy::GeDiM4Py_Logic::ExportSolution(NavierStokes_T1::ExactSpeedSolution_1,
                                                      sol_k.segment(0,
                                                                    speed_problemData.NumberDOFs),
-                                                     sol_strong.segment(0,
-                                                                        speed_problemData.NumberStrongs),
+                                                     u_x_strong,
                                                      meshDAO,
                                                      speed_problemData,
                                                      {
@@ -727,8 +750,7 @@ namespace UnitTesting
           GedimForPy::GeDiM4Py_Logic::ExportSolution(NavierStokes_T1::ExactSpeedSolution_2,
                                                      sol_k.segment(speed_problemData.NumberDOFs,
                                                                    speed_problemData.NumberDOFs),
-                                                     sol_strong.segment(speed_problemData.NumberStrongs,
-                                                                        speed_problemData.NumberStrongs),
+                                                     u_y_strong,
                                                      meshDAO,
                                                      speed_problemData,
                                                      {
