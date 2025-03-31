@@ -130,6 +130,36 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
+      static double* NonLinear_divergence_x(const int numPoints,
+                                            const double* points,
+                                            const double* u,
+                                            const double* u_x,
+                                            const double* u_y)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> matValues(values, numPoints);
+        matValues<< Eigen::Map<const Eigen::VectorXd>(u_x,
+                                                      numPoints);
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* NonLinear_divergence_y(const int numPoints,
+                                            const double* points,
+                                            const double* u,
+                                            const double* u_x,
+                                            const double* u_y)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> matValues(values, numPoints);
+        matValues<< Eigen::Map<const Eigen::VectorXd>(u_y,
+                                                      numPoints);
+
+        return values;
+      }
+      // ***************************************************************************
   };
   // ***************************************************************************
   class NavierStokes_T1 final
@@ -557,6 +587,27 @@ namespace UnitTesting
                                                                                                                                   u_y_strong);
           J_saddlePoint_f.segment(0, speed_problemData.NumberDOFs) += J_forcingTerm_double_dot_u_x;
           J_saddlePoint_f.segment(speed_problemData.NumberDOFs, speed_problemData.NumberDOFs) += J_forcingTerm_double_dot_u_y;
+        }
+
+        {
+          const Eigen::VectorXd J_forcingTerm_divergence_x = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearForcingTerm(NavierStokes::Ones,
+                                                                                                                        NavierStokes::NonLinear_divergence_x,
+                                                                                                                        meshDAO,
+                                                                                                                        mesh.Cell2DsMap,
+                                                                                                                        pressure_problemData,
+                                                                                                                        u_x_k,
+                                                                                                                        u_x_strong);
+          const Eigen::VectorXd J_forcingTerm_divergence_y = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearForcingTerm(NavierStokes::Ones,
+                                                                                                                        NavierStokes::NonLinear_divergence_y,
+                                                                                                                        meshDAO,
+                                                                                                                        mesh.Cell2DsMap,
+                                                                                                                        pressure_problemData,
+                                                                                                                        u_y_k,
+                                                                                                                        u_y_strong);
+          J_saddlePoint_f.segment(2 * speed_problemData.NumberDOFs,
+                                  pressure_problemData.NumberDOFs) += J_forcingTerm_divergence_x;
+          J_saddlePoint_f.segment(2 * speed_problemData.NumberDOFs,
+                                  pressure_problemData.NumberDOFs) += J_forcingTerm_divergence_y;
         }
 
         Eigen::SparseMatrix<double> J_saddle_point(2 * speed_problemData.NumberDOFs +
