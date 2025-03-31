@@ -1370,12 +1370,12 @@ namespace GedimForPy
       const std::vector<Eigen::MatrixXd> trial_basisFunctionDerivativeValues2D = femValues.BasisFunctionDerivatives(trial_localSpace,
                                                                                                                     cell2DMapData,
                                                                                                                     trial_referenceBasisFunctionDerivatives);
-      const std::vector<DiscreteProblemData::DOF*>& cell2D_DOF = trial_Functions.Cell2Ds_DOF[cell2DIndex];
+      const std::vector<DiscreteProblemData::DOF*>& trial_cell2D_DOF = trial_Functions.Cell2Ds_DOF[cell2DIndex];
 
       Eigen::VectorXd localNumericSolution = Eigen::VectorXd::Zero(trial_numLocals);
       for(unsigned int i = 0; i < trial_numLocals; ++i)
       {
-        const DiscreteProblemData::DOF& dofI = *cell2D_DOF[i];
+        const DiscreteProblemData::DOF& dofI = *trial_cell2D_DOF[i];
 
         switch (dofI.Type)
         {
@@ -1424,9 +1424,11 @@ namespace GedimForPy
                                                                               test_basisFunctionDerivativeValues2D,
                                                                               cell2DQuadratureWeights);
 
+      const std::vector<DiscreteProblemData::DOF*>& test_cell2D_DOF = test_Functions.Cell2Ds_DOF[cell2DIndex];
+
       for (unsigned int i = 0; i < test_numLocals; i++)
       {
-        const DiscreteProblemData::DOF& dofI = *cell2D_DOF[i];
+        const DiscreteProblemData::DOF& dofI = *test_cell2D_DOF[i];
 
         if (dofI.Type != DiscreteProblemData::DOF::Types::DOF)
           continue;
