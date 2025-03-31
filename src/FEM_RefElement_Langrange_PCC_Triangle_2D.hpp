@@ -6,16 +6,16 @@
 
 namespace GedimForPy
 {
+  struct QuadratureData final
+  {
+      Eigen::MatrixXd Points;
+      Eigen::VectorXd Weights;
+  };
+
   /// \brief 1D Primal Conforming Constant Lagrange Element Degree variable
   class FEM_RefElement_Langrange_PCC_Triangle_2D final
   {
     public:
-      struct QuadratureData final
-      {
-          Eigen::MatrixXd Points;
-          Eigen::VectorXd Weights;
-      };
-
       struct LocalSpace final
       {
           struct ReferenceElementData final

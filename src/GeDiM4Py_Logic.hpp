@@ -255,6 +255,15 @@ namespace GedimForPy
                                                           const DiscreteProblemData& test_Functions,
                                                           const Eigen::VectorXd& numeric_k,
                                                           const Eigen::VectorXd& strong_k);
+      static Eigen::VectorXd AssembleNonLinearForcingTerm(F f,
+                                                          NNL non_linear_f,
+                                                          const Gedim::IMeshDAO& mesh,
+                                                          const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                          const DiscreteProblemData& trial_Functions,
+                                                          const DiscreteProblemData& test_Functions,
+                                                          const Eigen::VectorXd& numeric_k,
+                                                          const Eigen::VectorXd& strong_k,
+                                                          const QuadratureData& quadrature);
       static Eigen::VectorXd AssembleNonLinearDerivativeForcingTerm(F f,
                                                                     NNL non_linear_f,
                                                                     const Gedim::IMeshDAO& mesh,
@@ -262,6 +271,23 @@ namespace GedimForPy
                                                                     const DiscreteProblemData& problemData,
                                                                     const Eigen::VectorXd& numeric_k,
                                                                     const Eigen::VectorXd& strong_k);
+      static Eigen::VectorXd AssembleNonLinearDerivativeForcingTerm(F f,
+                                                                    NNL non_linear_f,
+                                                                    const Gedim::IMeshDAO& mesh,
+                                                                    const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                                    const DiscreteProblemData& trial_Functions,
+                                                                    const DiscreteProblemData& test_Functions,
+                                                                    const Eigen::VectorXd& numeric_k,
+                                                                    const Eigen::VectorXd& strong_k);
+      static Eigen::VectorXd AssembleNonLinearDerivativeForcingTerm(F f,
+                                                                    NNL non_linear_f,
+                                                                    const Gedim::IMeshDAO& mesh,
+                                                                    const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                                    const DiscreteProblemData& trial_Functions,
+                                                                    const DiscreteProblemData& test_Functions,
+                                                                    const Eigen::VectorXd& numeric_k,
+                                                                    const Eigen::VectorXd& strong_k,
+                                                                    const QuadratureData& quadrature);
 
       static Eigen::VectorXd AssembleStrongSolution(Strong g,
                                                     const unsigned int& marker,

@@ -111,6 +111,34 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
+      static double* OnesDerivative_x(const int numPoints,
+                                      const double* points)
+      {
+        double* values = new double[2 * numPoints];
+
+        Eigen::Map<Eigen::MatrixXd> matValues(values,
+                                              2,
+                                              numPoints);
+        matValues.setZero();
+        matValues.row(0).setOnes();
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* OnesDerivative_y(const int numPoints,
+                                      const double* points)
+      {
+        double* values = new double[2 * numPoints];
+
+        Eigen::Map<Eigen::MatrixXd> matValues(values,
+                                              2,
+                                              numPoints);
+        matValues.setZero();
+        matValues.row(1).setOnes();
+
+        return values;
+      }
+      // ***************************************************************************
       static double* NonLinear_double_dot_product(const int numPoints,
                                                   const double* points,
                                                   const double* u,
@@ -156,6 +184,25 @@ namespace UnitTesting
         Eigen::Map<Eigen::VectorXd> matValues(values, numPoints);
         matValues<< Eigen::Map<const Eigen::VectorXd>(u_y,
                                                       numPoints);
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* NonLinear_divergence_p(const int numPoints,
+                                            const double* points,
+                                            const double* u,
+                                            const double* u_x,
+                                            const double* u_y)
+      {
+        double* values = new double[2 * numPoints];
+
+        Eigen::Map<Eigen::MatrixXd> matValues(values,
+                                              2,
+                                              numPoints);
+        matValues.row(0)<< Eigen::Map<const Eigen::VectorXd>(u,
+                                                             numPoints).transpose();
+        matValues.row(1)<< Eigen::Map<const Eigen::VectorXd>(u,
+                                                             numPoints).transpose();
 
         return values;
       }
@@ -610,6 +657,29 @@ namespace UnitTesting
                                   pressure_problemData.NumberDOFs) += J_forcingTerm_divergence_x;
           J_saddlePoint_f.segment(2 * speed_problemData.NumberDOFs,
                                   pressure_problemData.NumberDOFs) += J_forcingTerm_divergence_y;
+        }
+
+        {
+          const Eigen::VectorXd J_forcingTerm_divergence_p_x = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearDerivativeForcingTerm(NavierStokes::OnesDerivative_x,
+                                                                                                                                  NavierStokes::NonLinear_divergence_p,
+                                                                                                                                  meshDAO,
+                                                                                                                                  mesh.Cell2DsMap,
+                                                                                                                                  pressure_problemData,
+                                                                                                                                  speed_problemData,
+                                                                                                                                  p_k,
+                                                                                                                                  p_strong);
+          const Eigen::VectorXd J_forcingTerm_divergence_p_y = GedimForPy::GeDiM4Py_Logic::AssembleNonLinearDerivativeForcingTerm(NavierStokes::OnesDerivative_y,
+                                                                                                                                  NavierStokes::NonLinear_divergence_p,
+                                                                                                                                  meshDAO,
+                                                                                                                                  mesh.Cell2DsMap,
+                                                                                                                                  pressure_problemData,
+                                                                                                                                  speed_problemData,
+                                                                                                                                  p_k,
+                                                                                                                                  p_strong);
+          J_saddlePoint_f.segment(0,
+                                  speed_problemData.NumberDOFs) += J_forcingTerm_divergence_p_x;
+          J_saddlePoint_f.segment(speed_problemData.NumberDOFs,
+                                  speed_problemData.NumberDOFs) += J_forcingTerm_divergence_p_y;
         }
 
         Eigen::SparseMatrix<double> J_saddle_point(2 * speed_problemData.NumberDOFs +
