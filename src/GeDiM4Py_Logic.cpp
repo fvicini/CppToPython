@@ -1179,7 +1179,7 @@ namespace GedimForPy
     PDE_Equation equation;
 
     const Eigen::MatrixXd test_referenceBasisFunctions = femValues.Reference_BasisFunctions(test_localSpace,
-                                                                                            test_localSpace.ReferenceElement.InternalQuadrature.Points);
+                                                                                            trial_localSpace.ReferenceElement.InternalQuadrature.Points);
     const Eigen::MatrixXd trial_referenceBasisFunctions = femValues.Reference_BasisFunctions(trial_localSpace,
                                                                                              trial_localSpace.ReferenceElement.InternalQuadrature.Points);
     const std::vector<Eigen::MatrixXd> trial_referenceBasisFunctionDerivatives = femValues.Reference_BasisFunctionDerivatives(trial_localSpace,
