@@ -764,12 +764,60 @@ namespace GedimForPy
                                                         NNL non_linear_f,
                                                         const Gedim::IMeshDAO& mesh,
                                                         const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                        const DiscreteProblemData& problemData,
+                                                        const Eigen::VectorXd& numeric_k,
+                                                        const Eigen::VectorXd& strong_k,
+                                                        std::list<Eigen::Triplet<double> >& advectionTriplets,
+                                                        std::list<Eigen::Triplet<double> >& advectionStrongTriplets)
+  {
+    return AssembleNonLinearAdvectionMatrix(b,
+                                            non_linear_f,
+                                            mesh,
+                                            cell2DsMap,
+                                            problemData,
+                                            problemData,
+                                            numeric_k,
+                                            strong_k,
+                                            advectionTriplets,
+                                            advectionStrongTriplets);
+  }
+  // ***************************************************************************
+  void GeDiM4Py_Logic::AssembleNonLinearAdvectionMatrix(B b,
+                                                        NNL non_linear_f,
+                                                        const Gedim::IMeshDAO& mesh,
+                                                        const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
                                                         const DiscreteProblemData& trial_Functions,
                                                         const DiscreteProblemData& test_Functions,
                                                         const Eigen::VectorXd& numeric_k,
                                                         const Eigen::VectorXd& strong_k,
                                                         std::list<Eigen::Triplet<double> >& advectionTriplets,
-                                                        std::list<Eigen::Triplet<double> >& advectionStrongTriplets)
+                                                        std::list<Eigen::Triplet<double> >& advectionStrongTriplets,
+                                                        const QuadratureData& quadrature)
+  {
+    return AssembleNonLinearAdvectionMatrix(b,
+                                            non_linear_f,
+                                            mesh,
+                                            cell2DsMap,
+                                            trial_Functions,
+                                            test_Functions,
+                                            numeric_k,
+                                            strong_k,
+                                            advectionTriplets,
+                                            advectionStrongTriplets,
+                                            trial_Functions.LocalSpace.ReferenceElement.InternalQuadrature);
+  }
+  // ***************************************************************************
+  void GeDiM4Py_Logic::AssembleNonLinearAdvectionMatrix(B b,
+                                                        NNL non_linear_f,
+                                                        const Gedim::IMeshDAO& mesh,
+                                                        const std::vector<Gedim::MapTriangle::MapTriangleData>& cell2DsMap,
+                                                        const DiscreteProblemData& trial_Functions,
+                                                        const DiscreteProblemData& test_Functions,
+                                                        const Eigen::VectorXd& numeric_k,
+                                                        const Eigen::VectorXd& strong_k,
+                                                        std::list<Eigen::Triplet<double> >& advectionTriplets,
+                                                        std::list<Eigen::Triplet<double> >& advectionStrongTriplets,
+                                                        const QuadratureData& quadrature)
   {
     FEM_RefElement_Langrange_PCC_Triangle_2D trial_femValues, test_femValues;
     Gedim::MapTriangle mapTriangle;
@@ -777,8 +825,8 @@ namespace GedimForPy
     const FEM_RefElement_Langrange_PCC_Triangle_2D::LocalSpace& test_localSpace = test_Functions.LocalSpace;
     PDE_Equation equation;
 
-    const Eigen::MatrixXd& internal_quadraturePoints = trial_localSpace.ReferenceElement.InternalQuadrature.Points;
-    const Eigen::VectorXd& internal_quadratureWeights = trial_localSpace.ReferenceElement.InternalQuadrature.Weights;
+    const Eigen::MatrixXd& internal_quadraturePoints = quadrature.Points;
+    const Eigen::VectorXd& internal_quadratureWeights = quadrature.Weights;
 
     const Eigen::MatrixXd test_referenceBasisFunctions = test_femValues.Reference_BasisFunctions(test_localSpace,
                                                                                                  internal_quadraturePoints);

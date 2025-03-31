@@ -22,7 +22,7 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
-      static double* AdvectionTerm_1(const int numPoints, const double* points)
+      static double* AdvectionTerm_x(const int numPoints, const double* points)
       {
         double* values = new double[2 * numPoints];
 
@@ -33,7 +33,7 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
-      static double* AdvectionTerm_2(const int numPoints, const double* points)
+      static double* AdvectionTerm_y(const int numPoints, const double* points)
       {
         double* values = new double[2 * numPoints];
 
@@ -154,6 +154,21 @@ namespace UnitTesting
                                                              numPoints).transpose();
         matValues.row(1)<< Eigen::Map<const Eigen::VectorXd>(u_y,
                                                              numPoints).transpose();
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* NonLinear_u(const int numPoints,
+                                   const double* points,
+                                   const double* u,
+                                   const double* u_x,
+                                   const double* u_y)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> matValues(values, numPoints);
+        matValues<< Eigen::Map<const Eigen::VectorXd>(u,
+                                                      numPoints);
 
         return values;
       }
@@ -581,7 +596,7 @@ namespace UnitTesting
 
         {
           std::list<Eigen::Triplet<double>> J_advection_dx_Triplets, J_advectionStrong_dx_Triplets;
-          GedimForPy::GeDiM4Py_Logic::AssembleAdvectionMatrix(NavierStokes::AdvectionTerm_1,
+          GedimForPy::GeDiM4Py_Logic::AssembleAdvectionMatrix(NavierStokes::AdvectionTerm_x,
                                                               meshDAO,
                                                               mesh.Cell2DsMap,
                                                               speed_problemData,
@@ -608,7 +623,7 @@ namespace UnitTesting
 
         {
           std::list<Eigen::Triplet<double>> J_advection_dy_Triplets, J_advectionStrong_dy_Triplets;
-          GedimForPy::GeDiM4Py_Logic::AssembleAdvectionMatrix(NavierStokes::AdvectionTerm_2,
+          GedimForPy::GeDiM4Py_Logic::AssembleAdvectionMatrix(NavierStokes::AdvectionTerm_y,
                                                               meshDAO,
                                                               mesh.Cell2DsMap,
                                                               speed_problemData,
@@ -706,6 +721,26 @@ namespace UnitTesting
           GedimForPy::GeDiM4Py_Logic::ShiftTriplets(J_C_1_22_Triplets,
                                                     speed_problemData.NumberDOFs,
                                                     speed_problemData.NumberDOFs,
+                                                    NavierStokes::A_transform_triplet_row,
+                                                    NavierStokes::A_transform_triplet_col,
+                                                    NavierStokes::A_transform_triplet_value,
+                                                    J_saddle_Point_triplets);
+        }
+
+        {
+          std::list<Eigen::Triplet<double>> J_C_2_11_Triplets, J_C_2_Strong_11_Triplets;
+          GedimForPy::GeDiM4Py_Logic::AssembleNonLinearAdvectionMatrix(NavierStokes::AdvectionTerm_x,
+                                                                       NavierStokes::NonLinear_u,
+                                                                       meshDAO,
+                                                                       mesh.Cell2DsMap,
+                                                                       speed_problemData,
+                                                                       u_x_k,
+                                                                       u_x_strong,
+                                                                       J_C_2_11_Triplets,
+                                                                       J_C_2_Strong_11_Triplets);
+          GedimForPy::GeDiM4Py_Logic::ShiftTriplets(J_C_2_11_Triplets,
+                                                    0,
+                                                    0,
                                                     NavierStokes::A_transform_triplet_row,
                                                     NavierStokes::A_transform_triplet_col,
                                                     NavierStokes::A_transform_triplet_value,
