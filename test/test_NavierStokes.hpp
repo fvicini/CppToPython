@@ -207,6 +207,36 @@ namespace UnitTesting
         return values;
       }
       // ***************************************************************************
+      static double* NonLinear_C_1_x(const int numPoints,
+                                     const double* points,
+                                     const double* u,
+                                     const double* u_x,
+                                     const double* u_y)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> matValues(values, numPoints);
+        matValues<< Eigen::Map<const Eigen::VectorXd>(u_x,
+                                                      numPoints);
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* NonLinear_C_1_y(const int numPoints,
+                                     const double* points,
+                                     const double* u,
+                                     const double* u_x,
+                                     const double* u_y)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> matValues(values, numPoints);
+        matValues<< Eigen::Map<const Eigen::VectorXd>(u_y,
+                                                      numPoints);
+
+        return values;
+      }
+      // ***************************************************************************
   };
   // ***************************************************************************
   class NavierStokes_T1 final
@@ -600,6 +630,86 @@ namespace UnitTesting
                                                     NavierStokes::B_transform_triplet_value,
                                                     J_saddle_Point_triplets);
 
+        }
+
+        {
+          std::list<Eigen::Triplet<double>> J_C_1_11_Triplets, J_C_1_Strong_11_Triplets;
+          GedimForPy::GeDiM4Py_Logic::AssembleNonLinearReactionMatrix(NavierStokes::Ones,
+                                                                      NavierStokes::NonLinear_C_1_x,
+                                                                      meshDAO,
+                                                                      mesh.Cell2DsMap,
+                                                                      speed_problemData,
+                                                                      u_x_k,
+                                                                      u_x_strong,
+                                                                      J_C_1_11_Triplets,
+                                                                      J_C_1_Strong_11_Triplets);
+          GedimForPy::GeDiM4Py_Logic::ShiftTriplets(J_C_1_11_Triplets,
+                                                    0,
+                                                    0,
+                                                    NavierStokes::A_transform_triplet_row,
+                                                    NavierStokes::A_transform_triplet_col,
+                                                    NavierStokes::A_transform_triplet_value,
+                                                    J_saddle_Point_triplets);
+        }
+
+        {
+          std::list<Eigen::Triplet<double>> J_C_1_12_Triplets, J_C_1_Strong_12_Triplets;
+          GedimForPy::GeDiM4Py_Logic::AssembleNonLinearReactionMatrix(NavierStokes::Ones,
+                                                                      NavierStokes::NonLinear_C_1_y,
+                                                                      meshDAO,
+                                                                      mesh.Cell2DsMap,
+                                                                      speed_problemData,
+                                                                      u_x_k,
+                                                                      u_x_strong,
+                                                                      J_C_1_12_Triplets,
+                                                                      J_C_1_Strong_12_Triplets);
+          GedimForPy::GeDiM4Py_Logic::ShiftTriplets(J_C_1_12_Triplets,
+                                                    speed_problemData.NumberDOFs,
+                                                    0,
+                                                    NavierStokes::A_transform_triplet_row,
+                                                    NavierStokes::A_transform_triplet_col,
+                                                    NavierStokes::A_transform_triplet_value,
+                                                    J_saddle_Point_triplets);
+        }
+
+        {
+          std::list<Eigen::Triplet<double>> J_C_1_21_Triplets, J_C_1_Strong_21_Triplets;
+          GedimForPy::GeDiM4Py_Logic::AssembleNonLinearReactionMatrix(NavierStokes::Ones,
+                                                                      NavierStokes::NonLinear_C_1_x,
+                                                                      meshDAO,
+                                                                      mesh.Cell2DsMap,
+                                                                      speed_problemData,
+                                                                      u_y_k,
+                                                                      u_y_strong,
+                                                                      J_C_1_21_Triplets,
+                                                                      J_C_1_Strong_21_Triplets);
+          GedimForPy::GeDiM4Py_Logic::ShiftTriplets(J_C_1_21_Triplets,
+                                                    0,
+                                                    speed_problemData.NumberDOFs,
+                                                    NavierStokes::A_transform_triplet_row,
+                                                    NavierStokes::A_transform_triplet_col,
+                                                    NavierStokes::A_transform_triplet_value,
+                                                    J_saddle_Point_triplets);
+        }
+
+        {
+          std::list<Eigen::Triplet<double>> J_C_1_22_Triplets, J_C_1_Strong_22_Triplets;
+          GedimForPy::GeDiM4Py_Logic::AssembleNonLinearReactionMatrix(NavierStokes::Ones,
+                                                                      NavierStokes::NonLinear_C_1_y,
+                                                                      meshDAO,
+                                                                      mesh.Cell2DsMap,
+                                                                      speed_problemData,
+                                                                      u_y_k,
+                                                                      u_y_strong,
+                                                                      J_C_1_22_Triplets,
+                                                                      J_C_1_Strong_22_Triplets);
+          GedimForPy::GeDiM4Py_Logic::ShiftTriplets(J_C_1_22_Triplets,
+                                                    speed_problemData.NumberDOFs,
+                                                    speed_problemData.NumberDOFs,
+                                                    NavierStokes::A_transform_triplet_row,
+                                                    NavierStokes::A_transform_triplet_col,
+                                                    NavierStokes::A_transform_triplet_value,
+                                                    J_saddle_Point_triplets);
         }
 
         {
