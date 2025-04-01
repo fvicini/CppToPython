@@ -371,6 +371,182 @@ namespace UnitTesting
       // ***************************************************************************
   };
   // ***************************************************************************
+  class NavierStokes_T2 final
+  {
+    public:
+      // ***************************************************************************
+      static std::array<Eigen::VectorXd, 2> u(const Eigen::MatrixXd& points)
+      {
+        std::array<Eigen::VectorXd, 2> result;
+        for (unsigned int p = 0; p < points.cols(); ++p)
+        {
+          const Eigen::Vector3d point = points.col(p);
+          const double x = point.x();
+          const double y = point.y();
+
+          result[0][p] = + 0.1 * 2.0 * x * x * y *
+                         (1.0 - x) * (1.0 - x) *
+                         (1.0 - 3.0 * y + 2.0 * y * y);
+          result[1][p] = - 0.1 * 2.0 * x * y * y *
+                         (1.0 - y) * (1.0 - y) *
+                         (1.0 - 3.0 * x + 2.0 * x * x);
+        }
+
+        return result;
+      }
+      // ***************************************************************************
+      static Eigen::VectorXd p(const Eigen::MatrixXd& points)
+      {
+        Eigen::VectorXd result;
+        for (unsigned int p = 0; p < points.cols(); ++p)
+        {
+          const Eigen::Vector3d point = points.col(p);
+          const double x = point.x();
+          const double y = point.y();
+
+          result[p] = x + y - 1.0;
+        }
+
+        return result;
+      }
+      // ***************************************************************************
+      static std::array<std::array<Eigen::VectorXd, 2>, 2> grad_u(const Eigen::MatrixXd& points)
+      {
+        std::array<std::array<Eigen::VectorXd, 2>, 2> result;
+        for (unsigned int p = 0; p < points.cols(); ++p)
+        {
+          const Eigen::Vector3d point = points.col(p);
+          const double x = point.x();
+          const double y = point.y();
+
+          // d_x_u_1
+          result[0][0][p] = + 0.4 * x * y *
+                            (1.0 - 3.0 * x + 2.0 * x * x) *
+                            (1.0 - 3.0 * y + 2.0 * y * y);
+          // d_y_u_1
+          result[0][1][p] = + 0.2 * x * x *
+                            (1.0 - x) * (1.0 - x) *
+                            (1.0 - 6.0 * y + 6.0 * y * y);
+          // d_x_u_2
+          result[1][0][p] = - 0.2 * y * y *
+                            (1.0 - y) * (1.0 - y) *
+                            (1.0 - 6.0 * x + 6.0 * x * x);
+          // d_y_u_2
+          result[1][1][p] = - 0.4 * x * y *
+                            (1.0 - 3.0 * y + 2.0 * y * y) *
+                            (1.0 - 3.0 * x + 2.0 * x * x);
+        }
+
+        return result;
+      }
+      // ***************************************************************************
+      static std::array<Eigen::VectorXd, 2> lap_u(const Eigen::MatrixXd& points)
+      {
+        std::array<Eigen::VectorXd, 2> result;
+        for (unsigned int p = 0; p < points.cols(); ++p)
+        {
+          const Eigen::Vector3d point = points.col(p);
+          const double x = point.x();
+          const double y = point.y();
+
+          // d_xx_u_1
+          result[0][p] = + 0.4 * y *
+                         (1.0 - 3.0 * y + 2.0 * y * y) *
+                         (1.0 - 6.0 * x + 6.0 * x * x) +
+                         0.2 * x * x *
+                         (1.0 - x) * (1.0 - x) *
+                         (12.0 * y - 6.0);
+          // d_yy_u_2
+          result[1][p] = - 0.2 * y * y *
+                         (1.0 - y) * (1.0 - y) *
+                         (12.0 * x - 6.0) -
+                         0.4 * x *
+                         (1.0 - 3.0 * x + 2.0 * x * x) *
+                         (1.0 - 6.0 * y + 6.0 * y * y);
+        }
+
+        return result;
+      }
+      // ***************************************************************************
+      static double* ForcingTerm_1(const int numPoints, const double* points)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+        vecValues.setConstant(1.0);
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* ForcingTerm_2(const int numPoints, const double* points)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+        vecValues.setConstant(1.0);
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* ExactPressureSolution(const int numPoints,
+                                           const double* points)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+
+        vecValues = matPoints.row(0).array() +
+                    matPoints.row(1).array() -
+                    1.0;
+        return values;
+      }
+      // ***************************************************************************
+      static double* ExactSpeedSolution_1(const int numPoints,
+                                          const double* points)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+        vecValues.setZero();
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* ExactSpeedSolution_2(const int numPoints,
+                                          const double* points)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+        vecValues.setZero();
+
+        return values;
+      }
+      // ***************************************************************************
+      static double* ExactPressureDerivativeSolution(const int direction,
+                                                     const int numPoints,
+                                                     const double* points)
+      {
+        double* values = new double[numPoints];
+
+        Eigen::Map<const Eigen::MatrixXd> matPoints(points, 3, numPoints);
+        Eigen::Map<Eigen::VectorXd> vecValues(values, numPoints);
+
+        if(direction == 0)
+          vecValues.setOnes();
+        else if (direction == 1)
+          vecValues.setOnes();
+        else if (direction == 2)
+          vecValues.setZero();
+        else
+          throw std::runtime_error("Error on direction");
+
+        return values;
+      }
+      // ***************************************************************************
+  };
+  // ***************************************************************************
   TEST(TestGeometry, Test_NavierStokes_T1)
   {
     const std::string exportFolder = "./Export/TestGeometry/Test_NavierStokes_T1";
